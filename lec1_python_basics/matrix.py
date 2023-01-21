@@ -31,8 +31,10 @@ print(inv_a)
 
 # Element-wise mult & Matrix mult
 print(inv_a * A)
+print()
 print(np.matmul(inv_a, A))
 print(inv_a.dot(A))
+print(inv_a @ A)
 
 # identity matrix
 print(np.identity(5))
