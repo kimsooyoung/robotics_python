@@ -1,85 +1,107 @@
 from matplotlib import pyplot as plt
 from scipy.optimize import fsolve
+
 import math
 import numpy as np
+import matrix_helper as mh
 
 def forward_kinematics(l1,l2,theta1,theta2):
+    O_01 = [0, 0]
+    O_12 = [l1, 0];
+    
     # prepping to get homogenous transformations %%
-    c1 = math.cos(theta1);
-    c2 = math.cos(theta2);
-    s1 = math.sin(theta1);
-    s2 = math.sin(theta2);
-    O01 = [0, 0];
-    O12 = [l1, 0];
-
-    H01 = np.array([[c1, -s1, O01[0]],
-                    [s1, c1,  O01[1]],
-                    [0,   0,  1]])
-    H12 = np.array([[c2, -s2, O12[0]],
-                    [s2, c2,  O12[1]],
-                    [0,   0,  1]])
-    H02 = np.matmul(H01,H12)
-
-
+    H_01 = mh.calc_homogeneous_2d(theta1, O_01)
+    H_12 = mh.calc_homogeneous_2d(theta2, O_12)
+    
     # %%%%%%%% origin  in world frame  %%%%%%
     o = [0, 0];
 
     # %%%%% end of link1 in world frame %%%%
     P1 = np.array([l1, 0, 1]);
     P1 = np.transpose(P1)
-    P0 = np.matmul(H01,P1)
+    P0 = H_01 @ P1
     p = [P0[0], P0[1]]
     #
     # %%%% end of link 2 in world frame  %%%%%%%
     Q2 = np.array([l2, 0, 1]);
     Q2 = np.transpose(Q2)
-    Q0 = np.matmul(H02,Q2)
+    Q0 = H_01 @ H_12 @ Q2
     q = [Q0[0], Q0[1]]
 
     return o,p,q
 
-def inverse_kinematics(theta,parms):
-    # l1 = 1
-    # l2 = 1
-    l1 = parms[0]
-    l2 = parms[1]
-    x_ref = parms[2]
-    y_ref = parms[3]
+def inverse_kinematics(theta, params):
+    
+    # forward_kinematics(l1, l2, theta1, theta2)
+    o,p,q = forward_kinematics(params[0], params[1], theta[0], theta[1])
+    
+    # return difference btw ref & end-point
+    return q[0] - params[2], q[1] - params[3]
+    
+def draw_2d_mpl(circle=False):
+    # link length
+    l1 = 1.0
+    l2 = 1.0
+    
+    if circle is True:
+        phi  = np.arange(0,2*np.pi,0.2)
+        x_ref_list = 1  + 0.5*np.cos(phi)
+        y_ref_list = 0.5+ 0.5*np.sin(phi)
+    
+    link1, link2 = (None, None)
+    cnt = 0
+    
+    while True:
+        
+        if circle is False:
+            print("=== Type New Ref Points ===")
+            x_ref = float(input('x_ref : '))
+            y_ref = float(input('y_ref : '))
+        else:
+            x_ref = x_ref_list[cnt]
+            y_ref = y_ref_list[cnt]
+            cnt += 1
+        
+        if link1 is not None:
+            link1.remove()
+            link2.remove()
+            if circle is False:
+                point.remove()
+        
+        parms = [l1, l2, x_ref, y_ref]
 
-    theta1 = theta[0]
-    theta2 = theta[1]
-    [o,p,q] = forward_kinematics(l1,l2,theta1,theta2)
-    x = q[0]
-    y = q[1]
-    return x-x_ref,y-y_ref
+        theta = fsolve(inverse_kinematics, [0.01,0.5],parms)
+        theta1, theta2 = theta
+        print(f"theta1 : {theta1}")
+        print(f"theta2 : {theta2}")
 
-l1 = 1
-l2 = 1
-x_ref = 0.5
-y_ref = 1
-parms = [l1, l2, x_ref, y_ref]
-theta = fsolve(inverse_kinematics, [0.5,0],parms)
-theta1 = theta[0]
-theta2 = theta[1]
-print(theta1)
-print(theta2)
+        [o,p,q] = forward_kinematics(l1,l2,theta1,theta2)
 
-[o,p,q] = forward_kinematics(l1,l2,theta1,theta2)
+        # %Draw line from origin to end of link 1
+        link1, = plt.plot([o[0], p[0]],[o[1], p[1]],linewidth=5, color='red')
 
-# %Draw line from origin to end of link 1
-plt.plot([o[0], p[0]],[o[1], p[1]],linewidth=5, color='red')
+        # %Draw line from end of link 1 to end of link 2
+        link2, = plt.plot([p[0], q[0]],[p[1], q[1]],linewidth=5, color='blue')
 
-# %Draw line from end of link 1 to end of link 2
-plt.plot([p[0], q[0]],[p[1], q[1]],linewidth=5, color='blue')
+        # Draw end point
+        point, = plt.plot(q[0],q[1],color = 'black',marker = 'o',markersize=5)
 
-plt.xlabel("x")
-plt.ylabel("y")
+        plt.xlabel("x")
+        plt.ylabel("y")
 
-plt.xlim(-2,2)
-plt.ylim(-2,2)
-plt.grid()
-plt.gca().set_aspect('equal')
+        plt.xlim(-2,2)
+        plt.ylim(-2,2)
+        plt.grid()
+        plt.pause(0.2)
+        plt.gca().set_aspect('equal')
 
-plt.show(block=False)
-plt.pause(5)
-plt.close()
+        plt.show(block=False)
+        # plt.close()
+        
+if __name__=="__main__":
+    try:
+        draw_2d_mpl(circle=False)
+    except Exception as e:
+        print(e)
+    finally:
+        plt.close()
