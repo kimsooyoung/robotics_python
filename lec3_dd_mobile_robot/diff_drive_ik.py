@@ -3,6 +3,10 @@ import math
 from scipy import interpolate
 import numpy as np
 
+
+fig = plt.figure()
+ax = fig.add_subplot(1, 1, 1)
+
 class parameters:
     def __init__(self):
         # 목적지에 도달해야 하는 offset
@@ -136,9 +140,9 @@ def motion_simulation(params, path=None):
     # 로봇이 도달해야 하는 좌표 
     # (world frame을 갖는다. x_ref, y_ref에서 offset 뺀값)
     z0 = ptP_to_ptC(x_ref[0],y_ref[0], theta0, params)
-    # theta 추가 - 이건 ㅇㄹ 
     z0 = np.hstack([z0, theta0])
-    z = np.array(z0)
+    # theta 추가 - 이건 ㅇㄹ 
+    z = z0
     # x, y, theta at the start for point C
     # z0에는 offset 적용되어 있다.
     # z0 = np.array([x0, y0, theta0]); 
@@ -146,7 +150,7 @@ def motion_simulation(params, path=None):
 
     # 도달해야 할 point들의 arr 준비
     # p에는 offset 적용이 되어 있지 않음
-    p = np.array([x_ref[0], y_ref[0]])
+    traj = np.array([x_ref[0], y_ref[0]])
     # error 값들이 쌓이게 될 arr
     e = np.array([0,0])
     # control signals 
@@ -184,11 +188,11 @@ def motion_simulation(params, path=None):
         v.append(u[0])
         omega.append(u[1])
 
-        #     % 5. now control the car based on u = [v omega]
+        # 5. now control the car based on u = [v omega]
         z0 = euler_integration([t[i], t[i+1]],z0,[u[0],u[1]])
         z = np.vstack([z, z0])
         p0 = ptC_to_ptP(z0[0],z0[1],z0[2],params);
-        p = np.vstack([p, p0])
+        traj = np.vstack([traj, p0])
 
     #interpolation
     t_interp = np.arange(0 , params.t_length , 1/params.fps)
@@ -201,8 +205,8 @@ def motion_simulation(params, path=None):
     z_interp[:,1] = f_z2(t_interp)
     z_interp[:,2] = f_z3(t_interp)
 
-    f_p1 = interpolate.interp1d(t, p[:,0])
-    f_p2 = interpolate.interp1d(t, p[:,1])
+    f_p1 = interpolate.interp1d(t, traj[:,0])
+    f_p2 = interpolate.interp1d(t, traj[:,1])
     shape = (len(t_interp),2)
     p_interp = np.zeros(shape)
     p_interp[:,0] = f_p1(t_interp)
