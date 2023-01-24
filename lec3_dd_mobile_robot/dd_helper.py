@@ -26,7 +26,7 @@ def euler_integration(tspan,z0,u):
 def ptP_to_ptC(state, params):
     # x_p, y_p : 로봇이 도달해야 할 좌표
     # params.px,params.py : 로봇이 회전 후 가져야 할 offset
-    # 실제 해당 offset 만큼은 여유를 둬야 하므로 -np.matmul이 되었다.
+    # 실제 해당 offset 만큼은 이동을 해야 하므로 -np.matmul이 되었다.
     x_p, y_p, theta = state
 
     cos = np.cos(theta)

@@ -6,19 +6,19 @@ import numpy as np
 class parameters:
     def __init__(self):
         # 목적지에 도달해야 하는 offset
-        # 목적지와 딱 맞게 가고 싶다면 px=0.0이어야 하는건가?
+        # 목적지와 딱 맞게 가고 싶다면 px=0.0이어야 하는건가? => yes
         self.px = 0.01
         self.py = 0
         self.Kp = 100;
         # 로봇 반지름
         self.R = 0.1
         self.pause = 0.1
-        self.fps =10
+        self.fps = 5
         self.t_length = 10
 
 def animate(params, t_interp, z, p, plot_items):
 
-    fig2, _ = plt.subplots()
+    # fig2, _ = plt.subplots()
 
     R = params.R;
     phi = np.arange(0,2*np.pi,0.25)
@@ -40,7 +40,8 @@ def animate(params, t_interp, z, p, plot_items):
         line, = plt.plot([x, x2],[y, y2],color="black")
         robot,  = plt.plot(x_robot,y_robot,color='black')
         # 로봇이 그리는 경로
-        shape, = plt.plot(p[0:i,0],p[0:i,1],color='red');
+        # shape, = plt.plot(p[0:i,0],p[0:i,1],color='red');
+        shape, = plt.plot(z[0:i,0], z[0:i,1], color='red', marker="o", markersize=0.5);
 
         plt.xlim(-2,2)
         plt.ylim(-2,2)
@@ -49,8 +50,6 @@ def animate(params, t_interp, z, p, plot_items):
         line.remove()
         robot.remove()
         shape.remove()
-
-    plt.close()
 
     fig3, (ax3, ax4, ax5) = plt.subplots(nrows=3, ncols=1)
     e, v, omega = plot_items
@@ -123,7 +122,7 @@ def motion_simulation(params, path):
         x_c, y_c, theta = z0
 
         # 2. get x_p, y_p from x_c,y_c z0에는 offset 적용되어 있다.
-        # 결국 다시 world frame으로 바꾸는 것임 (보통 p0는 센서가 담당한다.)
+        # 결국 다시 world frame으로 바꾸는 것임 (보통 센서가 담당한다.)
         x_p, y_p = dd_helper.ptC_to_ptP(z0, params)
         # 지금은 아래와 완전 동일함
         # x_p, y_p = x_ref[i], y_ref[i]
@@ -133,7 +132,7 @@ def motion_simulation(params, path):
         e = np.vstack([e, error])
 
         # 4. get u = [v, omega] from the errors
-        b = [ 10.1 + params.Kp * error[0], 0.1 + params.Kp * error[1]]
+        b = [ params.Kp * error[0], params.Kp * error[1]]
         px, py = params.px, params.py
 
         cos = np.cos(theta)
@@ -151,8 +150,7 @@ def motion_simulation(params, path):
         # offset 적용된 z0로 euler_integration 계산
         z0 = dd_helper.euler_integration([t[i], t[i+1]],z0,[u[0],u[1]])
         z = np.vstack([z, z0])
-
-        # offset 적용해제한 뒤 trag에 저장 => 지금은 무조건 같게 됨
+        # actually useless - It'll be always optimum value
         p0 = dd_helper.ptC_to_ptP(z0, params);
         traj = np.vstack([traj, p0])
 
@@ -173,5 +171,4 @@ if __name__=="__main__":
         t_interp, z_interp, p_interp = dd_helper.interpolation(params, robot_endpoint, traj)
         # draw motion
         animate(params, t_interp,z_interp,p_interp, plot_data)
-
         print("Everything done!")
