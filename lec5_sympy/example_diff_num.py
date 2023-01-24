@@ -1,19 +1,17 @@
 import sympy as sy
 
-x  = sy.symbols('x', real=True) # defining the variables
-f0 = x**2+2*x+1
-print(f0)
+# prepare equations
+x = sy.symbols('x', real=True)
+f0 = x ** 2 + 2 * x + 1
+print(f"f0 : {f0}")
 
-xval = 1
-pert = 1e-5
-F0 = f0.subs(x,xval)
-F1 = f0.subs(x,xval-pert)
-F2 = f0.subs(x,xval+pert)
+x_val = 1
+epsilon = 1e-5
+F0 = f0.subs(x, x_val - epsilon)
+F1 = f0.subs(x, x_val)
+F2 = f0.subs(x, x_val + epsilon)
 
-#forward difference
-dfdx_num = (F2-F0)/pert
-print(dfdx_num)
-
-#central difference
-dfdx_num = (F2-F1)/(2*pert)
-print(dfdx_num)
+# calculate numerical diff
+fwd_diff = (F2 - F1) / epsilon
+ctr_diff = (F2 - F0) / (2 * epsilon)
+print(f"fwd_diff : {fwd_diff} / ctr_diff : {ctr_diff}")
