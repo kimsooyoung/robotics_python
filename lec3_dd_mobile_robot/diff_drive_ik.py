@@ -132,6 +132,7 @@ def motion_simulation(params, path):
         e = np.vstack([e, error])
 
         # 4. get u = [v, omega] from the errors
+        # b = [ 10.0 + params.Kp * error[0], 10.0 + params.Kp * error[1]]
         b = [ params.Kp * error[0], params.Kp * error[1]]
         px, py = params.px, params.py
 
