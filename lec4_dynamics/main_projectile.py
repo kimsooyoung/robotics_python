@@ -68,7 +68,7 @@ def projectile(z, t, m,g,c):
     dragY = c * v * ydot
 
     #%%%% net acceleration %%%
-    ax = 0 -  (dragX / m) #xddot
+    ax =  0 - (dragX / m) #xddot
     ay = -g - (dragY / m) #yddot
 
     dzdt = np.array([xdot, ax, ydot, ay])
