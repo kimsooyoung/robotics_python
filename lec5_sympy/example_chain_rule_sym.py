@@ -1,13 +1,12 @@
 import sympy as sy
 
-x,xdot,xddot  = sy.symbols('x xdot xddot', real=True)
-
-# f1 = sin(x), where x = x(t)
+x, x_d, x_dd = sy.symbols('x x_d x_dd', real=True)
+# ex1 
 f1 = sy.sin(x)
-df1dx = sy.diff(f1,x)*xdot
+df1dx = sy.diff(f1, x) * x_d
 print(df1dx)
 
-#f2 = x*xdot where x = x(t)
-f2 = x*xdot
-df2dx = sy.diff(f2,x)*xdot + sy.diff(f2,xdot)*xddot
-print(df2dx)
+# ex2
+f2 = x * x_d
+df2fx = sy.diff(f2, x) * x_d + sy.diff(f2, x_d) * x_dd
+print(df2fx)
