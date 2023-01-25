@@ -77,8 +77,8 @@ for i in range(len(q)):
     EOM.append(dt_dL_dq_d[i] - dL_dq[i])
 
 
-# print(sy.solve(EOM[0], alpha1))
-# print(sy.solve(EOM[1], alpha2))
+print(sy.solve(EOM[0], alpha1))
+print(sy.solve(EOM[1], alpha2))
 
 # C : 코리올리
 # G : gravity?
