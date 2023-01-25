@@ -49,7 +49,8 @@ for i in range(len(q)):
     dL_dq_d.append(sy.diff(L, q_d[i]))
     temp_symbol = 0
     for j in range(len(q)):
-        temp_symbol += sy.diff(dL_dq_d[i], q[j]) * q_d[j] + sy.diff(dL_dq_d[i], q_d[j]) * q_dd[j]
+        temp_symbol += sy.diff(dL_dq_d[i], q[j]) * q_d[j] + \
+                       sy.diff(dL_dq_d[i], q_d[j]) * q_dd[j]
     
     dt_dL_dq_d.append(temp_symbol)
     dL_dq.append(sy.diff(L, q[i]))
