@@ -14,8 +14,8 @@ class parameters:
         self.c2 = 0.5
         self.l = 1
         self.g = 9.81
-        self.pause = 0.05
-        self.fps =20
+        self.pause = 0.02
+        self.fps = 20
 
 def cos(angle):
     return np.cos(angle)
@@ -48,7 +48,22 @@ def animate(t_interp, z_interp, params):
         theta2 = z_interp[i,2];
         O = np.array([0, 0])
         P = np.array([l*sin(theta1), -l*cos(theta1)])
+        # 그림을 그려야 하니까 + P를 해주었음
         Q = P + np.array([l*sin(theta1+theta2),-l*cos(theta1+theta2)])
+        
+        # 사실 이렇게도 구할 수 있다.
+        # H_01 = np.array([
+        #     [np.cos(3*np.pi/2 + theta1), -np.sin(3*np.pi/2 + theta1), 0],
+        #     [np.sin(3*np.pi/2 + theta1), -np.cos(3*np.pi/2 + theta1), 0],
+        #     [0, 0, 1],
+        # ])
+        # H_12 = np.array([
+        #     [np.cos(theta2), -np.sin(theta2), 0],
+        #     [np.sin(theta2), -np.cos(theta2), 0],
+        #     [0, 0, 1],
+        # ])
+
+        # COM Point
         G1 = np.array([c1*sin(theta1), -c1*cos(theta1)])
         G2 = P + np.array([c2*sin(theta1+theta2),-c2*cos(theta1+theta2)])
 
@@ -61,8 +76,8 @@ def animate(t_interp, z_interp, params):
         plt.ylim(-2,2)
         plt.gca().set_aspect('equal')
 
-
         plt.pause(params.pause)
+
         if (i < len(t_interp)-1):
             pend1.remove()
             pend2.remove()
@@ -71,8 +86,25 @@ def animate(t_interp, z_interp, params):
 
     #plt.show()
     plt.show(block=False)
-    plt.pause(5)
+    plt.pause(1)
     plt.close()
+
+    # result plotting
+    plt.figure(1)
+    plt.subplot(2, 1, 1)
+    plt.plot(t,z[:,0],color='red',label='theta1');
+    plt.plot(t,z[:,2],color='blue',label='theta2');
+    plt.ylabel("angle")
+    plt.legend(loc="upper left")
+    
+    plt.subplot(2, 1, 2)
+    plt.plot(t,z[:,1],color='red',label='omega1');
+    plt.plot(t,z[:,3],color='blue',label='omega2');
+    plt.xlabel("t")
+    plt.ylabel("angular rate")
+    plt.legend(loc="lower left")
+
+    plt.show()
 
 def double_pendulum(z0, t, m1, m2, I1, I2, c1, c2, link1, g):
     
@@ -103,11 +135,10 @@ if __name__=="__main__":
 
     params = parameters()
 
-    t = np.linspace(0, 10, 101)
+    t = np.linspace(0, 10, 50)
     
     # initlal state
     z0 = np.array([np.pi, 0.001, 0, 0])
-    # 
     all_params = (
         params.m1, params.m2,
         params.I1, params.I2,
@@ -118,20 +149,3 @@ if __name__=="__main__":
     t_interp, z_interp = interpolation(t, z, params)
 
     animate(t_interp, z_interp, params)
-
-    # plt.figure(1)
-    # plt.subplot(2, 1, 1)
-    # plt.plot(t,z[:,0],color='red',label='theta1');
-    # plt.plot(t,z[:,2],color='blue',label='theta2');
-    # plt.ylabel("angle")
-    # plt.legend(loc="upper left")
-    # plt.subplot(2, 1, 2)
-    # plt.plot(t,z[:,1],color='red',label='theta1');
-    # plt.plot(t,z[:,3],color='blue',label='theta2');
-    # plt.xlabel("t")
-    # plt.ylabel("angular rate")
-    # plt.legend(loc="lower left")
-    # #plt.show()
-    # plt.show(block=False)
-    # plt.pause(5)
-    # plt.close()
