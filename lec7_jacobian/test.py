@@ -1,26 +1,43 @@
-import numpy as np
+import sympy as sy
 
-def func(x, y):
-    return np.array([[x**2+y**2], [2*x+3*y+5]])
+#define symbolic quantities
+theta1, theta2 = sy.symbols("theta1 theta2", real=True)
+c1, c2, l = sy.symbols("c1 c2 l", real=True)
 
-z = np.array([1, 2])
-f = func(z[0], z[1])
-epsilon = 1e-3
+H_01 = sy.Matrix([
+    [sy.cos(3*sy.pi/2 + theta1), -sy.sin(3*sy.pi/2 + theta1), 0],
+    [sy.sin(3*sy.pi/2 + theta1),  sy.cos(3*sy.pi/2 + theta1), 0],
+    [0, 0, 1]
+])
 
-# J = ([
-#     [df1/dx, df1/dy],
-#     [df2/dx, df2/dy]
-# ])
-J = np.eye(2)
+H_12 = sy.Matrix([
+    [sy.cos(theta2), -sy.sin(theta2), l],
+    [sy.sin(theta2),  sy.cos(theta2), 0],
+    [0, 0, 1]
+])
 
-# x
-dfdx = (func(z[0] + epsilon, z[1]) - func(z[0], z[1])) / epsilon
-# dfdx.shape => 2 * 1 [[],[]]
-J[0, 0] = dfdx[0, 0]
-J[1, 0] = dfdx[1, 0]
+H_02 = H_01 * H_12
 
-dfdy = (func(z[0], z[1] + epsilon) - func(z[0], z[1])) / epsilon
-J[0, 1] = dfdy[0, 0]
-J[1, 1] = dfdy[1, 0]
+G1_1 = sy.Matrix([c1, 0, 1])
+G1_0 = H_01 * G1_1
 
-print(J)
+G2_2 = sy.Matrix([c2, 0, 1])
+G2_0 = H_02 * G2_2
+# End point
+E2_2 = sy.Matrix([l, 0, 1])
+E2_0 = H_02 * E2_2
+
+G1_0.row_del(2)
+G2_0.row_del(2)
+E2_0.row_del(2)
+
+q = sy.Matrix([theta1, theta2])
+# Jacobian of link1 COM
+J_G1 = G1_0.jacobian(q)
+# Jacobian of link2 COM
+J_G2 = sy.simplify(G2_0.jacobian(q))
+# Jacobian of End Point
+E_G2 = sy.simplify(E2_0.jacobian(q))
+print(J_G1)
+print(J_G2)
+print(E_G2)
