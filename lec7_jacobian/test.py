@@ -1,24 +1,26 @@
-import sympy as sy
+import numpy as np
 
 def func(x, y):
-    return sy.Matrix([ x**2 + y**2, 2*x + 3*y + 5])
+    return np.array([[x**2+y**2], [2*x+3*y+5]])
 
-x, y = sy.symbols("x y", real=True)
-f = func(x, y)
+z = np.array([1, 2])
+f = func(z[0], z[1])
+epsilon = 1e-3
 
-# Matrix([[x], [y]]) 이나 Matrix([x, y])이나 같다.
-z = sy.Matrix([x, y])
-z2 = sy.Matrix([[x], [y]])
-# print(f"z {z}")
-# print(f"z.transpose() {z.transpose()}")
-# print(f"z2 {z2}")
-# print(f"z2.transpose() {z2.transpose()}")
+# J = ([
+#     [df1/dx, df1/dy],
+#     [df2/dx, df2/dy]
+# ])
+J = np.eye(2)
 
-J = f.jacobian(z)
+# x
+dfdx = (func(z[0] + epsilon, z[1]) - func(z[0], z[1])) / epsilon
+# dfdx.shape => 2 * 1 [[],[]]
+J[0, 0] = dfdx[0, 0]
+J[1, 0] = dfdx[1, 0]
+
+dfdy = (func(z[0], z[1] + epsilon) - func(z[0], z[1])) / epsilon
+J[0, 1] = dfdy[0, 0]
+J[1, 1] = dfdy[1, 0]
+
 print(J)
-
-J_sym = J.subs([x, 1], [y, 2])
-# or 
-# J_sym = J.subs([ (x, 1), (y, 2)])
-
-print(J_sym)

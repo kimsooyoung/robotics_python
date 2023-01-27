@@ -17,6 +17,7 @@ z2 = sy.Matrix([[x], [y]])
 J = f.jacobian(z)
 print(J)
 
+# (1, 2)
 J_sym = J.subs([x, 1], [y, 2])
 # or 
 # J_sym = J.subs([ (x, 1), (y, 2)])
