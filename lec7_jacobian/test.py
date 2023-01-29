@@ -41,3 +41,22 @@ E_G2 = sy.simplify(E2_0.jacobian(q))
 print(J_G1)
 print(J_G2)
 print(E_G2)
+
+# Application1 - cartesian velocity 
+omega1, omega2 = sy.symbols("omega1 omega2", real=True)
+q_dot = sy.Matrix([omega1, omega2])
+
+V_G1 = sy.simplify(J_G1 * q_dot)
+V_G2 = sy.simplify(J_G2 * q_dot)
+print("V_G1, V_G2")
+print(V_G1)
+print(V_G2)
+
+# Application2 - static forces
+m1, m2, g = sy.symbols("m1 m2 g", real=True)
+F_G1 = sy.Matrix([0, -m1 * g])
+F_G2 = sy.Matrix([0, -m2 * g])
+
+tau = sy.simplify(J_G1.transpose() * F_G1) + sy.simplify(J_G2 * F_G2)
+print("Tau")
+print(tau)
