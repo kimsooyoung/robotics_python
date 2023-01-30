@@ -17,10 +17,13 @@ class Parameter():
 def generate_path(params, q):
     
     phi = np.arange(0, 2*np.pi, params.step_size)
-    center = np.array([q[0] - params.r, q[1]])
+    
+    # first reference point == robot initial point
+    # center = np.array([q[0] - params.r, q[1]])
+    center = np.array([q[0], q[1]])
     x_ref = center[0] + params.r * np.cos(phi)
     y_ref = center[1] + params.r * np.sin(phi)
-        
+
     return x_ref, y_ref
 
 def simualtion(params, x_ref, y_ref):
@@ -36,25 +39,25 @@ def simualtion(params, x_ref, y_ref):
     phi  = np.arange(0, 2*np.pi, params.step_size)
 
     for i in range(0,len(phi)):
-        #Get the jacobian and its inverse
+        # 1. Get the jacobian and its inverse
         J = ph.jacobian_E(params.l, theta1, theta2)
-        #print(J)
+        # 2. Calculate J inv
         Jinv = np.linalg.inv(J)
-        #print(Jinv)
-
-        #Get the errors dx = [x_ref-x, y_ref-y]
+        # 3. Get current endpoint then calculate the errors dX
         _, _, q = ph.forward_kinematics(params.l, theta1, theta2)
         x = q[0]
         y = q[1]
         
         dX = np.array([x_ref[i] - x , y_ref[i] - y])
 
-        #Compute the correction dq = Jinv*dX
+        # 4. Compute the correction dq
         dq = Jinv.dot(dX)
 
+        # 5. update joint positions
         theta1 += dq[0]
         theta2 += dq[1]
 
+        # 6. append data for output results
         x_all.append(x)
         y_all.append(y)
         theta1_all.append(theta1)
@@ -85,7 +88,7 @@ def animation(params, x_all, y_all, theta1_all, theta2_all):
         plt.ylim(-2,2)
         plt.gca().set_aspect('equal')
 
-        plt.pause(0.02)
+        plt.pause(0.01)
         tmp1.remove()
         tmp2.remove()
 
@@ -108,8 +111,10 @@ if __name__=="__main__":
     params = Parameter()
     # get initial points
     o, p, q = ph.forward_kinematics(params.l, params.theta1, params.theta2)
+    
     # generate path
     x_ref, y_ref = generate_path(params, q)
+    
     # 1. calculate forward Kinematics with state vectors 
     # 2. Get update vector using Jacobian
     # 3. Update joint position then FK again
@@ -117,4 +122,3 @@ if __name__=="__main__":
     
     # motion animation then plotting traj
     animation(params, x_all, y_all, theta1_all, theta2_all)
-    
