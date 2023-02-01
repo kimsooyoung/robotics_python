@@ -1,62 +1,119 @@
-import sympy as sy
+from matplotlib import pyplot as plt
+import pendulum_helper as ph
+#from scipy.optimize import fsolve
 
-#define symbolic quantities
-theta1, theta2 = sy.symbols("theta1 theta2", real=True)
-c1, c2, l = sy.symbols("c1 c2 l", real=True)
+import math
+import numpy as np
 
-H_01 = sy.Matrix([
-    [sy.cos(3*sy.pi/2 + theta1), -sy.sin(3*sy.pi/2 + theta1), 0],
-    [sy.sin(3*sy.pi/2 + theta1),  sy.cos(3*sy.pi/2 + theta1), 0],
-    [0, 0, 1]
-])
+class Parameter():
+    def __init__(self):
+        self.l = 1.0
+        self.theta1 = np.pi/2 + np.pi/3
+        self.theta2 = -np.pi/2
+        
+        self.r = 0.5
+        self.step_size = 0.2
 
-H_12 = sy.Matrix([
-    [sy.cos(theta2), -sy.sin(theta2), l],
-    [sy.sin(theta2),  sy.cos(theta2), 0],
-    [0, 0, 1]
-])
+def generate_path(params, q):
+    
+    phi = np.arange(0, 2*np.pi, params.step_size)
+    
+    # first reference point == robot initial point
+    # center = np.array([q[0] - params.r, q[1]])
+    center = np.array([q[0], q[1]])
+    x_ref = center[0] + params.r * np.cos(phi)
+    y_ref = center[1] + params.r * np.sin(phi)
 
-H_02 = H_01 * H_12
+    return x_ref, y_ref
 
-G1_1 = sy.Matrix([c1, 0, 1])
-G1_0 = H_01 * G1_1
+def simualtion(params, x_ref, y_ref):
+    
+    # get initial states     
+    theta1, theta2 = params.theta1, params.theta2
 
-G2_2 = sy.Matrix([c2, 0, 1])
-G2_0 = H_02 * G2_2
-# End point
-E2_2 = sy.Matrix([l, 0, 1])
-E2_0 = H_02 * E2_2
+    x_all = []
+    y_all = []
+    theta1_all = []
+    theta2_all = []
+    
+    phi  = np.arange(0, 2*np.pi, params.step_size)
 
-G1_0.row_del(2)
-G2_0.row_del(2)
-E2_0.row_del(2)
+    for i in range(0,len(phi)):
+        J = ph.jacobian_E(params.l, theta1, theta2)
+        J_inv = np.linalg.inv(J)
+        
+        o, p, q = ph.forward_kinematics(params.l, theta1, theta2)
+        err = np.array([
+            x_ref[i] - q[0], 
+            y_ref[i] - q[1] 
+        ])
+        
+        dq = J_inv @ err
+        
+        theta1 += dq[0]
+        theta2 += dq[1]
+        
+        x_all.append(q[0])
+        y_all.append(q[1])
+        theta1_all.append(theta1)
+        theta2_all.append(theta2)
+        
+    return x_all, y_all, theta1_all, theta2_all
 
-q = sy.Matrix([theta1, theta2])
-# Jacobian of link1 COM
-J_G1 = G1_0.jacobian(q)
-# Jacobian of link2 COM
-J_G2 = sy.simplify(G2_0.jacobian(q))
-# Jacobian of End Point
-E_G2 = sy.simplify(E2_0.jacobian(q))
-print(J_G1)
-print(J_G2)
-print(E_G2)
 
-# Application1 - cartesian velocity 
-omega1, omega2 = sy.symbols("omega1 omega2", real=True)
-q_dot = sy.Matrix([omega1, omega2])
+def animation(params, x_all, y_all, theta1_all, theta2_all):
+    phi  = np.arange(0, 2*np.pi, params.step_size)
 
-V_G1 = sy.simplify(J_G1 * q_dot)
-V_G2 = sy.simplify(J_G2 * q_dot)
-print("V_G1, V_G2")
-print(V_G1)
-print(V_G2)
+    for i in range(len(phi)):
+        [o, p, q] = ph.forward_kinematics(params.l, theta1_all[i], theta2_all[i])
 
-# Application2 - static forces
-m1, m2, g = sy.symbols("m1 m2 g", real=True)
-F_G1 = sy.Matrix([0, -m1 * g])
-F_G2 = sy.Matrix([0, -m2 * g])
+        plt.plot(q[0],q[1],color = 'black',marker = 'o',markersize=5)
 
-tau = sy.simplify(J_G1.transpose() * F_G1) + sy.simplify(J_G2 * F_G2)
-print("Tau")
-print(tau)
+        # %Draw line from origin to end of link 1
+        tmp1, = plt.plot([o[0], p[0]],[o[1], p[1]],linewidth=5, color='red')
+
+        # %Draw line from end of link 1 to end of link 2
+        tmp2, = plt.plot([p[0], q[0]],[p[1], q[1]],linewidth=5, color='blue')
+
+        plt.xlabel("x")
+        plt.ylabel("y")
+
+        # plt.grid()
+        plt.xlim(-2,2)
+        plt.ylim(-2,2)
+        plt.gca().set_aspect('equal')
+
+        plt.pause(0.01)
+        tmp1.remove()
+        tmp2.remove()
+
+    plt.close()
+    plt.figure(1)
+    
+    plt.plot(x_all, y_all, 'b--')
+    plt.plot(x_ref, y_ref, 'r-.')
+    plt.ylabel("y")
+    plt.xlabel("x")
+    
+    plt.gca().set_aspect('equal')
+    
+    plt.show(block=False)
+    plt.pause(5)
+    plt.close()
+
+if __name__=="__main__":
+    
+    params = Parameter()
+    # get initial points
+    o, p, q = ph.forward_kinematics(params.l, params.theta1, params.theta2)
+    
+    # generate path
+    x_ref, y_ref = generate_path(params, q)
+    
+    # 1. calculate forward Kinematics with state vectors 
+    # 2. Get update vector using Jacobian
+    # 3. Update joint position then FK again
+    x_all, y_all, theta1_all, theta2_all = simualtion(params, x_ref, y_ref)
+    
+    # motion animation then plotting traj
+    animation(params, x_all, y_all, theta1_all, theta2_all)
