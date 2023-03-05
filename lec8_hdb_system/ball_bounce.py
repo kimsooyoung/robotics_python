@@ -10,9 +10,9 @@ class parameters:
         self.g = 9.81
         self.m = 1
         self.c = 0
-        self.e = 0.9
-        self.pause = 0.01
-        self.fps = 30
+        self.e = 0.8
+        self.pause = 0.005
+        self.fps = 10
         
 def projectile(t, z, m,g,c):
 
@@ -35,11 +35,14 @@ def one_bounce(t0,z0,parms):
 
     tf = t0 + 5
     contact.terminal = True
+    
+    # 위에서 아래로 내려갈 때만 잡는다.
     contact.direction = -1
-    # sol = solve_ivp(projectile,[t0, tf],z0,method='RK45', t_eval=t, dense_output=True, args=(parms.m,parms.g,parms.c))
-    sol = solve_ivp(projectile,[t0, tf], z0, method='RK45',
-            t_eval=np.linspace(t0, tf, 1001), dense_output=True, 
-            events=contact,args=(parms.m,parms.g,parms.c))
+
+    sol = solve_ivp(projectile, t_span=(t0, tf), y0=z0, method='RK45',
+        t_eval=np.linspace(t0, tf, 1001), dense_output=True, 
+        events=contact, args=(parms.m,parms.g,parms.c)
+    )
 
     # [xdot, ax, ydot, ay]
     [m,n] = np.shape(sol.y) #4,101
@@ -50,14 +53,41 @@ def one_bounce(t0,z0,parms):
     for i in range(0,m):
         z[:,i] = sol.y[i,:]
 
-    z[n-1,3] = -parms.e*z[n-1,3]
+    # z[n-1,3] = -parms.e*z[n-1,3]
+    z[n-1,3] *= -parms.e
 
     return t,z
 
-
+# return값이 0일 때가 조건이 되어 해당 point가 반환된다.
 def contact(t,z,m,g,c):
     x,xdot,y,ydot = z
     return y
+
+def simulation(t0, z0):
+
+    t = t0
+    z = z0
+
+    # bouncing iteration 
+    i = 0
+    while (t0 <= tend):
+    # for i in range(0,3):
+        [t_temp, z_temp] = one_bounce(t0, z0, parms)
+        if i==0:
+            z = np.concatenate(([z], z_temp[1:,:]), axis=0)
+            t = np.concatenate(([t], t_temp[1:]), axis=0)
+        else:
+            z = np.concatenate((z, z_temp[1:,:]), axis=0)
+            t = np.concatenate((t, t_temp[1:]), axis=0)
+
+        z0 = z_temp[-1]
+        t0 = t_temp[-1]
+        # print(z0)
+        # print(t0)
+        i+=1
+
+    return t, z
+
 
 def animate(t,z,parms):
     #interpolation
@@ -70,7 +100,6 @@ def animate(t,z,parms):
         f = interpolate.interp1d(t, z[:,i])
         z_interp[:,i] = f(t_interp)
 
-    #plot
     for i in range(0,len(t_interp)):
         prj, =  plt.plot(z_interp[i,0],z_interp[i,2],color='red',marker='o');
         plt.plot([-2, 2],[0, 0],linewidth=2, color='black')
@@ -83,55 +112,37 @@ def animate(t,z,parms):
         if (i != len(t_interp)):
             prj.remove()
 
-    # plt.pause(2)
     plt.close()
 
+def plot_result(t, z):
+    
+    plt.figure(1)
+    
+    plt.subplot(2,1,1)
+    plt.plot(t,z[:,2],'r')
+    plt.ylabel('y')
+    
+    plt.subplot(2,1,2)
+    plt.plot(t,z[:,3],'r')
+    plt.ylabel('ydot')
+    plt.xlabel('time')
+    
+    plt.show(block=False)
+    plt.pause(3)
+    plt.close()
 
-parms = parameters()
+if __name__=="__main__":
 
-x0 = 0;
-x0dot = 0;
-y0 = 2;
-y0dot = 10;
+    parms = parameters()
 
-t0 = 0;
-tend = 10;
-z0 = np.array([x0, x0dot, y0, y0dot])
-z = z0
-t = t0
+    # define initial cond
+    # 초기 위로 올라가는 속도 10
+    x0, x0dot, y0, y0dot = (0, 0, 2, 10)
+    t0, tend = (0, 10)
 
-i = 0
-while (t0<=tend):
-# for i in range(0,3):
-    [t_temp,z_temp] = one_bounce(t0,z0,parms)
-    [mm,nn] = np.shape(z_temp)
-    if i==0:
-        z = np.concatenate(([z], z_temp[1:mm-1,:]), axis=0)
-        t = np.concatenate(([t], t_temp[1:mm-1]), axis=0)
-    else:
-        z = np.concatenate((z, z_temp[1:mm-1,:]), axis=0)
-        t = np.concatenate((t, t_temp[1:mm-1]), axis=0)
-    x0 = z_temp[mm-1,0]
-    x0dot = z_temp[mm-1,1]
-    y0 = z_temp[mm-1,2]
-    y0dot = z_temp[mm-1,3]
+    # initial state
     z0 = np.array([x0, x0dot, y0, y0dot])
-    t0 = t_temp[mm-1]
-    # print(z0)
-    # print(t0)
-    i+=1
 
-
-animate(t,z,parms)
-
-plt.figure(1)
-plt.subplot(2,1,1)
-plt.plot(t,z[:,2],'r')
-plt.ylabel('y')
-plt.subplot(2,1,2)
-plt.plot(t,z[:,3],'r')
-plt.ylabel('ydot')
-plt.xlabel('time')
-plt.show(block=False)
-plt.pause(3)
-plt.close()
+    t, z = simulation(t0, z0)
+    animate(t, z, parms)
+    # plot_result(t, z)

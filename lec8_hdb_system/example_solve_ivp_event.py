@@ -14,6 +14,9 @@ def my_event(t, r):
     x, y = r
     return x - 1
 
+my_event.terminal = False
+my_event.direction = +1
+
 sol = integrate.solve_ivp(
     f, t_span=(0,10), y0=(1,1),
     t_eval=np.linspace(0,10,100),
