@@ -87,7 +87,12 @@ print(sy.solve(EOM[1], alpha2))
 # G = G(q)
 # C = b - G = C(q, q_d)*q_d + G(q) - G(q) = C(q, q_d)*q_d
 EOM = sy.Matrix([EOM[0],EOM[1]])
+# EOM에서 alpha 들어간 term만 뽑아내는 방법론임
+# alpha1, alpha2로 자코비안 계산하면, 2 * 2인 M 행렬을 바로 뽑을 수 있다. 
 M = EOM.jacobian(q_dd)
+print(f"EOM: {EOM}")
+print(f"M: {M}")
+
 b1 = EOM[0].subs([ (alpha1,0), (alpha2,0)])
 b2 = EOM[1].subs([ (alpha1,0), (alpha2,0)])
 G1 = b1.subs([ (omega1,0), (omega2,0)])
