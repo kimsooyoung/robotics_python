@@ -301,9 +301,12 @@ parms = parameters();
 q1 = 0.2; u1 = -0.25; q2 = -0.4; u2 = 0.2;
 z0 = np.array([q1,u1,q2,u2])
 #dz = fixedpt(z0,parms)
+
+# 실패하지 않는 초기 조건을 찾아보자.
 zstar=fsolve(fixedpt, z0,parms)
 print(zstar)
 
+# Jacobian을 구할 수식이 없다. 따라서 수치적으로 구해본다.
 J = partialder(zstar,parms)
 eigVal,eigVec = np.linalg.eig(J)
 # print(eigVal)

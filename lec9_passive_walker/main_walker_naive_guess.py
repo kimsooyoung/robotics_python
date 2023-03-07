@@ -130,6 +130,8 @@ def one_step(t0,z0,parms):
     # contact.direction = -1
     # sol = solve_ivp(single_stance,[t0, tf],z0,method='RK45', t_eval=t, dense_output=True, \
     #         args=(parms.M,parms.m,parms.I,parms.l,parms.c,parms.g,parms.gam))
+    #
+    # error correction을 위해 RK45를 사용했다고 한다. 
     sol = solve_ivp(single_stance,[t0, tf],z0,method='RK45', t_eval=t, dense_output=True, \
                     events=collision, atol = 1e-13,rtol = 1e-12, args=(parms.M,parms.m,parms.I,parms.l,parms.c,parms.g,parms.gam))
 
@@ -269,11 +271,12 @@ parms = parameters();
 # q2 = -0.325195667560070;
 # u2 = 0.037978468073736;
 
-#an initial guess
-q1 = 0.2;
-u1 = -0.25;
-q2 = -0.4;
-u2 = 0.2;
+# an initial guess
+# initial angle and speed
+q1 = 0.2
+u1 = -0.25
+q2 = -0.4
+u2 = 0.2
 z0 = np.array([q1,u1,q2,u2])
 
 t0 = 0;
