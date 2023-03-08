@@ -99,11 +99,14 @@ def n_steps(t0,z0,parms,steps):
     for i in range(0,steps):
         [z_temp,t_temp] = one_step(t0,z0,parms)
         [mm,nn] = np.shape(z_temp)
-        zz_temp = np.zeros( (mm,6))
+        
+        zz_temp = np.zeros((mm,6))
+
         for j in range(0,mm):
             xh = xh_start + l*sin(z_temp[0,0])-l*sin(z_temp[j,0]);
             yh = l*cos(z_temp[j,0]);
             zz_temp[j,:] = np.append(z_temp[j,:],np.array([xh,yh]))
+
         xh_start = zz_temp[mm-2,4]
         if i==0:
             #z = np.concatenate(([z], z_temp[1:mm-1,:]), axis=0)
@@ -113,68 +116,16 @@ def n_steps(t0,z0,parms,steps):
             #z = np.concatenate((z, z_temp[1:mm-1,:]), axis=0)
             t = np.concatenate((t, t_temp[1:mm-1]), axis=0)
             zz = np.concatenate((zz, zz_temp[1:mm-1,:]), axis=0)
-        theta1 = z_temp[mm-1,0]
-        omega1 = z_temp[mm-1,1]
-        theta2 = z_temp[mm-1,2]
-        omega2 = z_temp[mm-1,3]
+
+        theta1, omega1, theta2, omega2 = z_temp[mm-1,0:4]
         z0 = np.array([theta1, omega1, theta2, omega2])
         t0 = t_temp[mm-1]
 
     return zz,t
 
-def one_step(t0,z0,parms):
-
-    tf = t0+4;
-    t = np.linspace(t0, tf, 1001)
-    collision.terminal = True
-    # contact.direction = -1
-    # sol = solve_ivp(single_stance,[t0, tf],z0,method='RK45', t_eval=t, dense_output=True, \
-    #         args=(parms.M,parms.m,parms.I,parms.l,parms.c,parms.g,parms.gam))
-    sol = solve_ivp(single_stance,[t0, tf],z0,method='RK45', t_eval=t, dense_output=True, \
-                    events=collision, atol = 1e-13,rtol = 1e-12, args=(parms.M,parms.m,parms.I,parms.l,parms.c,parms.g,parms.gam))
-
-
-    #get solution at different time steps from sol.y
-    [m,n] = np.shape(sol.y)
-    shape = (n,m)
-    t = sol.t
-    z = np.zeros(shape)
-
-    #get event from sol.y_events and exact time sol.t_events
-    [mm,nn,pp] = np.shape(sol.y_events)
-    tt_last_event = sol.t_events[mm-1]
-    yy_last_event = sol.y_events[mm-1]
-
-    #save data in z
-    for i in range(0,m):
-        z[:,i] = sol.y[i,:]
-
-    #get state before footstrike using events
-    t_end = tt_last_event[0]
-    theta1 = yy_last_event[0,0]
-    omega1 = yy_last_event[0,1]
-    theta2 = yy_last_event[0,2]
-    omega2 = yy_last_event[0,3]
-
-    zminus = np.array([theta1, omega1, theta2, omega2 ])
-
-    #return state after footstrike
-    zplus = footstrike(t_end,zminus,parms)
-
-    #replace last entry in z and t
-    t[n-1] = t_end
-    z[n-1,0] = zplus[0];
-    z[n-1,1] = zplus[1];
-    z[n-1,2] = zplus[2];
-    z[n-1,3] = zplus[3];
-
-
-    return z,t
-
-
 def collision(t, z, M,m,I,l,c,g,gam):
 
-    theta1,omega1,theta2,omega2 = z
+    theta1, omega1, theta2, omega2 = z
 
     if (theta1>-0.05): #allow legs to pass through for small hip angles (taken care in real walker using stepping stones)
         gstop = 1
@@ -182,6 +133,7 @@ def collision(t, z, M,m,I,l,c,g,gam):
         gstop = theta2 + 2*theta1
 
     return gstop
+
 
 def footstrike(t, z, parms):
     theta1_n,omega1_n,theta2_n,omega2_n = z
@@ -238,9 +190,54 @@ def footstrike(t, z, parms):
 
     return [theta1,omega1,theta2,omega2]
 
+def one_step(t0,z0,parms):
+
+    tf = t0+4;
+    t = np.linspace(t0, tf, 1001)
+    collision.terminal = True
+    # contact.direction = -1
+    # sol = solve_ivp(single_stance,[t0, tf],z0,method='RK45', t_eval=t, dense_output=True, \
+    #         args=(parms.M,parms.m,parms.I,parms.l,parms.c,parms.g,parms.gam))
+    sol = solve_ivp(single_stance,[t0, tf],z0,method='RK45', t_eval=t, dense_output=True, \
+                    events=collision, atol = 1e-13,rtol = 1e-12, args=(parms.M,parms.m,parms.I,parms.l,parms.c,parms.g,parms.gam))
+
+
+    #get solution at different time steps from sol.y
+    [m,n] = np.shape(sol.y)
+    shape = (n,m)
+    t = sol.t
+    z = np.zeros(shape)
+
+    #get event from sol.y_events and exact time sol.t_events
+    [mm,nn,pp] = np.shape(sol.y_events)
+    tt_last_event = sol.t_events[mm-1]
+    yy_last_event = sol.y_events[mm-1]
+
+    #save data in z
+    for i in range(0,m):
+        z[:,i] = sol.y[i,:]
+
+    #get state before footstrike using events
+    t_end = tt_last_event[0]
+    theta1, omega1, theta2, omega2 = yy_last_event[0,:]
+    zminus = np.array([theta1, omega1, theta2, omega2 ])
+
+    #return state after footstrike
+    zplus = footstrike(t_end,zminus,parms)
+
+    #replace last entry in z and t
+    t[n-1] = t_end
+    z[n-1] = zplus
+    # z[n-1,0] = zplus[0];
+    # z[n-1,1] = zplus[1];
+    # z[n-1,2] = zplus[2];
+    # z[n-1,3] = zplus[3];
+
+    return z,t
+
 def single_stance(t, z, M,m,I,l,c,g,gam):
 
-    theta1,omega1,theta2,omega2 = z
+    theta1, omega1, theta2, omega2 = z
 
     A11 =  2.0*I + M*l**2 + m*(c - l)**2 + m*(c**2 - 2*c*l*cos(theta2) + l**2)
     A12 =  1.0*I + c*m*(c - l*cos(theta2))
@@ -258,7 +255,7 @@ def single_stance(t, z, M,m,I,l,c,g,gam):
     alpha1 = thetaddot[0]
     alpha2 = thetaddot[1]
 
-    return [omega1,alpha1,omega2,alpha2]
+    return [omega1, alpha1, omega2, alpha2]
 
 def fixedpt(z0,parms):
     t0 = 0
@@ -288,39 +285,7 @@ def partialder(z0,parms):
 
     return J
 
-
-parms = parameters();
-
-# this is the fixed point
-# q1 = 0.162597833780035;
-# u1 = -0.231869638058927;
-# q2 = -0.325195667560070;
-# u2 = 0.037978468073736;
-
-#an initial guess
-q1 = 0.2; u1 = -0.25; q2 = -0.4; u2 = 0.2;
-z0 = np.array([q1,u1,q2,u2])
-#dz = fixedpt(z0,parms)
-
-# 실패하지 않는 초기 조건을 찾아보자.
-zstar=fsolve(fixedpt, z0,parms)
-print(zstar)
-
-# Jacobian을 구할 수식이 없다. 따라서 수치적으로 구해본다.
-J = partialder(zstar,parms)
-eigVal,eigVec = np.linalg.eig(J)
-# print(eigVal)
-# print(eigVec)
-print(np.abs(eigVal))
-
-t0 = 0;
-steps = 10;
-[z,t] = n_steps(t0,zstar,parms,steps)
-# print(t[len(t)-1])
-
-animate(t,z,parms)
-
-if (1):
+def plot(t, z):
     plt.figure(1)
     plt.subplot(2,1,1)
     plt.plot(t,z[:,0],'r--')
@@ -345,3 +310,39 @@ if (1):
     plt.show(block=False)
     plt.pause(3)
     plt.close()
+
+
+if __name__ == "__main__":
+        
+    parms = parameters();
+
+    # this is the fixed point
+    # q1 = 0.162597833780035;
+    # u1 = -0.231869638058927;
+    # q2 = -0.325195667560070;
+    # u2 = 0.037978468073736;
+
+    # an initial guess
+    # theta1, omega1, theta2, omega2
+    q1, u1, q2, u2 = 0.2, -0.25, -0.4, 0.2
+    # q1, u1, q2, u2 = -0.4, 0.2, 0.2, -0.25
+    z0 = np.array([q1,u1,q2,u2])
+    #dz = fixedpt(z0,parms)
+
+    # 실패하지 않는 초기 조건을 찾아보자.
+    zstar = fsolve(fixedpt, z0, parms)
+    print(zstar)
+
+    # Jacobian을 구할 수식이 없다. 따라서 수치적으로 구해본다.
+    J = partialder(zstar,parms)
+    eigVal, eigVec = np.linalg.eig(J)
+    print(f"eigVal {eigVal}")
+    print(f"eigVec {eigVec}")
+    print(f"abs(eigVal) : {np.abs(eigVal)}")
+
+    t0 = 0;
+    steps = 10;
+    [z, t] = n_steps(t0, zstar, parms, steps)
+
+    animate(t, z, parms)
+    plot(t, z)

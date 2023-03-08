@@ -57,11 +57,6 @@ print(f"G1: {G1}")
 print(f"G2: {G2}")
 print(f"C2: {C2}")
 
-# print(G2[0])
-# print("\n");
-# print(G2[1])
-# print("\n");
-
 #1b) velocity vectors
 q = sy.Matrix([x, y, theta1, theta2])
 qdot = sy.Matrix([vx, vy, omega1, omega2])
@@ -104,16 +99,17 @@ Y_H = R_H[1]
 Y_G1 = R_G1[1]
 Y_G2 = R_G2[1]
 
-# print(Y_H)
-# print("\n");
-# print(Y_G1)
-# print("\n");
-# print(Y_G2)
-# print("\n");
+print(Y_H)
+print(Y_G1)
+print(Y_G2)
 
 # #2) Lagrangian
-T = 0.5*m*v_G1.dot(v_G1) + 0.5*m*v_G2.dot(v_G2) + 0.5*M*v_H.dot(v_H) + \
-    0.5*I*omega1*omega1 + 0.5*I*(omega1+omega2)*(omega1+omega2)
+T = 0.5*m*v_G1.dot(v_G1) + \
+    0.5*m*v_G2.dot(v_G2) + \
+    0.5*M*v_H.dot(v_H) + \
+    0.5*I*omega1*omega1 + \
+    0.5*I*(omega1+omega2)*(omega1+omega2)
+
 V = m*g*Y_G1 + m*g*Y_G2 + M*g*Y_H
 L = T-V
 # L = sy.Matrix([L]);
@@ -141,6 +137,8 @@ for i in range(0,mm):
     EOM.append(ddt_dLdqdot[i] - dLdq[i])
 
 EOM = sy.Matrix([EOM[0],EOM[1],EOM[2],EOM[3]])
+print()
+print(EOM)
 
 # Equation for SS
 # A_ss: alpha만 들어간 term / 4 * 4 크기를 갖는다.
@@ -157,23 +155,26 @@ print('A12 = ', sy.simplify(A_ss[2,3]))
 print('A21 = ', sy.simplify(A_ss[3,2]))
 print('A22 = ', sy.simplify(A_ss[3,3]),'\n')
 
-print('b1 = ', sy.simplify(b_ss[2]))
-print('b2 = ', sy.simplify(b_ss[3]),'\n')
+# print('b1 = ', sy.simplify(b_ss[2]))
+# print('b2 = ', sy.simplify(b_ss[3]),'\n')
 
-print('A_ss = np.array([[A11, A12], [A21,A22]])');
-print('b_ss = np.array([b1,b2])')
-print('invA_ss = np.linalg.inv(A_ss)')
-print('thetaddot = invA_ss.dot(b_ss)','\n\n')
+# print('A_ss = np.array([[A11, A12], [A21, A22]])');
+# print('b_ss = np.array([b1, b2])')
+# print('invA_ss = np.linalg.inv(A_ss)')
+# print('thetaddot = invA_ss.dot(b_ss)','\n\n')
 
-###############################
-# Heelstrike stuff starts now #
-###############################
+# ###############################
+# # Heelstrike stuff starts now #
+# ###############################
 
-r_C2 = sy.Matrix([C2[0],C2[1]])
-J_sw = r_C2.jacobian(q)
+# # 점 C2에 대한 Jacobian 계산
+# r_C2 = sy.Matrix([ C2[0], C2[1]])
+# J_sw = r_C2.jacobian(q)
 
-# J_n_sw = J_sw.subs([ (theta1,theta1_n), (theta2,theta2_n)])
-# A_n_hs = A_ss.subs([ (theta1,theta1_n), (theta2,theta2_n)])
+# # J_n_sw => 2 * 4 Matrix
+# # A_n_hs => 4 * 4 Matrix
+# J_n_sw = J_sw.subs([ (theta1, theta1_n), (theta2, theta2_n) ])
+# A_n_hs = A_ss.subs([ (theta1, theta1_n), (theta2, theta2_n) ])
 
 # #hs equations
 # print('J11 = ', sy.simplify(J_n_sw[0,0]))
@@ -186,6 +187,7 @@ J_sw = r_C2.jacobian(q)
 # print('J24 = ', sy.simplify(J_n_sw[1,3]),'\n')
 # print('J = np.array([[J11, J12, J13, J14], [J21,J22,J23,J24]])','\n');
 
+# # A_n_hs는 단순히 theta1, theta2 대신에 theta1_n, theta2_n 넣은 것
 # print('A11 = ', sy.simplify(A_n_hs[0,0]))
 # print('A12 = ', sy.simplify(A_n_hs[0,1]))
 # print('A13 = ', sy.simplify(A_n_hs[0,2]))
@@ -207,12 +209,29 @@ J_sw = r_C2.jacobian(q)
 # print('A44 = ', sy.simplify(A_n_hs[3,3]))
 # print('A_n_hs = np.array([[A11, A12, A13, A14], [A21, A22, A23, A24], [A31, A32, A33, A34], [A41, A42, A43, A44]])\n');
 
+# # # C2_dot의 state(-) => x_dot, y_dot, theta1_dot, theta2_dot 
+# # X_n_hs = sy.Matrix([0, 0, omega1_n, omega2_n])
+# # # (4 * 4) * (4 * 1) => (4 * 1)
+# # b_temp = A_n_hs * X_n_hs
+# # b_hs = sy.Matrix([ b_temp[0], b_temp[1], b_temp[2], b_temp[3], 0, 0 ])
+# # zeros_22 = sy.zeros(2,2)
+
+# # A_hs = sy.zeros(6,6)
+# # A_hs[:4, :4] = A_n_hs
+# # A_hs[:4, 4:] = J_n_sw.T
+# # A_hs[4:, :4] = J_n_sw
+
+# # invA_hs = (A_hs**-1) * b_hs
+
 # print('X_n_hs = np.array([0, 0, omega1_n, omega2_n])')
 # print('b_temp  = A_n_hs.dot(X_n_hs)')
 # print('b_hs = np.block([ b_temp, 0, 0 ])')
 # print('zeros_22 = np.zeros((2,2))')
 # print('A_hs = np.block([[A_n_hs, -np.transpose(J)] , [ J, zeros_22] ])')
 # print('invA_hs = np.linalg.inv(A_hs)')
+
 # print('X_hs = invA_hs.dot(b_hs)')
+
+# # switch condition
 # print('omega1 = X_hs[2] + X_hs[3]')
 # print('omega2 = -X_hs[3]')
