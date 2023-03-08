@@ -8,13 +8,22 @@ from scipy.optimize import fsolve
 
 class parameters:
     def __init__(self):
+        # g : gravity
+        # m : mass of leg
+        # M : mass of hip
+        # I : moment of inertia of hip
+        # l : length of leg
+        # c : distance from hip to center of mass of leg
+        # gam : ramp angle
+        # pause : pause between frames
+        # fps : frames per second
         self.g = 1
         self.m = 0.5
         self.M = 1
         self.I = 0.02
         self.l = 1.0
         self.c = 0.5
-        self.gam = 0.01
+        self.gam = 0.1
         self.pause = 0.01
         self.fps = 10
 
@@ -329,7 +338,11 @@ if __name__ == "__main__":
     z0 = np.array([q1,u1,q2,u2])
     #dz = fixedpt(z0,parms)
 
-    # 실패하지 않는 초기 조건을 찾아보자.
+    # 실패하지 않는 초기 조건을 찾아보자. Jacobian의 최대 eigenvalue를 통해 판별할 수 있다.
+    # 
+    # max(eig(J)) < 1 => stable
+    # max(eig(J)) = 1 => neutrally stable
+    # max(eig(J)) > 1 => unstable
     zstar = fsolve(fixedpt, z0, parms)
     print(zstar)
 
@@ -340,8 +353,8 @@ if __name__ == "__main__":
     print(f"eigVec {eigVec}")
     print(f"abs(eigVal) : {np.abs(eigVal)}")
 
-    t0 = 0;
-    steps = 10;
+    t0 = 0
+    steps = 10
     [z, t] = n_steps(t0, zstar, parms, steps)
 
     animate(t, z, parms)

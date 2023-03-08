@@ -1,10 +1,15 @@
 import sympy as sy
+import numpy as np 
 
 # define state variables
 # 각도, 각속도, 각가속도
 theta1, theta2 = sy.symbols('theta1 theta2', real=True)
 omega1, omega2 = sy.symbols('omega1 omega2', real=True)
 alpha1, alpha2 = sy.symbols('alpha1 alpha2', real=True)
+
+# 충돌 후의 각도와 각속도
+theta1_n, theta2_n = sy.symbols('theta1_n theta2_n', real=True)
+omega1_n, omega2_n = sy.symbols('omega1_n omega2_n', real=True)
 
 # 변위, 속도, 가속도
 x, y = sy.symbols('x y', real=True)
@@ -143,6 +148,10 @@ EOM = sy.Matrix(EOM)
 ##### Step 4. single_stance #####
 #################################
 
+# alpha1, alpha2를 얻어내는 것이 목표
+# 사실 이것을 위해서는 x,y관련된 term은 필요가 없다.
+# 따라서 EOM matrix의 오른쪽 하단 부분만 추출해서 사용한다.
+
 # Ax = b
 A_ss = EOM.jacobian(q_dd)
 b_ss = []
@@ -150,17 +159,87 @@ b_ss = []
 for i in range(len(q_dd)):
     b_ss.append(-1 * EOM[i].subs([(ax, 0), (ay, 0), (alpha1, 0), (alpha2, 0)]))
 
-print(f"A_ss[2,2]: {sy.simplify(A_ss[2,2])}")
-print(f"A_ss[2,3]: {sy.simplify(A_ss[2,3])}")
-print(f"A_ss[3,2]: {sy.simplify(A_ss[3,2])}")
-print(f"A_ss[3,3]: {sy.simplify(A_ss[3,3])}")
+# print(f"A_ss[2,2]: {sy.simplify(A_ss[2,2])}")
+# print(f"A_ss[2,3]: {sy.simplify(A_ss[2,3])}")
+# print(f"A_ss[3,2]: {sy.simplify(A_ss[3,2])}")
+# print(f"A_ss[3,3]: {sy.simplify(A_ss[3,3])}")
 
-# when real problem, use this
-print("A_ss = np.array([ [A22, A23], [A32, A33] ])")
-print("b_ss = np.array([ b2, b3 ])")
-print("q_dd = np.linalg.inv(A_ss).dot(b_ss)")
+# # when real problem, use this
+# print("A_ss = np.array([ [A22, A23], [A32, A33] ])")
+# print("b_ss = np.array([ b2, b3 ])")
+# print("q_dd = np.linalg.inv(A_ss).dot(b_ss)")
 
 ##############################
 ##### Step 5. Heelstrike #####
 ##############################
 
+# 강의노트를 참고하면, 구속 조건이 있을 때의 EOM
+# 즉 DAE를 세우는 방법을 알 수 있다.
+# 해당 식을 위해서는 C2의 Jacobian, Matrix M이 필요하다.
+# 목표는 strike 이후의 각도와 각속도를 얻어내는 것이다.
+
+C2_xy = sy.Matrix([ C2[0], C2[1] ]) 
+J_C2 = C2_xy.jacobian(q)
+
+A_n_hs = A_ss.subs([ (theta1, theta1_n), (theta2, theta2_n) ])
+J_n_sw = J_C2.subs([ (theta1, theta1_n), (theta2, theta2_n) ])
+
+# #hs equations
+# print('J11 = ', sy.simplify(J_n_sw[0,0]))
+# print('J12 = ', sy.simplify(J_n_sw[0,1]))
+# print('J13 = ', sy.simplify(J_n_sw[0,2]))
+# print('J14 = ', sy.simplify(J_n_sw[0,3]))
+# print('J21 = ', sy.simplify(J_n_sw[1,0]))
+# print('J22 = ', sy.simplify(J_n_sw[1,1]))
+# print('J23 = ', sy.simplify(J_n_sw[1,2]))
+# print('J24 = ', sy.simplify(J_n_sw[1,3]),'\n')
+
+# print('J = np.array([[J11, J12, J13, J14], [J21,J22,J23,J24]])','\n');
+
+# # A_n_hs는 단순히 theta1, theta2 대신에 theta1_n, theta2_n 넣은 것
+# print('A11 = ', sy.simplify(A_n_hs[0,0]))
+# print('A12 = ', sy.simplify(A_n_hs[0,1]))
+# print('A13 = ', sy.simplify(A_n_hs[0,2]))
+# print('A14 = ', sy.simplify(A_n_hs[0,3]))
+
+# print('A21 = ', sy.simplify(A_n_hs[1,0]))
+# print('A22 = ', sy.simplify(A_n_hs[1,1]))
+# print('A23 = ', sy.simplify(A_n_hs[1,2]))
+# print('A24 = ', sy.simplify(A_n_hs[1,3]))
+
+# print('A31 = ', sy.simplify(A_n_hs[2,0]))
+# print('A32 = ', sy.simplify(A_n_hs[2,1]))
+# print('A33 = ', sy.simplify(A_n_hs[2,2]))
+# print('A34 = ', sy.simplify(A_n_hs[2,3]))
+
+# print('A41 = ', sy.simplify(A_n_hs[3,0]))
+# print('A42 = ', sy.simplify(A_n_hs[3,1]))
+# print('A43 = ', sy.simplify(A_n_hs[3,2]))
+# print('A44 = ', sy.simplify(A_n_hs[3,3]))
+
+# Ax = b를 다시 세워보자. (여기서부터는 numpy가 사용된다.)
+#
+# z_d(+)와 I_c2가 목표이다.
+# [ [ M -J_c.T ], [ J_c.T 0 ] ] * [ z_d(+) I_c2 ] = [ M*z_d(-) 0 ]
+
+# 충돌 후 vx, vy는 0이며, 각속도는 구해야 한다.
+# M*z_d(-) => A_n_hs.dot([0, 0, omega1_n, omega2_n])
+
+"""
+A_hs = np.block([
+    [A_n_hs, -np.transpose(J_n_sw) ], 
+    [J_n_sw, np.zeros((2,2))] 
+])
+
+b_hs = np.block([
+    A_n_hs.dot([0, 0, omega1_n, omega2_n]),
+    np.zeros((2,1))
+])
+
+# x_hs => [vx(+), vy(+), omega1(+), omega2(+) ]
+x_hs = np.linalg.inv(A_hs).dot(b_hs)
+
+# switch condition
+omega1 = x_hs[2] + x_hs[3]
+omega2 = -x_hs[3]
+"""
