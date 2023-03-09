@@ -153,7 +153,7 @@ def one_step(z0, t0, params):
     ######### 여기까지 single stance #########
 
     # foot strike는 z_minus와 t_minus를 준비해서 footstrike 함수에 넣어준다.
-    print(sol.y_events[-1])
+
     z_minus = np.array(sol.y_events[-1][0,:])
     t_minus = sol.t_events[-1][0]
 
@@ -270,6 +270,12 @@ def animate(t,z,parms):
 
     plt.close()
 
+def fixedpt(z0, params):
+
+    z, t = one_step(z0, 0, params)
+
+    return z[-1,0]-z0[0], z[-1,1]-z0[1], z[-1,2]-z0[2], z[-1,3]-z0[3]
+
 if __name__=="__main__":
     
     params = Parameters()
@@ -283,11 +289,14 @@ if __name__=="__main__":
     # theta1 = 0.162597833780035
     # omega1 = -0.231869638058927
     # theta2 = -0.325195667560070
-    #
 
     t0 = 0
-    step_size = 2
+    step_size = 3
     z0 = np.array([theta1, omega1, theta2, omega2])
+
+    # 실패하지 않는 초기 조건을 찾아보자.
+    z_star = fsolve(fixedpt, z0, params)
     
-    z, t = n_steps(z0, t0, step_size, params)
+    # z, t = n_steps(z0, t0, step_size, params)
+    z, t = n_steps(z_star, t0, step_size, params)
     animate(t, z, params)
