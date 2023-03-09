@@ -296,9 +296,11 @@ def partialder(z0,parms):
 def plot(t, z):
     plt.figure(1)
     plt.subplot(2,1,1)
+
     plt.plot(t,z[:,0],'r--')
     plt.plot(t,z[:,2],'b')
     plt.ylabel('theta')
+    
     plt.subplot(2,1,2)
     plt.plot(t,z[:,1],'r--')
     plt.plot(t,z[:,3],'b')
@@ -309,6 +311,7 @@ def plot(t, z):
     plt.subplot(2,1,1)
     plt.plot(t,z[:,4],'b')
     plt.ylabel('xh')
+    
     plt.subplot(2,1,2)
     plt.plot(t,z[:,5],'b')
     plt.ylabel('yh')

@@ -1,10 +1,12 @@
 from matplotlib import pyplot as plt
 import numpy as np
+
 import math
 from scipy import interpolate
 from scipy.integrate import odeint
 from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
+from copy import deepcopy
 
 def cos(x):
     return np.cos(x)
@@ -214,9 +216,9 @@ def animate(t,z,parms):
     #interpolation
     data_pts = 1/parms.fps
     t_interp = np.arange(t[0],t[len(t)-1],data_pts)
+
     [m,n] = np.shape(z)
-    shape = (len(t_interp),n)
-    z_interp = np.zeros(shape)
+    z_interp = np.zeros((len(t_interp),n))
 
     for i in range(0,n):
         f = interpolate.interp1d(t, z[:,i])
@@ -225,7 +227,9 @@ def animate(t,z,parms):
     l = parms.l
     c = parms.c
 
-    min_xh = min(z[:,4]); max_xh = max(z[:,4]);
+    min_xh = min(z[:,4]) 
+    max_xh = max(z[:,4])
+
     dist_travelled = max_xh - min_xh;
     camera_rate = dist_travelled/len(t_interp);
 
@@ -235,8 +239,10 @@ def animate(t,z,parms):
     R1 = np.array([min_xh-l,0])
     R2 = np.array([max_xh+l,0])
 
+    # 바닥은 처음에 다 그려버린다.
     ramp, = plt.plot([R1[0], R2[0]],[R1[1], R2[1]],linewidth=5, color='black')
-    #plot
+    
+    # plot body
     for i in range(0,len(t_interp)):
         theta1 = z_interp[i,0];
         theta2 = z_interp[i,2];
@@ -255,6 +261,7 @@ def animate(t,z,parms):
         com1, = plt.plot(G1[0],G1[1],color='black',marker='o',markersize=5)
         com2, = plt.plot(G2[0],G2[1],color='black',marker='o',markersize=5)
 
+        # camera_rate 만큼 화면을 오른쪽으로 이동시킨다.
         window_xmin = window_xmin + camera_rate;
         window_xmax = window_xmax + camera_rate;
         plt.xlim(window_xmin,window_xmax)
@@ -276,11 +283,65 @@ def fixedpt(z0, params):
 
     return z[-1,0]-z0[0], z[-1,1]-z0[1], z[-1,2]-z0[2], z[-1,3]-z0[3]
 
+def partial_jacobian(z, params):
+
+    m = len(z)
+    J = np.zeros((m, m))
+
+    epsilon = 1e-5
+
+    for i in range(m):
+        # LIST IS IMMUATABLE
+        z_minus = deepcopy(z)
+        z_plus  = deepcopy(z)
+
+        z_minus[i] = z[i] - epsilon
+        z_plus[i]  = z[i] + epsilon
+
+        z_minus_result, _ = one_step(z_minus, 0, params)
+        z_plus_result, _  = one_step(z_plus, 0, params)
+
+        for j in range(m):
+            J[i,j] = (z_plus_result[-1,j] - z_minus_result[-1,j]) / (2 * epsilon)
+
+    return J
+
+def plot(t, z):
+    plt.figure(1)
+    plt.subplot(2,1,1)
+
+    plt.plot(t,z[:,0],'r--')
+    plt.plot(t,z[:,2],'b')
+    plt.ylabel('theta')
+    
+    plt.subplot(2,1,2)
+    plt.plot(t,z[:,1],'r--')
+    plt.plot(t,z[:,3],'b')
+    plt.ylabel('thetadot')
+    plt.xlabel('time')
+
+    plt.figure(2)
+    plt.subplot(2,1,1)
+    plt.plot(t,z[:,4],'b')
+    plt.ylabel('xh')
+    
+    plt.subplot(2,1,2)
+    plt.plot(t,z[:,5],'b')
+    plt.ylabel('yh')
+    plt.xlabel('time')
+
+    # plt.show()
+    plt.show(block=False)
+    plt.pause(3)
+    plt.close()
+
 if __name__=="__main__":
     
     params = Parameters()
 
-    # initial state
+    #####################################
+    ######## initial state ##############
+    #####################################
 
     # case 1
     theta1, omega1, theta2, omega2 = 0.2, -0.25, -0.4, 0.2
@@ -291,12 +352,24 @@ if __name__=="__main__":
     # theta2 = -0.325195667560070
 
     t0 = 0
-    step_size = 3
+    step_size = 10
     z0 = np.array([theta1, omega1, theta2, omega2])
 
-    # 실패하지 않는 초기 조건을 찾아보자.
+    ##########################################
+    ### 실패하지 않는 초기 조건을 찾아보자. ####
+    ##########################################
     z_star = fsolve(fixedpt, z0, params)
+
+    # 해당 초기 조건에 대한 stability를 확인해보자.
+    # Jacobian의 determinant를 통해 구해야 하는데, 
+    # Jacobian을 대수적으로 구할 수 없으므로 수치적으로 구해볼 것이다.
+    J_star = partial_jacobian(z_star, params)
+    eig_val, eig_vec = np.linalg.eig(J_star)
+    print(f"eigVal {eig_val}")
+    print(f"eigVec {eig_vec}")
+    print(f"max(abs(eigVal)) : {max(np.abs(eig_val))}")
     
-    # z, t = n_steps(z0, t0, step_size, params)
+    # # z, t = n_steps(z0, t0, step_size, params)
     z, t = n_steps(z_star, t0, step_size, params)
     animate(t, z, params)
+    plot(t, z)
