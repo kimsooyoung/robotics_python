@@ -112,6 +112,7 @@ def n_steps(t0,z0,parms,steps):
         zz_temp = np.zeros((mm,6))
 
         for j in range(0,mm):
+            # xh, yh : position of hip
             xh = xh_start + l*sin(z_temp[0,0])-l*sin(z_temp[j,0]);
             yh = l*cos(z_temp[j,0]);
             zz_temp[j,:] = np.append(z_temp[j,:],np.array([xh,yh]))
@@ -142,7 +143,6 @@ def collision(t, z, M,m,I,l,c,g,gam):
         gstop = theta2 + 2*theta1
 
     return gstop
-
 
 def footstrike(t, z, parms):
     theta1_n,omega1_n,theta2_n,omega2_n = z
@@ -228,20 +228,19 @@ def one_step(t0,z0,parms):
 
     #get state before footstrike using events
     t_end = tt_last_event[0]
-    theta1, omega1, theta2, omega2 = yy_last_event[0,:]
-    zminus = np.array([theta1, omega1, theta2, omega2 ])
+    # theta1, omega1, theta2, omega2 = yy_last_event[0,:]
+    zminus = np.array(yy_last_event[0,:])
 
     #return state after footstrike
     zplus = footstrike(t_end,zminus,parms)
 
     #replace last entry in z and t
+    
+    # 이거 안하면 시뮬에서 이상하게 보인다.
     t[n-1] = t_end
-    z[n-1] = zplus
-    # z[n-1,0] = zplus[0];
-    # z[n-1,1] = zplus[1];
-    # z[n-1,2] = zplus[2];
-    # z[n-1,3] = zplus[3];
 
+    z[n-1] = zplus
+    
     return z,t
 
 def single_stance(t, z, M,m,I,l,c,g,gam):
@@ -356,6 +355,7 @@ if __name__ == "__main__":
     t0 = 0
     steps = 10
     [z, t] = n_steps(t0, zstar, parms, steps)
+    # [z, t] = n_steps(t0, z0, parms, steps)
 
     animate(t, z, parms)
-    plot(t, z)
+    # plot(t, z)
