@@ -57,9 +57,7 @@ def one_bounce(t0, z0, params):
 
     m, n = sol.y.shape
     z = np.zeros((n, m))
-
-    for i in range(0, m):
-        z[:, i] = sol.y[i, :]
+    z = sol.y.T
 
     z[n-1, 3] *= -1 * params.e
 
@@ -67,30 +65,22 @@ def one_bounce(t0, z0, params):
 
 def simulation(t0, t_end, z0, params):
 
-    t = t0
-    z = z0
-
-    output_t = np.array([])
-    output_z = np.array([])
+    t = np.array([t0])
+    z = np.zeros((1, 4))
 
     i = 0
-    while t <= t_end:
-        t_temp, z_temp = one_bounce(t, z, params)
+    while t0 <= t_end:
+        t_temp, z_temp = one_bounce(t0, z0, params)
 
-        if i == 0:
-            output_t = np.concatenate(([t], t_temp[1:]), axis=0)
-            output_z = np.concatenate(([z], z_temp[1:,:]), axis=0)
-        else:
-            output_t = np.concatenate((output_t, t_temp[1:]), axis=0)
-            output_z = np.concatenate((output_z, z_temp[1:,:]), axis=0)
+        z = np.concatenate((z, z_temp), axis=0)
+        t = np.concatenate((t, t_temp), axis=0)
 
-        t = t_temp[-1]
-        z = z_temp[-1]
+        t0 = t_temp[-1]
+        z0 = z_temp[-1]
         
         i += 1
 
-    return output_t, output_z
-
+    return t, z
 
 def animate(t,z,parms):
     #interpolation

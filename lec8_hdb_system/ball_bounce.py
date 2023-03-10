@@ -65,20 +65,16 @@ def contact(t,z,m,g,c):
 
 def simulation(t0, z0):
 
-    t = t0
-    z = z0
+    t = np.array([t0])
+    z = np.zeros((1, 4))
 
     # bouncing iteration 
     i = 0
     while (t0 <= tend):
-    # for i in range(0,3):
         [t_temp, z_temp] = one_bounce(t0, z0, parms)
-        if i==0:
-            z = np.concatenate(([z], z_temp[1:,:]), axis=0)
-            t = np.concatenate(([t], t_temp[1:]), axis=0)
-        else:
-            z = np.concatenate((z, z_temp[1:,:]), axis=0)
-            t = np.concatenate((t, t_temp[1:]), axis=0)
+
+        z = np.concatenate((z, z_temp), axis=0)
+        t = np.concatenate((t, t_temp), axis=0)
 
         z0 = z_temp[-1]
         t0 = t_temp[-1]
