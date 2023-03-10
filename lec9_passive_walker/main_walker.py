@@ -223,8 +223,9 @@ def one_step(t0,z0,parms):
     yy_last_event = sol.y_events[mm-1]
 
     #save data in z
-    for i in range(0,m):
-        z[:,i] = sol.y[i,:]
+    z = sol.y.T
+    # for i in range(0,m):
+    #     z[:,i] = sol.y[i,:]
 
     #get state before footstrike using events
     t_end = tt_last_event[0]

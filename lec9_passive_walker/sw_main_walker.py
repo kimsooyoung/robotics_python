@@ -148,9 +148,7 @@ def one_step(z0, t0, params):
     # m : 4 / n : 1001
     m, n = np.shape(sol.y)
     z = np.zeros((n, m))
-
-    for i in range(m):
-        z[:,i] = sol.y[i,:]
+    z = sol.y.T
 
     ######### 여기까지 single stance #########
 
