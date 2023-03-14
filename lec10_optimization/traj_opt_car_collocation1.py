@@ -1,10 +1,7 @@
 from matplotlib import pyplot as plt
-import numpy as np
-import math
-from scipy import interpolate
-from scipy.integrate import odeint
-import random
 import scipy.optimize as opt
+import numpy as np
+
 from copy import deepcopy
 
 class parameters:
@@ -45,10 +42,19 @@ def nonlinear_fn(x):
 
     ceq = [0] * (2*N + 4)
     
+    # boundary conditions
+    # pos(0) : 0
+    # vel(0) : 0
+    # pos(N + 1) : D
+    # vel(N + 1) : 0
     ceq[0] = pos[0]
     ceq[1] = vel[0]
     ceq[2] = pos[N] - D
     ceq[3] = vel[N]
+    
+    # defect constraints
+    # pos(i+1) - pos(i) - vel(i)*dt = 0
+    # vel(i+1) - vel(i) - 0.5*(u(i)+u(i+1))*dt = 0    
     for i in range(0,N):
        ceq[i+4] = defect_pos[i]
        ceq[i+N+4] = defect_vel[i]
@@ -78,11 +84,8 @@ def plot(T, pos, vel, u, N):
     plt.pause(10)
     plt.close()
 
-
 if __name__ == "__main__":
 
-    random.seed(1)
-    
     # define parameters
     parms = parameters()
     N = parms.N
@@ -121,6 +124,8 @@ if __name__ == "__main__":
         x0[i] = u_opt[i-1-N-1-N-1]
         x_min[i] = u_min
         x_max[i] = u_max
+    print(x_min)
+    
 
     limits = opt.Bounds(x_min, x_max)
 
