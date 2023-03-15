@@ -4,124 +4,161 @@ import math
 from scipy import interpolate
 from scipy.integrate import odeint
 import random
+
 import scipy.optimize as opt
 
 class parameters:
     def __init__(self):
         self.D = 5
         self.N = 5
+        # z0 = [x0, x0_dot]
         self.z0 = np.array([0,0])
 
+def cost(x):
+    return x[0]
+
+# t는 t1 ~ t2 사이의 값이 된다.
+# t1, t2 사이로 u1, u2를 interpolation 시킨 뒤
+# 특정 t에 대한 u를 구한다.
+# 1차 함수를 만들고 특정 점에 대한 값을 return 하는 것임
+# simulator단에서는 u_opt의 값을 최적화해줄 것이다.
+# shoothing method이기 때문에 car함수에 EOM이 들어가는 것이 아니라
+# interpolation이 들어가는 것임!
 def car(z, t, t1,t2,u1,u2):
 
     xdot = z[1];
 
     t_opt = np.array([t1,t2])
     u_opt = np.array([u1,u2])
-    if (t>t2 or t<= t1): #needed because odeint goes outside t bounds
+
+    #needed because odeint goes outside t bounds
+    if (t > t2 or t <= t1):
         u = 0
     else:
         f = interpolate.interp1d(t_opt, u_opt)
         u = f(t)
 
+    # print(f"t: {t}")
+    # print(f"t_opt: {t_opt}")
+    # print(f"u_opt: {u_opt}")
+    # print(f"u: {u}")
+
+    # z0가 [ x, xdot ]이므로 output은 [ xdot, u ]이다.
     dzdt = np.array([xdot, u]);
     return dzdt
 
+# [N+1, 2] 크기의 z를 채워넣는 시뮬레이터
+# car라는 odeint를 통해 새로운 z를 얻어내고 
+# 해당 작업을 N번 반복 (z[0]는 초기값이다.)
 def simulator(x,z0,N):
-    T = x[0];
-    for i in range(0,N+1):
-        u_opt[i] = x[i+1]
+
+    # x = [ T, N+1개 u ]
+    T = x[0]
+
+    u_opt = x[1:]
+    print(f"u_opt: {u_opt}")
 
     t_opt = np.linspace(0,T,N+1)
 
-    shape = (N+1,2)
-    zz = np.zeros(shape)
-    zz[0,0] = z0[0]
-    zz[0,1] = z0[1]
-    tt = t_opt
-    uu = u_opt
+    zz = np.zeros((N+1,2))
+    zz[0, 0], zz[0, 1] = z0[0], z0[1]
+
     for i in range(0,N): #goes from 0 to N
-        args = (t_opt[i],t_opt[i+1],u_opt[i],u_opt[i+1])
-        z = odeint(car, z0, np.array([t_opt[i],t_opt[i+1]]), args,rtol=1e-12,atol=1e-12)
+        args = (t_opt[i], t_opt[i+1], u_opt[i], u_opt[i+1])
+        # t가 size 2이기 때문에 z는 2*2 행렬이 된다.
+        z = odeint(
+            car, z0, np.array([t_opt[i], t_opt[i+1]]), 
+            args, rtol=1e-12, atol=1e-12
+        )
         z0 = np.array([z[1,0], z[1,1]]);
         zz[i+1,0] = z0[0]
         zz[i+1,1] = z0[1]
 
-    return tt,zz,uu
+    return t_opt, zz, u_opt
 
-def cost(x):
-    return x[0]
 
 def nonlinear_fn(x):
     parms = parameters()
-    D = parms.D
-    z0 = parms.z0
+
+    # z0는 시뮬레이터에 들어가는 초기값으로 constraints에서 사용되지 않음
+    D, z0, N = parms.D, parms.z0, parms.N
+
+    # zz : [N+1, 2]
+    [tt, zz, uu] = simulator(x, z0, N);
+
+    x_end = zz[N, 0] - D
+    v_end = zz[N, 1]
+    
+    return [ x_end, v_end ]
+
+def plot(tt, zz, uu):
+
+    plt.figure(1)
+
+    plt.subplot(3,1,1)
+    plt.plot(tt,zz[:,0])
+    plt.ylabel("x")
+    
+    plt.subplot(3,1,2)
+    plt.plot(tt,zz[:,1])
+    plt.ylabel("xdot")
+    
+    plt.subplot(3,1,3)
+    plt.plot(tt,uu)
+    plt.xlabel("t")
+    plt.ylabel("u")
+
+    # plt.show()
+    plt.show(block=False)
+    plt.pause(10)
+    plt.close()
+
+if __name__=="__main__":
+
+    random.seed(1)
+
+    parms = parameters()
     N = parms.N
 
-    [tt,zz,uu] = simulator(x,z0,N);
-    x_end = zz[N,0]-D;
-    v_end = zz[N,1];
-    return [x_end, v_end ]
+    T_min, T_max =  1, 5
+    u_min, u_max = -5, 5
 
-random.seed(1)
-parms = parameters()
-N = parms.N
+    T_opt = 2
+    u_opt = [0] * (N+1) #initialize u to zeros
 
-T_min = 1; T_max = 5;
-u_min = -5; u_max = 5;
+    for i in range(0,N+1):
+        u_opt[i] = u_min + (u_max-u_min)*random.random();
 
-T_opt = 2
-u_opt = [0] * (N+1) #initialize u to zeros
-for i in range(0,N+1):
-    u_opt[i] = u_min + (u_max-u_min)*random.random();
+    # x0 : [ T, N+1 u's ]
+    x0 = [0] * (N+2)
+    x_min = [0] * (N+2)
+    x_max = [0] * (N+2)
 
-x0 = [0] * (N+2)
-x_min = [0] * (N+2)
-x_max = [0] * (N+2)
-x0[0] = T_opt
-x_min[0] = T_min
-x_max[0] = T_max
-for i in range(1,N+2):
-    x0[i] = u_opt[i-1]
-    x_min[i] = u_min
-    x_max[i] = u_max
+    x0[0], x_min[0], x_max[0]  = T_opt, T_min, T_max
 
-limits = opt.Bounds(x_min,
-                    x_max)
+    for i in range(1,N+2):
+        x0[i] = u_opt[i-1]
+        x_min[i] = u_min
+        x_max[i] = u_max
 
-eq_cons = {'type': 'eq',
-           'fun' : nonlinear_fn
-           }
+    limits = opt.Bounds(x_min, x_max)
 
-res = opt.minimize(cost, x0, method='SLSQP',
-               constraints=[eq_cons], options={'ftol': 1e-6, 'disp': True, 'maxiter':500},
-               bounds=limits)
+    eq_cons = {
+        'type': 'eq',
+        'fun' : nonlinear_fn
+    }
 
-print(x0)
-x = res.x
-print(x)
-print(res.success)
-print(res.message)
-print(res.status)
+    res = opt.minimize(cost, x0, method='SLSQP',
+                constraints=[eq_cons], options={'ftol': 1e-6, 'disp': True, 'maxiter':500},
+                bounds=limits)
 
-#testing
-z0 = parms.z0
-[tt,zz,uu] = simulator(x,z0,N) #test
-print(zz[N,0])
-print(zz[N,1])
+    print(x0)
+    x = res.x
 
-plt.figure(1)
-plt.subplot(3,1,1)
-plt.plot(tt,zz[:,0])
-plt.ylabel("x")
-plt.subplot(3,1,2)
-plt.plot(tt,zz[:,1])
-plt.ylabel("xdot")
-plt.subplot(3,1,3)
-plt.plot(tt,uu)
-plt.xlabel("t")
-plt.ylabel("u")
-# plt.show()
-plt.show(block=False)
-plt.pause(10)
-plt.close()
+    #testing
+    z0 = parms.z0
+    [tt, zz, uu] = simulator(x, z0, N)
+    print(zz[N,0])
+    print(zz[N,1])
+
+    plot(tt, zz, uu)
