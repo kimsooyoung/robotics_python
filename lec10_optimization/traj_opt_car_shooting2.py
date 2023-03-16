@@ -21,8 +21,9 @@ def car(z, t, t1,t2,u1,u2):
     if (t>t2 or t<= t1): #needed because odeint goes outside t bounds
         u = 0
     else:
-        f = interpolate.interp1d(t_opt, u_opt)
-        u = f(t)
+        u = u1 + (u2-u1)/(t2-t1)*(t-t1)
+        # f = interpolate.interp1d(t_opt, u_opt)
+        # u = f(t)
 
     dzdt = np.array([xdot, u]);
     return dzdt

@@ -35,17 +35,14 @@ def car(z, t, t1,t2,u1,u2):
     if (t > t2 or t <= t1):
         u = 0
     else:
-        f = interpolate.interp1d(t_opt, u_opt)
-        u = f(t)
-
-    # print(f"t: {t}")
-    # print(f"t_opt: {t_opt}")
-    # print(f"u_opt: {u_opt}")
-    # print(f"u: {u}")
-
+        # f = interpolate.interp1d(t_opt, u_opt)
+        # u = f(t)
+        
+        # 이게 더 빠르다. (일차함수)
+        u = u1 + (u2-u1)/(t2-t1)*(t-t1)
+        
     # z0가 [ x, xdot ]이므로 output은 [ xdot, u ]이다.
-    dzdt = np.array([xdot, u]);
-    return dzdt
+    return xdot, u
 
 # [N+1, 2] 크기의 z를 채워넣는 시뮬레이터
 # car라는 odeint를 통해 새로운 z를 얻어내고 
@@ -65,17 +62,15 @@ def simulator(x,z0,N):
 
     for i in range(0,N): #goes from 0 to N
         args = (t_opt[i], t_opt[i+1], u_opt[i], u_opt[i+1])
-        # t가 size 2이기 때문에 z는 2*2 행렬이 된다.
+        # res: input으로 시간 2개, state 2개가 들어가므로
+        # output은 2*2 행렬이다.
         z = odeint(
-            car, z0, np.array([t_opt[i], t_opt[i+1]]), 
+            car, zz[i], np.array([t_opt[i], t_opt[i+1]]), 
             args, rtol=1e-12, atol=1e-12
         )
-        z0 = np.array([z[1,0], z[1,1]]);
-        zz[i+1,0] = z0[0]
-        zz[i+1,1] = z0[1]
-
+        zz[i+1] = z[1]
+        
     return t_opt, zz, u_opt
-
 
 def nonlinear_fn(x):
     parms = parameters()
@@ -84,7 +79,7 @@ def nonlinear_fn(x):
     D, z0, N = parms.D, parms.z0, parms.N
 
     # zz : [N+1, 2]
-    [tt, zz, uu] = simulator(x, z0, N);
+    [tt, zz, uu] = simulator(x, z0, N)
 
     x_end = zz[N, 0] - D
     v_end = zz[N, 1]
@@ -120,19 +115,21 @@ if __name__=="__main__":
     parms = parameters()
     N = parms.N
 
+    # x0, x_min, x_max 설정
     T_min, T_max =  1, 5
     u_min, u_max = -5, 5
 
     T_opt = 2
-    u_opt = [0] * (N+1) #initialize u to zeros
+    u_opt = np.zeros(N+1) #initialize u to zeros
 
-    for i in range(0,N+1):
-        u_opt[i] = u_min + (u_max-u_min)*random.random();
+    # 사실 여기 없어도 된다.
+    # for i in range(0,N+1):
+    #     u_opt[i] = u_min + (u_max-u_min)*random.random();
 
     # x0 : [ T, N+1 u's ]
-    x0 = [0] * (N+2)
-    x_min = [0] * (N+2)
-    x_max = [0] * (N+2)
+    x0 = np.zeros(N+2)
+    x_min = np.zeros(N+2)
+    x_max = np.zeros(N+2)
 
     x0[0], x_min[0], x_max[0]  = T_opt, T_min, T_max
 
