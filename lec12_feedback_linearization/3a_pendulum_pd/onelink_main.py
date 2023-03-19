@@ -15,11 +15,10 @@ class parameters:
         self.m1 = 1
         self.g = 10
         self.l1 = 1
-        # self.I1 = 0.5
         self.I1 = 1/12 * (self.m1 * self.l1**2)
         
         self.kp1 = 200
-        self.kd1 = 40
+        self.kd1 = 2 * np.sqrt(self.kp1)
         
         self.theta_des = np.pi/2
         
@@ -29,11 +28,12 @@ class parameters:
 def animate(t,z,parms):
     #interpolation
     t_interp = np.arange(t[0],t[len(t)-1],1/parms.fps)
+    # N 2
     m, n = np.shape(z)
     shape = (len(t_interp),n)
     z_interp = np.zeros(shape)
 
-    for i in range(0,n-1):
+    for i in range(n):
         f = interpolate.interp1d(t, z[:,i])
         z_interp[:,i] = f(t_interp)
 
@@ -104,7 +104,7 @@ if __name__=="__main__":
     # disturbances
     T1_mean, T1_dev = 0, 40 * 0.1
     theta1_mean, theta1_dev = 0, 0.0    
-    theta1dot_mean, theta1dot_dev = 0, 0.5 * 1
+    theta1dot_mean, theta1dot_dev = 0, 0.5 * 0
 
     #time
     t0, tend = 0, 2
@@ -132,14 +132,17 @@ if __name__=="__main__":
         t_temp = np.array([t[i], t[i+1]])
         z_temp = odeint(onelink_rhs, z0, t_temp, args=all_parms)
         
+        # 실제 노이즈는 odeint단에서 추가된다.
+        # 우리가 로봇을 실제 움직일 때도 
+        # 토크는 제대로 주는데 로봇이 그대로 안움직이니까
         tau_temp = control(
             z0[0], parms.theta_des, 
             z0[1], parms.kp1, parms.kd1
         )
         
         z0 = np.array([
-            z_temp[1,0]+np.random.normal(theta1_mean, theta1_dev),
-            z_temp[1,1]+np.random.normal(theta1dot_mean, theta1dot_dev)
+            z_temp[1,0]+ np.random.normal(theta1_mean, theta1_dev),
+            z_temp[1,1]+ np.random.normal(theta1dot_mean, theta1dot_dev)
         ])
         
         z[i+1] = z0

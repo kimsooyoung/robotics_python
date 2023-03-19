@@ -14,7 +14,7 @@ class Parameters():
         
         self.I = 1/12 * (self.m * self.l**2)
         
-        self.kp = 200
+        self.kp = 100
         # kd는 운동 방정식 구한 후에 계산
         # 그런데 운동방정식이 비선형이라... 근의 공식이 안됨
         # cos을 테일러 전개하면 첫 항이 1이므로, k=0이라고 해보자.
@@ -24,14 +24,18 @@ class Parameters():
          
         self.pause = 0.001
         self.fps = 30
+        
+        self.tau_noise_mean, self.tau_noise_std = 0, 0.1 * 20
+        self.theta_noise_mean, self.theta_noise_std = 0, 0.01 * 5
+        self.omega_noise_mean, self.omega_noise_std = 0, 0.1 * 0.0
 
 def get_tau(theta, omega, kp, kd, q_des):
-    return -kp * (theta - q_des) - kd * omega 
+    return -kp * (theta - q_des) - kd * omega
 
-def eom(q0, t, m, l, g, I, kp, kd, q_des):
+def eom(q0, t, m, l, g, I, kp, kd, q_des, tau_disturb):
     
     theta, omega = q0
-    tau = get_tau(theta, omega, kp, kd, q_des)
+    tau = get_tau(theta, omega, kp, kd, q_des) - tau_disturb
     
     angular_acc = ( tau - (m*g*l*np.cos(theta))/2 ) / (I + m*l**2/4 )
     return np.array([omega, angular_acc])
@@ -63,7 +67,6 @@ def animate(t, z, params):
         pendulum.remove()
     
     plt.close()
-
 
 def plot(t, z, tau, params):
     
@@ -101,6 +104,9 @@ if __name__=="__main__":
     
     m, l, g, I = params.m, params.l, params.g, params.I
     kp, kd, q_des = params.kp, params.kd, params.q_des
+    t_mean, t_std = params.tau_noise_mean, params.tau_noise_std
+    theta_mean, theta_std = params.theta_noise_mean, params.theta_noise_std
+    omega_mean, omega_std = params.omega_noise_mean, params.omega_noise_std
     
     z = np.zeros((N, 2))
     tau = np.zeros((N, 1))
@@ -110,14 +116,20 @@ if __name__=="__main__":
 
     for i in range(len(t)-1):
         
-        t_temp = np.array([t[i], t[i+1]])
+        time_temp = np.array([t[i], t[i+1]])
+        tau_disturb = np.random.normal(t_mean, t_std)
+        
         result = odeint(
-            eom, z0, t, args=(m, l, g, I, kp, kd, q_des)
+            eom, z0, time_temp, args=(m, l, g, I, kp, kd, q_des, tau_disturb)
         )
         
-        z[i+1] = result[1]
+        z0 = np.array([
+            result[1, 0]+ np.random.normal(theta_mean, theta_std),
+            result[1, 1]+ np.random.normal(omega_mean, omega_std)
+        ])
+        
+        z[i+1] = z0
         tau[i+1] = get_tau(z0[0], z0[1], kp, kd, q_des)
-        z0 = result[1]
         
     animate(t, z, params)
     plot(t, z, tau, params)
