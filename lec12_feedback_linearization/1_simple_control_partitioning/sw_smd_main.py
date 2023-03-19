@@ -50,6 +50,3 @@ if __name__=="__main__":
     result = odeint(smd_rhs, z0, t, args=(m, c, k, kp, kd))
     
     plot(t, result)
-    
-    
-    
