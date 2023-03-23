@@ -68,7 +68,7 @@ def onelink_rhs(z,t,m1,I1,l1,g,kp1,kd1,theta1_ref,theta1dot_ref,theta1ddot_ref,T
 
     return zdot
 
-def plot(t, z, theta_ref, T):
+def plot(t, z, theta_ref, thetadot_ref, T):
 
     plt.figure(1)
 
@@ -165,4 +165,4 @@ if __name__=="__main__":
 
 
     animate(t,z,parms)
-    plot(t, z, theta_ref, T)
+    plot(t, z, theta_ref, thetadot_ref, T)
