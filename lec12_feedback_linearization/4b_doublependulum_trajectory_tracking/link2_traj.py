@@ -26,6 +26,10 @@ theta1ddot = sy.diff(theta1dot,t);
 theta2ddot = sy.diff(theta2dot,t);
 
 # %various eqns
+# theta1(0) = 0 / theta1(1.5) = -0.5*pi+0.5
+# theta2(1.5) = -0.5*pi+0.5 / theta2(3) = 0
+# omega1(0) = 0 / omega2(3) = 0
+# omega1(1.5) = omega2(1.5) / ang_acc1(1.5) = ang_acc2(1.5)
 eqn1 = theta1.subs(t,t1_0) -theta1_0;
 eqn2 = theta1.subs(t,t1_N) -theta1_N;
 eqn3 = theta2.subs(t,t2_0) -theta2_0;

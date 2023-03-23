@@ -11,12 +11,14 @@ t1_N = 3.0; #final time
 theta1_0 = -0.5*pi-0.5; #initial position
 theta1_N = -0.5*pi+0.5; #final position
 
-
 theta1 = a10+a11*t+a12*t**2+a13*t**3;
 theta1dot = sy.diff(theta1,t);
 theta1ddot = sy.diff(theta1dot,t);
 
 # %various eqns
+# 시간 나누지 않아서 equ수가 작다.
+# theta(0) = -0.5*pi-0.5 / theta(3) = -0.5*pi+0.5
+# omega(0) = 0 / omega(3) = 0
 eqn1 = theta1.subs(t,t1_0) -theta1_0;
 eqn2 = theta1.subs(t,t1_N) -theta1_N;
 eqn3 = theta1dot.subs(t,t1_0)-0;
