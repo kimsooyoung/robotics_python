@@ -28,18 +28,21 @@ class parameters:
         self.kp2 = 100
         self.kd2 = 2*np.sqrt(self.kp2)
 
+# traj 같은데...
 def figure8(x0,y0,t):
 
     N = len(t)-1
     T = t[N];
     A = 0.5;
     B = A;
+    
     a = 2;
     b = 1;
     pi = np.pi
-    tau = 2*pi*(-15*(t/T)**4+6*(t/T)**5+10*(t/T)**3);
-    taudot = 2*pi*(-15*4*(1/T)*(t/T)**3+6*5*(1/T)*(t/T)**4+10*3*(1/T)*(t/T)**2);
-    tauddot = 2*pi*(-15*4*3*(1/T)**2*(t/T)**2 + 6*5*4*(1/T)**2*(t/T)**3+10*3*2*(1/T)**2*(t/T));
+    # 이게 뭘까?
+    tau = 2*pi*(-15*(t/T)**4 + 6*(t/T)**5 + 10*(t/T)**3);
+    taudot = 2*pi*(-15*4*(1/T)*(t/T)**3 + 6*5*(1/T)*(t/T)**4 + 10*3*(1/T)*(t/T)**2);
+    tauddot = 2*pi*(-15*4*3*(1/T)**2*(t/T)**2 + 6*5*4*(1/T)**2*(t/T)**3 + 10*3*2*(1/T)**2*(t/T));
 
     x = x0+A*sin(a*tau);
     y = y0+B*cos(b*tau);
