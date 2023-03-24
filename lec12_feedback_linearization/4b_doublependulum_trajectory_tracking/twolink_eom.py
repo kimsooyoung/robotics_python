@@ -26,6 +26,7 @@ C1 = sy.Matrix([c1, 0, 1])
 G1 = H01*C1
 C2 = sy.Matrix([c2, 0, 1])
 G2 = H02*C2
+# print(G2)
 
 x_G1 = sy.Matrix([G1[0]])
 y_G1 = sy.Matrix([G1[1]])
@@ -42,12 +43,15 @@ v_G2_y = y_G2.jacobian(q)*qdot
 v_G1 = sy.Matrix([v_G1_x,v_G1_y])
 v_G2 = sy.Matrix([v_G2_x,v_G2_y])
 
+# print(sy.simplify(v_G1))
+# print(sy.simplify(v_G2))
+
 #2) Lagrangian
 T = 0.5*m1*v_G1.dot(v_G1) + 0.5*m2*v_G2.dot(v_G2) + \
     0.5*I1*theta1dot*theta1dot + 0.5*I2*(theta1dot+theta2dot)*(theta1dot+theta2dot)
 V = m1*g*G1[1] + m2*g*G2[1]
 L = T-V
-# print(L)
+# print(sy.simplify(L))
 # print(type(T))
 # print(type(V))
 # print(type(L))
@@ -69,9 +73,9 @@ for i in range(0,mm):
     EOM.append(ddt_dLdqdot[i] - dLdq[i])
 
 EOM = sy.Matrix([EOM[0],EOM[1]])
-# print(len(EOM))
-# print(type(qddot))
-# print(type(EOM))
+# print(sy.simplify(EOM))
+# print()
+
 M = EOM.jacobian(qddot)
 N1 = EOM[0].subs([ (theta1ddot,0), (theta2ddot,0)])
 N2 = EOM[1].subs([ (theta1ddot,0), (theta2ddot,0)])

@@ -28,7 +28,10 @@ class parameters:
         self.kp2 = 100
         self.kd2 = 2*np.sqrt(self.kp2)
 
-# traj 같은데...
+# 말 그대로 8자 traj를 그리는 부분이다.
+# 이전 traj와 달리, point-to-point가 아닌, 
+# 시간에 따른 위치를 계산하는 것이다.
+# 이걸 point-to-point로 바꿔보는 것도 좋은 예시가 될 듯!
 def figure8(x0,y0,t):
 
     N = len(t)-1
