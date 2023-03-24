@@ -56,20 +56,19 @@ def figure8(x0,y0,t):
 
     return x,y,xdot,ydot,xddot,yddot
 
-def twolink_end_effector_position(theta,fsolve_parms):
+# forward kinematics이다.
+def twolink_end_effector_position(theta, fsolve_parms):
 
-    theta1 = theta[0]
-    theta2 = theta[1]
-    l1 = fsolve_parms[0]
-    l2 = fsolve_parms[1]
-    xref = fsolve_parms[2]
-    yref = fsolve_parms[3]
+    theta1, theta2 = theta
+    l1, l2, xref, yref = fsolve_parms
+
     P = np.array([l1*cos(theta1), l1*sin(theta1)])
     Q = P + np.array([l2*cos(theta1+theta2),l2*sin(theta1+theta2)])
 
     x = Q[0]
     y = Q[1]
-    return x-xref,y-yref
+
+    return x - xref,y - yref
 
 def jacobian_endeffector(theta1,theta2,l1,l2):
 
@@ -106,15 +105,17 @@ def twolink_traj(parms,h,t_0,t_N):
     theta1ddot_ref = np.zeros((N,1))
     theta2ddot_ref = np.zeros((N,1))
 
-    l1 = parms.l1;
-    l2 = parms.l2;
+    l1 = parms.l1
+    l2 = parms.l2
+
     theta_guess = np.array([0.01, 0.5])
+
     for i in range(0,N):
         fsolve_parms = [l1,l2, xd[i], yd[i]]
         theta = fsolve(twolink_end_effector_position,theta_guess,fsolve_parms)
-        theta1_ref[i] = theta[0]
-        theta2_ref[i] = theta[1]
         theta_guess = np.array([theta[0], theta[1]])
+        
+        theta1_ref[i], theta2_ref[i] = theta
         J = jacobian_endeffector(theta[0],theta[1],l1,l2)
 
         Xdot = np.array( [xd_dot[i], yd_dot[i]]);
@@ -122,14 +123,15 @@ def twolink_traj(parms,h,t_0,t_N):
 
         Jinv = np.linalg.inv(J)
         thetadot = Jinv.dot(Xdot)
-        theta1dot_ref[i] = thetadot[0]
-        theta2dot_ref[i] = thetadot[1]
+        theta1dot_ref[i], theta2dot_ref[i] = thetadot
 
         Jdot = jacobiandot_endeffector(theta[0],theta[1],thetadot[0],thetadot[1],l1,l2)
-        thetaddot = Jinv.dot(Xddot) - Jdot.dot(Xdot)
-        theta1ddot_ref[i] = thetaddot[0]
-        theta2ddot_ref[i] = thetaddot[1]
-
+        # 이거 맞니?
+        # x_d = J * q_d
+        # x_dd = J * q_dd + Jdot * q_d
+        # q_dd = Jinv * (x_dd - Jdot * q_d)
+        # theta1ddot_ref[i], theta2ddot_ref[i] = Jinv.dot(Xddot) - Jdot.dot(Xdot)
+        theta1ddot_ref[i], theta2ddot_ref[i] = Jinv.dot(Xddot - Jdot.dot(Xdot))
 
     return t, theta1_ref,theta1dot_ref,theta1ddot_ref, \
         theta2_ref,theta2dot_ref,theta2ddot_ref
