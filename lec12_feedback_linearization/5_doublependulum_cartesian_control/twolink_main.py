@@ -266,127 +266,112 @@ def twolink_rhs(z,t,m1,I1,l1,m2,I2,l2,g,kp1,kd1,kp2,kd2, \
 
     return zdot
 
-#parameters
-parms = parameters()
+def plot(t,z,theta1_ref,theta1dot_ref,theta2_ref,theta2dot_ref):
 
-h = 0.005;
-# pi = np.pi;
-t0 = 0;
-tN = 5;
-t, theta1_ref,theta1dot_ref,theta1ddot_ref, \
-theta2_ref,theta2dot_ref,theta2ddot_ref  = twolink_traj(parms,h,t0,tN)
+    plt.figure(1)
+    plt.subplot(2,1,1)
+    plt.plot(t,z[:,0])
+    plt.plot(t,theta1_ref,'r-.');
+    plt.ylabel("theta1")
+    plt.title("Plot of position vs. time")
+    plt.subplot(2,1,2)
+    plt.plot(t,z[:,2])
+    plt.plot(t,theta2_ref,'r-.');
+    plt.ylabel("theta2")
+    plt.show(block=False)
+    plt.pause(2)
+    plt.close()
 
-# print(theta1_ref)
+    plt.figure(2)
+    plt.subplot(2,1,1)
+    plt.plot(t,z[:,1])
+    plt.plot(t,theta1dot_ref,'r-.');
+    plt.ylabel("theta1dot")
+    plt.title("Plot of velocity vs. time")
+    plt.subplot(2,1,2)
+    plt.plot(t,z[:,3])
+    plt.plot(t,theta2dot_ref,'-.');
+    plt.ylabel("theta2dot")
+    plt.show(block=False)
+    plt.pause(2)
+    plt.close()
 
-# disturbances
-T1_mean = 0;
-T1_dev = 40*0;
-T2_mean = 0;
-T2_dev = 40*0;
-theta1_mean = 0;
-theta1_dev = 0.0;
-theta2_mean = 0;
-theta2_dev = 0.0;
-theta1dot_mean = 0
-theta1dot_dev = 0.5*0
-theta2dot_mean = 0
-theta2dot_dev = 0.5*0
+    plt.figure(3)
+    plt.subplot(2,1,1)
+    plt.plot(t,T1[:,0])
+    plt.ylabel("Torque 1")
+    plt.subplot(2,1,2)
+    plt.plot(t,T2[:,0])
+    plt.ylabel("Torque 2")
+    plt.xlabel("time")
+    plt.show(block=False)
+    plt.pause(4)
+    plt.close()
 
 
+if __name__=="__main__":
+    #parameters
+    parms = parameters()
 
-#initialization
-theta1 = theta1_ref[0,0];
-theta1dot = theta1dot_ref[0,0];
-theta2 = theta2_ref[0,0]
-theta2dot = theta2dot_ref[0,0]
+    h = 0.005;
+    # pi = np.pi;
+    t0 = 0;
+    tN = 5;
+    t, theta1_ref,theta1dot_ref,theta1ddot_ref, \
+    theta2_ref,theta2dot_ref,theta2ddot_ref  = twolink_traj(parms,h,t0,tN)
 
+    # print(theta1_ref)
 
+    # disturbances
+    T1_mean, T1_dev = 0, 40*0
+    T2_mean, T2_dev = 0, 40*0
+    theta1_mean, theta1_dev = 0, 0.0 
+    theta2_mean, theta2_dev = 0, 0.0
+    theta1dot_mean, theta1dot_dev = 0, 0.0
+    theta2dot_mean, theta2dot_dev = 0, 0.0
 
-#state
-N = len(t)
-shape = (N,4) #2 is for theta1 and theta2 and their rates, change according to the system
-z = np.zeros(shape)
-T1 = np.zeros((N,1))
-T2 = np.zeros((N,1))
-z0 = np.array([theta1, theta1dot, theta2, theta2dot])
-z[0,0] = z0[0]
-z[0,1] = z0[1]
-z[0,2] = z0[2]
-z[0,3] = z0[3]
+    #initialization
+    theta1, theta1dot = theta1_ref[0,0], theta1dot_ref[0,0]
+    theta2, theta2dot = theta2_ref[0,0], theta2dot_ref[0,0]
 
-for i in range(0,N-1):
-    theta1ref = theta1_ref[i,0];
-    theta1dotref = theta1dot_ref[i,0];
-    theta1ddotref = theta1ddot_ref[i,0]
-    theta2ref = theta2_ref[i,0];
-    theta2dotref = theta2dot_ref[i,0];
-    theta2ddotref = theta2ddot_ref[i,0]
-    T1_disturb = np.random.normal(T1_mean,T1_dev)
-    T2_disturb = np.random.normal(T2_mean,T2_dev)
-    physical_parms = (parms.m1,parms.I1,parms.l1,parms.m2,parms.I2,parms.l2,parms.g)
-    control_parms = (parms.kp1,parms.kd1, parms.kp2, parms.kd2,\
-                    theta1ref,theta1dotref,theta1ddotref, \
-                    theta2ref,theta2dotref,theta2ddotref, \
-                    T1_disturb,T2_disturb)
-    all_parms = physical_parms + control_parms
-    t_temp = np.array([t[i], t[i+1]])
+    #state
+    N = len(t)
+    shape = (N,4) #2 is for theta1 and theta2 and their rates, change according to the system
+    z = np.zeros(shape)
+    T1 = np.zeros((N,1))
+    T2 = np.zeros((N,1))
+    z0 = np.array([theta1, theta1dot, theta2, theta2dot])
+    z[0] = z0
 
-    z_temp = odeint(twolink_rhs, z0, t_temp, args=all_parms)
+    for i in range(N-1):
+        theta1ref, theta1dotref, theta1ddotref = theta1_ref[i,0], theta1dot_ref[i,0], theta1ddot_ref[i,0]
+        theta2ref, theta2dotref, theta2ddotref = theta2_ref[i,0], theta2dot_ref[i,0], theta2ddot_ref[i,0]
+        T1_disturb, T2_disturb = np.random.normal(T1_mean,T1_dev), np.random.normal(T2_mean,T2_dev)
 
-    T1_temp,T2_temp  = control(z0[0],z0[1],z0[2],z0[3], \
-              parms.kp1,parms.kd1, parms.kp2,parms.kd2,\
-              theta1ref,theta1dotref,theta1ddotref, \
-              theta2ref,theta2dotref,theta2ddotref, \
-              parms.m1,parms.I1,parms.l1,parms.m2,parms.I2,parms.l2,parms.g)
-    z0 = np.array([z_temp[1,0]+np.random.normal(theta1_mean,theta1_dev), \
-                   z_temp[1,1]+np.random.normal(theta1dot_mean,theta1dot_dev), \
-                   z_temp[1,2]+np.random.normal(theta2_mean,theta2_dev), \
-                   z_temp[1,3]+np.random.normal(theta2dot_mean,theta2dot_dev)])
-    z[i+1,0] = z0[0]
-    z[i+1,1] = z0[1]
-    z[i+1,2] = z0[2]
-    z[i+1,3] = z0[3]
-    T1[i+1,0] = T1_temp
-    T2[i+1,0] = T2_temp
+        physical_parms = (parms.m1,parms.I1,parms.l1,parms.m2,parms.I2,parms.l2,parms.g)
+        control_parms = (parms.kp1,parms.kd1, parms.kp2, parms.kd2,\
+                        theta1ref,theta1dotref,theta1ddotref, \
+                        theta2ref,theta2dotref,theta2ddotref, \
+                        T1_disturb,T2_disturb)
+        all_parms = physical_parms + control_parms
 
-animate(t,z,parms)
+        t_temp = np.array([t[i], t[i+1]])
+        z_temp = odeint(twolink_rhs, z0, t_temp, args=all_parms)
 
-plt.figure(1)
-plt.subplot(2,1,1)
-plt.plot(t,z[:,0])
-plt.plot(t,theta1_ref,'r-.');
-plt.ylabel("theta1")
-plt.title("Plot of position vs. time")
-plt.subplot(2,1,2)
-plt.plot(t,z[:,2])
-plt.plot(t,theta2_ref,'r-.');
-plt.ylabel("theta2")
-plt.show(block=False)
-plt.pause(2)
-plt.close()
+        T1_temp,T2_temp  = control(z0[0],z0[1],z0[2],z0[3], \
+                parms.kp1,parms.kd1, parms.kp2,parms.kd2,\
+                theta1ref,theta1dotref,theta1ddotref, \
+                theta2ref,theta2dotref,theta2ddotref, \
+                parms.m1,parms.I1,parms.l1,parms.m2,parms.I2,parms.l2,parms.g)
 
-plt.figure(2)
-plt.subplot(2,1,1)
-plt.plot(t,z[:,1])
-plt.plot(t,theta1dot_ref,'r-.');
-plt.ylabel("theta1dot")
-plt.title("Plot of velocity vs. time")
-plt.subplot(2,1,2)
-plt.plot(t,z[:,3])
-plt.plot(t,theta2dot_ref,'-.');
-plt.ylabel("theta2dot")
-plt.show(block=False)
-plt.pause(2)
-plt.close()
+        z0 = np.array([z_temp[1,0]+np.random.normal(theta1_mean,theta1_dev), \
+                    z_temp[1,1]+np.random.normal(theta1dot_mean,theta1dot_dev), \
+                    z_temp[1,2]+np.random.normal(theta2_mean,theta2_dev), \
+                    z_temp[1,3]+np.random.normal(theta2dot_mean,theta2dot_dev)])
 
-plt.figure(3)
-plt.subplot(2,1,1)
-plt.plot(t,T1[:,0])
-plt.ylabel("Torque 1")
-plt.subplot(2,1,2)
-plt.plot(t,T2[:,0])
-plt.ylabel("Torque 2")
-plt.xlabel("time")
-plt.show(block=False)
-plt.pause(4)
-plt.close()
+        z[i+1] = z0
+        T1[i+1,0] = T1_temp
+        T2[i+1,0] = T2_temp
+
+    # animate(t,z,parms)
+    plot(t,z,theta1_ref,theta1dot_ref,theta2_ref,theta2dot_ref)

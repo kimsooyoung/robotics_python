@@ -29,7 +29,7 @@ class Parameters():
         self.kd2 = 2*np.sqrt(self.kp2)
         
         self.pause = 0.01
-        self.fps =30        
+        self.fps = 30
         
 def link1_traj(ts):
     
