@@ -11,7 +11,7 @@ class Parameters():
         self.k1, self.k2 = 2, 3
 
         self.Q = np.eye(4)
-        self.R = 0.01 * np.eye(2)
+        self.R = .01 * np.eye(2)
 
         self.pause = 0.01
 
@@ -33,14 +33,19 @@ def dynamisc(m1, m2, k1, k2):
 
     return A, B
 
+
+def get_control(x, K):
+
+    return -K@x
+
 def spring_mass_linear_equ(x, t, m1, m2, k1, k2, K):
 
     A, B = dynamisc(m1, m2, k1, k2)
-    u = -K@x
+    u = get_control(x, K)
 
     return A@x + B@u
 
-def plot(result, ts):
+def plot(result, u, ts):
 
     plt.figure(1)
     
@@ -55,6 +60,16 @@ def plot(result, ts):
     plt.ylabel("velocity")
     plt.show()
 
+    plt.figure(2)
+    plt.subplot(2,1,1)
+    plt.plot(ts, u[:,0],'b')
+    plt.ylabel("u1")
+    
+    plt.subplot(2,1,2)
+    plt.plot(ts, u[:,1],'b')
+    plt.ylabel("u2")
+    plt.show()
+
 if __name__=="__main__":
 
     params = Parameters()
@@ -63,13 +78,25 @@ if __name__=="__main__":
     Q, R = params.Q, params.R
 
     A, B = dynamisc(m1, m2, k1, k2)
-    K, S, E = control.lqr(A, B, Q, R)
+    K, _, E = control.lqr(A, B, Q, R)
+    print(f"K = {K}")
+    print(f"E = {E}")
 
-    t0, tend = 0, 10
-    ts = np.linspace(t0, tend, 101)
+    t0, tend, N = 0, 10, 101
+    ts = np.linspace(t0, tend, N)
 
     z0 = np.array([0.5,0,0,0])
+    z  = np.zeros((N, 4))
+    u  = np.zeros((N, 2))
+    z[0] = z0
 
-    result = odeint(spring_mass_linear_equ, z0, ts, args=(m1, m2, k1, k2, K))
+    for i in range(N-1):
 
-    plot(result, ts)
+        t_temp = np.array([ts[i], ts[i+1]])
+        z_temp = odeint(spring_mass_linear_equ, z0, t_temp, args=(m1, m2, k1, k2, K))
+        u[i] = get_control(z0, K)
+        
+        z0 = z_temp[-1]
+        z[i+1] = z0
+
+    plot(z, u, ts)
