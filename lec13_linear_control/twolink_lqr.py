@@ -6,6 +6,7 @@ from scipy import interpolate
 from scipy.integrate import odeint
 import scipy.linalg #used by lqr
 
+pi = np.pi
 
 class parameters:
     def __init__(self):
@@ -19,8 +20,9 @@ class parameters:
         self.g = 9.81
         self.pause = 0.01
         self.fps =20
-        self.B = np.array([ [1], [0]]) #pendubot
+        # self.B = np.array([ [1], [0]]) #pendubot
         #self.B = np.array([ [0], [1]]) #acrobot
+        self.B = np.array([ [1, 0], [0, 1]]) 
 
 def cos(angle):
     return np.cos(angle)
@@ -145,18 +147,47 @@ def linearization(z,m1,m2,I1,I2,c1,c2,l,g,B):
     # A_lin = [0(2x2) I(2x2);
     #      invM*(dGC/dq) invM*(dGC/dqdot)]
     A_lin = np.block([
-    [np.zeros((2, 2)), np.identity(2)],
-    [np.matmul(invM,-dGCdq), np.matmul(invM,-dGCdqdot)]
+        [np.zeros((2, 2)), np.identity(2)],
+        [np.matmul(invM,-dGCdq), np.matmul(invM,-dGCdqdot)]
      ])
 
     # B_lin = [0(2x2); invM*B]
     B_lin = np.block([
-    [np.zeros((2, 1))],
-    [np.matmul(invM,B)]
-     ])
+        [np.zeros((2, 2))],
+        [np.matmul(invM,B)]
+    ])
 
     return A_lin, B_lin
 
+def plot(t,z,u):
+
+    plt.figure(1)
+    
+    plt.subplot(4, 1, 1)
+    plt.plot(t,z[:,0],color='red',label='theta1');
+    plt.plot(t,z[:,1],color='blue',label='theta2');
+    plt.ylabel("angle")
+    plt.legend(loc="upper left")
+    
+    plt.subplot(4, 1, 2)
+    plt.plot(t,z[:,2],color='red',label='omega1');
+    plt.plot(t,z[:,3],color='blue',label='omega2');
+    plt.xlabel("t")
+    plt.ylabel("angular rate")
+    plt.legend(loc="lower left")
+    
+    plt.subplot(4, 1, 3)
+    plt.plot(t,u[:,0],color='green');
+    plt.xlabel("t")
+    plt.ylabel("torque1")
+    
+    plt.subplot(4, 1, 4)
+    plt.plot(t,u[:,1],color='green');
+    plt.xlabel("t")
+    plt.ylabel("torque2")
+        
+    plt.show()
+    
 def double_pendulum(z,t,m1,m2,I1,I2,c1,c2,l,g,B,K,T1_disturb,T2_disturb):
 
     theta1 = z[0];
@@ -177,7 +208,7 @@ def double_pendulum(z,t,m1,m2,I1,I2,c1,c2,l,g,B,K,T1_disturb,T2_disturb):
     G2 =  -c2*g*m2*sin(theta1 + theta2)
 
     u  = controller(z,K)
-    Bu = B*u
+    Bu = (B@u).reshape(2,1)
     T_disturb = np.array([[T1_disturb],[T2_disturb]])
     # print(np.shape(Bu))
 
@@ -186,94 +217,64 @@ def double_pendulum(z,t,m1,m2,I1,I2,c1,c2,l,g,B,K,T1_disturb,T2_disturb):
     CG = np.array([[C1+G1],[C2+G2]])
     invM = np.linalg.inv(M)
     thetaddot = np.matmul(invM,-CG+Bu+T_disturb) #invM.dot(-CG)
-    alpha1 = thetaddot[0,0]
-    alpha2 = thetaddot[1,0]
+    # print(thetaddot)
+    alpha1, alpha2 = thetaddot[0,0], thetaddot[1,0]
 
     dzdt = np.array([omega1, omega2, alpha1, alpha2]);
     return dzdt
 
-#parameters
-parms = parameters()
+if __name__=="__main__":
+    #parameters
+    parms = parameters()
 
-# disturbances
-T1_mean = 0;
-T1_dev = 40;
-T2_mean = 0;
-T2_dev = 40;
-theta1_mean = 0;
-theta1_dev = 0.0;
-theta2_mean = 0;
-theta2_dev = 0.0;
-theta1dot_mean = 0
-theta1dot_dev = 0.05
-theta2dot_mean = 0
-theta2dot_dev = 0.1
+    # disturbances
+    T1_mean, T1_dev = 0, 0.0 * 1
+    T2_mean, T2_dev = 0, 0.0 * 1
+    theta1_mean, theta1_dev = 0, 0.0 * 1
+    theta2_mean, theta2_dev = 0, 0.0 * 1
+    theta1dot_mean, theta1dot_dev = 0, 0.0 * 1
+    theta2dot_mean, theta2dot_dev = 0, 0.0 * 1
+    
+    #compute controller K
+    #linearize about vertical position
+    theta1, theta2, omega1, omega2 = 0, 0, 0, 0
+    z = np.array([theta1,theta2,omega1,omega2])
 
-#compute controller K
-#linearize about vertical position
-theta1 = 0; theta2 = 0
-omega1 = 0; omega2 = 0
-z = np.array([theta1,theta2,omega1,omega2])
-A_lin,B_lin = linearization(z,parms.m1,parms.m2,parms.I1,parms.I2,\
-        parms.c1,parms.c2,parms.l,parms.g,parms.B)
-Q = np.eye((4))
-R = np.array([[1e-2]]);
-# K, X, eigVals = lqr(A_lin,B_lin,Q,R) #hand coded
-K, S, E = control.lqr(A_lin,B_lin,Q,R) #from python module lqr
-print("K = ", K)
+    A_lin,B_lin = linearization(z,parms.m1,parms.m2,parms.I1,parms.I2,\
+            parms.c1,parms.c2,parms.l,parms.g,parms.B)
+    
+    Q = np.eye((4))
+    R = 1e-2 * np.eye((2))
+    # K, X, eigVals = lqr(A_lin,B_lin,Q,R) #hand coded
+    K, S, E = control.lqr(A_lin,B_lin,Q,R) #from python module lqr
+    print("K = ", K)
 
+    N = 101
+    t0 = 0; tf = 10
+    t = np.linspace(t0, tf, N)
+    z0 = np.array([pi/4, -pi/4, 0, 0])
+    shape = (N,4) #2 is for theta1 and theta2 and their rates, change according to the system
+    
+    z = np.zeros(shape)
+    u = np.zeros((N,2))
+    z[0] = z0
 
-N = 101
-t0 = 0; tf = 10
-t = np.linspace(t0, tf, N)
-z0 = np.array([0.0, 0, 0, 0])
-shape = (N,4) #2 is for theta1 and theta2 and their rates, change according to the system
-z = np.zeros(shape)
-u = np.zeros((N,1))
-z[0,0] = z0[0]
-z[0,1] = z0[1]
-z[0,2] = z0[2]
-z[0,3] = z0[3]
+    for i in range(0,N-1):
+        T1_disturb = np.random.normal(T1_mean,T1_dev)
+        T2_disturb = np.random.normal(T2_mean,T2_dev)
+        physical_parms = (parms.m1,parms.m2,parms.I1,parms.I2,parms.c1,parms.c2, parms.l,parms.g,parms.B)
+        control_parms = (K,T1_disturb,T2_disturb)
+        all_parms = physical_parms + control_parms
+        t_temp = np.array([t[i], t[i+1]])
+        z_temp = odeint(double_pendulum, z0, t_temp, args=all_parms)
+        u_temp = controller(z0,K)
+        z0 = np.array([z_temp[1,0]+np.random.normal(theta1_mean,theta1_dev), \
+                    z_temp[1,1]+np.random.normal(theta1dot_mean,theta1dot_dev), \
+                    z_temp[1,2]+np.random.normal(theta2_mean,theta2_dev), \
+                    z_temp[1,3]+np.random.normal(theta2dot_mean,theta2dot_dev)])
+        z[i+1] = z0
+        u[i+1] = u_temp
 
-for i in range(0,N-1):
-    T1_disturb = np.random.normal(T1_mean,T1_dev)
-    T2_disturb = np.random.normal(T2_mean,T2_dev)
-    physical_parms = (parms.m1,parms.m2,parms.I1,parms.I2,parms.c1,parms.c2, parms.l,parms.g,parms.B)
-    control_parms = (K,T1_disturb,T2_disturb)
-    all_parms = physical_parms + control_parms
-    t_temp = np.array([t[i], t[i+1]])
-    z_temp = odeint(double_pendulum, z0, t_temp, args=all_parms)
-    u_temp = controller(z0,K)
-    z0 = np.array([z_temp[1,0]+np.random.normal(theta1_mean,theta1_dev), \
-                   z_temp[1,1]+np.random.normal(theta1dot_mean,theta1dot_dev), \
-                   z_temp[1,2]+np.random.normal(theta2_mean,theta2_dev), \
-                   z_temp[1,3]+np.random.normal(theta2dot_mean,theta2dot_dev)])
-    z[i+1,0] = z0[0]
-    z[i+1,1] = z0[1]
-    z[i+1,2] = z0[2]
-    z[i+1,3] = z0[3]
-    u[i+1,0] = u_temp
+    animate(t,z,parms)
+    plot(t,z,u)
 
-
-animate(t,z,parms)
-
-plt.figure(1)
-plt.subplot(3, 1, 1)
-plt.plot(t,z[:,0],color='red',label='theta1');
-plt.plot(t,z[:,1],color='blue',label='theta2');
-plt.ylabel("angle")
-plt.legend(loc="upper left")
-plt.subplot(3, 1, 2)
-plt.plot(t,z[:,2],color='red',label='omega1');
-plt.plot(t,z[:,3],color='blue',label='omega2');
-plt.xlabel("t")
-plt.ylabel("angular rate")
-plt.legend(loc="lower left")
-plt.subplot(3, 1, 3)
-plt.plot(t,u[:,0],color='green');
-plt.xlabel("t")
-plt.ylabel("torque")
-#plt.show()
-plt.show(block=False)
-plt.pause(2)
-plt.close()
