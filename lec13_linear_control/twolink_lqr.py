@@ -12,11 +12,13 @@ class parameters:
     def __init__(self):
         self.m1 = 1
         self.m2 = 1
-        self.I1 = 0.1
-        self.I2 = 0.1
-        self.c1 = 0.5
-        self.c2 = 0.5
         self.l = 1
+        self.c1 = self.l/2
+        self.c2 = self.l/2
+        
+        self.I1 = self.m1*self.l**2/12
+        self.I2 = self.m2*self.l**2/12
+        
         self.g = 9.81
         self.pause = 0.01
         self.fps =20
@@ -242,12 +244,12 @@ if __name__=="__main__":
 
     A_lin,B_lin = linearization(z,parms.m1,parms.m2,parms.I1,parms.I2,\
             parms.c1,parms.c2,parms.l,parms.g,parms.B)
-    
     Q = np.eye((4))
     R = 1e-2 * np.eye((2))
     # K, X, eigVals = lqr(A_lin,B_lin,Q,R) #hand coded
     K, S, E = control.lqr(A_lin,B_lin,Q,R) #from python module lqr
     print("K = ", K)
+    print(f"E : {E}")
 
     N = 101
     t0 = 0; tf = 10
