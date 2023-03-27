@@ -51,9 +51,10 @@ Q = sy.simplify(J_p.T*F_op + J_r.T*F_or)
 
 # EOM
 q_d = sy.Matrix([x_d, y_d, phi_d])
-d_dd = sy.Matrix([x_dd, y_dd, phi_dd])
+q_dd = sy.Matrix([x_dd, y_dd, phi_dd])
 
 EOM = []
+EOM_control = []
 dLdq = []
 dLdqd = []
 dt_dLdqd = []
@@ -64,15 +65,42 @@ for i in range(len(q)):
     
     temp = 0
     for j in range(len(q)):
-        temp += sy.diff(dLdqd[i], q[j])*q_d[j] + sy.diff(dLdqd[i], q_d[j])*d_dd[j]
+        temp += sy.diff(dLdqd[i], q[j])*q_d[j] + sy.diff(dLdqd[i], q_d[j])*q_dd[j]
     dt_dLdqd.append(temp)
     
-    EOM.append(dt_dLdqd[i] - dLdq[i] - Q[i])
+    EOM.append(dt_dLdqd[i] - dLdq[i])
+    EOM_control.append(dt_dLdqd[i] - dLdq[i] - Q[i])
     
-x_dd = sy.simplify(sy.solve(EOM[0],x_dd)[0])
-y_dd = sy.simplify(sy.solve(EOM[1],y_dd)[0])
-phi_dd = sy.simplify(sy.solve(EOM[2],phi_dd)[0])
+print("x_dd = ", (sy.solve(EOM_control[0],x_dd)[0]) )
+print("y_dd = ", (sy.solve(EOM_control[1],y_dd)[0]) )
+print("phi_dd = ", (sy.solve(EOM_control[2],phi_dd)[0]) )
 
-print(f"x_dd = {x_dd}")
-print(f"y_dd = {y_dd}")
-print(f"phi_dd = {phi_dd}")
+EOM = sy.Matrix([EOM[0],EOM[1], EOM[2]])
+M = EOM.jacobian(q_dd)
+N1 = EOM[0].subs([ (x_dd,0), (y_dd,0), (phi_dd,0) ])
+N2 = EOM[1].subs([ (x_dd,0), (y_dd,0), (phi_dd,0) ])
+N3 = EOM[2].subs([ (x_dd,0), (y_dd,0), (phi_dd,0) ])
+G1 = N1.subs([ (x_d,0), (y_d,0), (phi_d,0) ])
+G2 = N2.subs([ (x_d,0), (y_d,0), (phi_d,0) ])
+G3 = N3.subs([ (x_d,0), (y_d,0), (phi_d,0) ])
+C1 = N1 - G1
+C2 = N2 - G2
+C3 = N3 - G3
+
+print('M11 = ', sy.simplify(M[0,0]))
+print('M12 = ', sy.simplify(M[0,1]))
+print('M13 = ', sy.simplify(M[0,2]))
+print('M21 = ', sy.simplify(M[1,0]))
+print('M22 = ', sy.simplify(M[1,1]))
+print('M23 = ', sy.simplify(M[1,2]))
+print('M31 = ', sy.simplify(M[2,0]))
+print('M32 = ', sy.simplify(M[2,1]))
+print('M33 = ', sy.simplify(M[2,2]),'\n')
+
+print('C1 = ', sy.simplify(C1))
+print('C2 = ', sy.simplify(C2))
+print('C3 = ', sy.simplify(C3),'\n')
+
+print('G1 = ', sy.simplify(G1))
+print('G2 = ', sy.simplify(G2))
+print('G3 = ', sy.simplify(G3),'\n')

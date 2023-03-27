@@ -33,7 +33,7 @@ def bicopter_dynamics(z,t, m, g, l, r, I):
     phi_dd = (l*ud)/(2*I)
     
     return x_d, y_d, phi_d, x_dd, y_dd, phi_dd
-        
+
 
 def animate(t,z,parms):
     #interpolation
