@@ -35,62 +35,73 @@ def spring_mass_rhs(x,t,m1,m2,k1,k2):
          [ -0.48187707,  11.26965048]]
 
     O_44 = np.zeros((4,4))
-    LC = np.matmul(L,C)
-    A_LC = np.subtract(A,LC)
+    LC = L@C
+    A_LC = np.subtract(A, LC)
 
     #no observer
+    # e1_d = A * e1
+    # e2_d = A * e2
     Abig = np.block([ \
          [A,   O_44], \
         [O_44, A ] \
-         ])
+     ])
 
     #with Luenberg observer
+    # e1_d = A * e1
+    # e2_d = LC*e1 + (A-LC)*e2
+    # e2_d = A * e2 + LC*(e1 - e2)
+    # => 첫번째 L*C는 뭐지 ??
     Abig = np.block([ \
          [A,   O_44], \
         [LC, A_LC ] \
-         ])
+     ])
 
-    xdot = Abig.dot(x)
+    return Abig@x
 
-    return xdot
+def plot(t, x, parameters):
 
-parms = parameters()
+     plt.figure(1)
+     
+     plt.subplot(2,2,1)
+     plt.plot(t,x[:,0],'r-.')
+     plt.plot(t,x[:,4],'b');
+     plt.ylabel("position q1")
+     plt.legend(['act','est'])
+     
+     plt.subplot(2,2,3)
+     plt.plot(t,x[:,1],'r-.')
+     plt.plot(t,x[:,5],'b');
+     plt.legend(['act','est'])
+     plt.ylabel("position q2")
+     plt.xlabel("time t")
 
-x0 = np.array([0.5,0,0,0])
-x0est = np.array([0.2,0,0,0])
-x0big = np.concatenate((x0, x0est))
+     plt.subplot(2,2,2)
+     plt.plot(t,x[:,2],'r-.')
+     plt.plot(t,x[:,6],'b');
+     plt.ylabel("velocity q1dot ")
+     plt.legend(['act','est'])
+     
+     plt.subplot(2,2,4)
+     plt.plot(t,x[:,3],'r-.')
+     plt.plot(t,x[:,7],'b');
+     plt.ylabel("velocity q2dot ")
+     plt.xlabel("time t")
+     plt.legend(['act','est'])
 
-t0 = 0;
-tend = 5;
+     plt.show(block=False)
+     plt.pause(5)
+     plt.close()
 
-t = np.linspace(t0, tend, 101)
-x = odeint(spring_mass_rhs, x0big, t, args=(parms.m1,parms.m2,parms.k1,parms.k2))
+if __name__=='__main__':
+     parms = parameters()
 
-plt.figure(1)
-plt.subplot(2,2,1)
-plt.plot(t,x[:,0],'r-.')
-plt.plot(t,x[:,4],'b');
-plt.ylabel("position q1")
-plt.legend(['act','est'])
-plt.subplot(2,2,3)
-plt.plot(t,x[:,1],'r-.')
-plt.plot(t,x[:,5],'b');
-plt.legend(['act','est'])
-plt.ylabel("position q2")
-plt.xlabel("time t")
+     x0 = np.array([0.5,0,0,0])
+     x0est = np.array([0.2,0,0,0])
+     x0big = np.concatenate((x0, x0est))
 
-plt.subplot(2,2,2)
-plt.plot(t,x[:,2],'r-.')
-plt.plot(t,x[:,6],'b');
-plt.ylabel("velocity q1dot ")
-plt.legend(['act','est'])
-plt.subplot(2,2,4)
-plt.plot(t,x[:,3],'r-.')
-plt.plot(t,x[:,7],'b');
-plt.ylabel("velocity q2dot ")
-plt.xlabel("time t")
-plt.legend(['act','est'])
+     t0, tend = 0, 5
 
-plt.show(block=False)
-plt.pause(5)
-plt.close()
+     t = np.linspace(t0, tend, 101)
+     x = odeint(spring_mass_rhs, x0big, t, args=(parms.m1,parms.m2,parms.k1,parms.k2))
+     
+     plot(t, x, parameters)
