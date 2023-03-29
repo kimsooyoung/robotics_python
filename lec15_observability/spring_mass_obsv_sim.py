@@ -51,6 +51,15 @@ def spring_mass_rhs(x,t,m1,m2,k1,k2):
     # e2_d = LC*e1 + (A-LC)*e2
     # e2_d = A * e2 + LC*(e1 - e2)
     # => 첫번째 L*C는 뭐지 ??
+    
+    # 만약 이렇게 하면 모든 값들이 0으로 가버린다.
+    Abig = np.block([ \
+         [A,   O_44], \
+        [O_44, A_LC ] \
+     ])
+    
+    # 지금 우리가 하고자 하는 것은 real value인 e1에 가깝도록 하는 것이기 때문에
+    # e2_d = LC*e1 + (A-LC)*e2를 해주는 것이다.
     Abig = np.block([ \
          [A,   O_44], \
         [LC, A_LC ] \

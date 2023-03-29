@@ -45,7 +45,7 @@ if __name__=='__main__':
     k1, k2, m1, m2 = parms.k1, parms.k2, parms.m1, parms.m2
     A, B, C = linear_system(k1, k2, m1, m2)
 
-    #compute eigenvalues of uncontrolled system
+    # compute eigenvalues of uncontrolled system
     eigVal, eigVec = np.linalg.eig(A)
     print('eig-vals (uncontrolled)=') #eigvalues on imaginary axis
     print(eigVal, '\n')
@@ -72,9 +72,10 @@ if __name__=='__main__':
     eigVal, eigVec = np.linalg.eig(A - L@C)
     print('eig-vals (controlled)=', eigVal)
     
-    # controllability
+    # Review: controllability
     Co = control.ctrb(A,B)
     print('rank=',np.linalg.matrix_rank(Co))
+    
     K = control.place(A,B,p)
     eigVal, eigVec = np.linalg.eig(A - B@K)
     print('eig-vals (controlled)=', eigVal)
