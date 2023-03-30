@@ -39,6 +39,11 @@ def spring_mass_dynamics(z, t, A, C, L):
      O_44 = np.zeros((4,4))
      LC = L @ C
      
+    #  Abig = np.block([
+    #       [A,   O_44],
+    #       [O_44, A-LC]
+    #  ])
+     
      Abig = np.block([
           [A,   O_44],
           [LC,  A-LC]
