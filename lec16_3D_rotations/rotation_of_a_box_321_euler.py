@@ -12,27 +12,26 @@ def sin(theta):
 def rotation(phi,theta,psi):
 
     R_x = np.array([
-                    [1,            0,         0],
-                    [0,     cos(phi), -sin(phi)],
-                    [0,     sin(phi),  cos(phi)]
-
-                  ])
+        [1,            0,         0],
+        [0,     cos(phi), -sin(phi)],
+        [0,     sin(phi),  cos(phi)]
+    ])
 
     R_y = np.array([
-                        [cos(theta),  0, sin(theta)],
-                        [0,           1,          0],
-                        [-sin(theta),  0, cos(theta)]
-                      ])
+        [cos(theta),  0, sin(theta)],
+        [0,           1,          0],
+        [-sin(theta),  0, cos(theta)]
+    ])
 
-    R_z = np.array( [
-                   [cos(psi), -sin(psi), 0],
-                   [sin(psi),  cos(psi), 0],
-                   [0,            0,         1]
-                   ])
+    R_z = np.array([
+        [cos(psi), -sin(psi), 0],
+        [sin(psi),  cos(psi), 0],
+        [0,            0,         1]
+    ])
 
-    R_temp = np.matmul(R_y,R_x);
-    R = np.matmul(R_z,R_temp);
-    return R;
+    R =  R_z @ R_y @ R_x
+    
+    return R
 
 def animate(fig_no,phi,theta,psi):
     lx = 0.5;
@@ -53,16 +52,15 @@ def animate(fig_no,phi,theta,psi):
     v1 = np.zeros(np.shape(v0))
     [m,n] = np.shape(v1)
     R = rotation(phi,theta,psi)
+    
     for i in range(0,m):
         vec = np.array([v0[i,0], v0[i,1], v0[i,2]])
         vec = R.dot(vec)
-        v1[i,0] = vec[0];
-        v1[i,1] = vec[1];
-        v1[i,2] = vec[2];
-
-
+        v1[i] = vec
+        
     fig = plt.figure(1)
     ax = fig.add_subplot(2, 2, fig_no ,projection="3d")
+    
     pc0 = art3d.Poly3DCollection(v0[f], facecolors="lightblue",alpha=0.5) #, edgecolor="black")
     pc1 = art3d.Poly3DCollection(v1[f], facecolors="blue",alpha=0.25) #, edgecolor="black")
 
@@ -96,28 +94,18 @@ def animate(fig_no,phi,theta,psi):
     # plt.pause(5)
     # plt.close()
 
+if __name__ == "__main__":
+        
+    phi, theta, psi = 0, 0, 0
+    animate(1,phi,theta,psi)
 
-phi = 0;
-theta = 0;
-psi = 0;
-animate(1,phi,theta,psi)
+    phi, theta, psi = 0, 0, np.pi/2
+    animate(2,phi,theta,psi)
 
-phi = 0;
-theta = 0;
-psi = np.pi/2;
-animate(2,phi,theta,psi)
+    phi, theta, psi = 0, np.pi/2, np.pi/2
+    animate(3,phi,theta,psi)
 
-phi = 0;
-theta = np.pi/2;
-psi = np.pi/2
-animate(3,phi,theta,psi)
+    phi, theta, psi = np.pi/2, np.pi/2, np.pi/2
+    animate(4,phi,theta,psi)
 
-phi = np.pi/2;
-theta = np.pi/2;
-psi = np.pi/2
-animate(4,phi,theta,psi)
-
-plt.show()
-# plt.show(block=False)
-# plt.pause(10)
-# plt.close()
+    plt.show()
