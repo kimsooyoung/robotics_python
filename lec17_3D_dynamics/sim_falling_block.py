@@ -8,13 +8,17 @@ from mpl_toolkits.mplot3d import art3d
 class parameters:
     def __init__(self):
         self.m = 10
-        self.Ixx = 2
-        self.Iyy = 3
-        self.Izz = 5
+        
         self.lx = 0.1
         self.ly = 0.05
         self.lz = 0.02
+        
+        self.Ixx = self.m/12*(self.ly**2+self.lz**2)
+        self.Iyy = self.m/12*(self.lx**2+self.lz**2)
+        self.Izz = self.m/12*(self.lx**2+self.ly**2)
+        
         self.g = 9.8
+        
         self.pause = 0.05
         self.fps = 50
 
@@ -27,28 +31,24 @@ def sin(angle):
 def rotation(phi,theta,psi):
 
     R_x = np.array([
-                    [1,            0,         0],
-                    [0,     cos(phi), -sin(phi)],
-                    [0,     sin(phi),  cos(phi)]
-
-                  ])
+        [1,            0,         0],
+        [0,     cos(phi), -sin(phi)],
+        [0,     sin(phi),  cos(phi)]
+    ])
 
     R_y = np.array([
-                        [cos(theta),  0, sin(theta)],
-                        [0,           1,          0],
-                        [-sin(theta),  0, cos(theta)]
-                      ])
+        [cos(theta),  0, sin(theta)],
+        [0,           1,          0],
+        [-sin(theta),  0, cos(theta)]
+    ])
 
     R_z = np.array( [
-                   [cos(psi), -sin(psi), 0],
-                   [sin(psi),  cos(psi), 0],
-                   [0,            0,         1]
-                   ])
+        [cos(psi), -sin(psi), 0],
+        [sin(psi),  cos(psi), 0],
+        [0,            0,         1]
+    ])
 
-    R_temp = np.matmul(R_y,R_x);
-    R = np.matmul(R_z,R_temp);
-    return R;
-
+    return R_z @ R_y @ R_x
 
 def animate(t,Xpos,Xang,parms):
     #interpolation
@@ -66,13 +66,11 @@ def animate(t,Xpos,Xang,parms):
         fang = interpolate.interp1d(t, Xang[:,i])
         Xang_interp[:,i] = fang(t_interp)
 
-    lx = parms.lx
-    ly = parms.ly
-    lz = parms.lz
-    ll = np.max(np.array([lx,ly,lz]))+0.1
-    lmax = np.max(Xpos)
-    lmin = np.min(Xpos)
-
+    lx, ly, lz = parms.lx, parms.ly, parms.lz
+    ll = np.max(np.array([lx,ly,lz])) + 0.1
+    
+    lmax, lmin = np.max(Xpos), np.min(Xpos)
+    
     #plot
     v0 =  np.array([[-lx,-ly,-lz], [lx,-ly,-lz], [lx,ly,-lz], [-lx,ly,-lz],
                   [-lx,-ly,lz], [lx,-ly,lz], [lx,ly,lz], [-lx,ly,lz]])
@@ -99,14 +97,13 @@ def animate(t,Xpos,Xang,parms):
             v1[i,1] = vec[1]+y;
             v1[i,2] = vec[2]+z;
 
-
         ax = fig.add_subplot(projection="3d")
         # pc0 = art3d.Poly3DCollection(v0[f], facecolors="lightblue",alpha=0.5) #, edgecolor="black")
         pc1 = art3d.Poly3DCollection(v1[f], facecolors="blue",alpha=0.25) #, edgecolor="black")
 
-        # # ax.add_collection(pc0)
+        # ax.add_collection(pc0)
         ax.add_collection(pc1)
-        #
+        
         origin = np.array([0,0,0])
         dirn_x = np.array([1, 0, 0]); dirn_x = R.dot(dirn_x);
         dirn_y = np.array([0, 1, 0]); dirn_y = R.dot(dirn_y);
@@ -127,8 +124,7 @@ def animate(t,Xpos,Xang,parms):
 
     plt.close()
 
-
-def eom(X,t,m,Ixx,Iyy,Izz,g):
+def eom(X,t ,m,Ixx,Iyy,Izz,g):
 
     i = 0;
     x = X[i]; i +=1;
@@ -137,6 +133,7 @@ def eom(X,t,m,Ixx,Iyy,Izz,g):
     phi = X[i]; i +=1;
     theta = X[i]; i +=1;
     psi = X[i]; i+=1;
+    
     vx = X[i]; i +=1;
     vy = X[i]; i +=1;
     vz = X[i]; i +=1;
@@ -190,158 +187,167 @@ def eom(X,t,m,Ixx,Iyy,Izz,g):
     b[ 4 ]= -1.0*Ixx*phidot*psidot*cos(theta) + 0.5*Ixx*psidot**2*sin(2*theta) - 0.5*Iyy*phidot*psidot*cos(2*phi - theta) - 0.5*Iyy*phidot*psidot*cos(2*phi + theta) + 1.0*Iyy*phidot*thetadot*sin(2*phi) - 0.25*Iyy*psidot**2*sin(2*theta) - 0.125*Iyy*psidot**2*sin(2*phi - 2*theta) + 0.125*Iyy*psidot**2*sin(2*phi + 2*theta) + 0.5*Izz*phidot*psidot*cos(2*phi - theta) + 0.5*Izz*phidot*psidot*cos(2*phi + theta) - 1.0*Izz*phidot*thetadot*sin(2*phi) - 0.25*Izz*psidot**2*sin(2*theta) + 0.125*Izz*psidot**2*sin(2*phi - 2*theta) - 0.125*Izz*psidot**2*sin(2*phi + 2*theta)
     b[ 5 ]= -0.5*phidot*(Iyy*psidot*sin(2*phi - theta) + Iyy*psidot*sin(2*phi + theta) + 2*Iyy*thetadot*cos(2*phi) - Izz*psidot*sin(2*phi - theta) - Izz*psidot*sin(2*phi + theta) - 2*Izz*thetadot*cos(2*phi))*cos(theta) + 0.25*thetadot*(4*Ixx*phidot*cos(theta) - 4*Ixx*psidot*sin(2*theta) + 2*Iyy*psidot*sin(2*theta) + Iyy*psidot*sin(2*phi - 2*theta) - Iyy*psidot*sin(2*phi + 2*theta) + Iyy*thetadot*cos(2*phi - theta) - Iyy*thetadot*cos(2*phi + theta) + 2*Izz*psidot*sin(2*theta) - Izz*psidot*sin(2*phi - 2*theta) + Izz*psidot*sin(2*phi + 2*theta) - Izz*thetadot*cos(2*phi - theta) + Izz*thetadot*cos(2*phi + theta))
 
-
     invA = np.linalg.inv(A)
     Xddot = invA.dot(b)
-    i = 0;
-    ax = Xddot[i,0]; i+=1
-    ay = Xddot[i,0]; i+=1
-    az = Xddot[i,0]; i+=1
-    phiddot = Xddot[i,0]; i+=1
-    thetaddot = Xddot[i,0]; i+=1
-    psiddot = Xddot[i,0]; i+=1
+    
+    ax, ay, az, phiddot, thetaddot, psiddot = Xddot[0:6,0]
+    
+    # i = 0;
+    # ax = Xddot[i,0]; i+=1
+    # ay = Xddot[i,0]; i+=1
+    # az = Xddot[i,0]; i+=1
+    # phiddot = Xddot[i,0]; i+=1
+    # thetaddot = Xddot[i,0]; i+=1
+    # psiddot = Xddot[i,0]; i+=1
 
     dXdt = np.array([vx, vy, vz, phidot, thetadot, psidot, ax, ay, az, phiddot,thetaddot,psiddot]);
     return dXdt
 
-parms = parameters()
 
-x0 = 0; y0 = 0; z0 = 0;
-vx0 = 0; vy0 = 0; vz0 = 5;
-phi0 = 0; theta0 = 0; psi0 = 0;
-phidot0 = 3; thetadot0 = -4; psidot0 = 5;
+if __name__=='__main__':
 
-t = np.linspace(0, 1, 101)
-X0 = np.array([x0, y0, z0, phi0, theta0, psi0, vx0, vy0, vz0, phidot0, thetadot0, psidot0])
-all_parms = (parms.m,parms.Ixx,parms.Iyy,parms.Izz,parms.g)
-X = odeint(eom, X0, t, args=all_parms)
+    parms = parameters()
 
-mm = len(X);
-x = []; y = []; z = []
-phi = []; theta = []; psi = []
-vx = []; vy = []; vz = []
-phidot = []; thetadot = []; psidot = []
-KE = []; PE = []; TE = []
-omega_x=[]; omega_y=[]; omega_z = []
-omega_body_x=[]; omega_body_y=[]; omega_body_z = []
-m = parms.m;
-g = parms.g;
-Ixx = parms.Ixx
-Iyy = parms.Iyy
-Izz = parms.Izz
-X_pos = []
-X_ang = []
-for i in range(0,mm):
-    j = 0;
-    x.append(X[i,j]); j+=1;
-    y.append(X[i,j]); j+=1;
-    z.append(X[i,j]); j+=1;
-    phi.append(X[i,j]); j+=1;
-    theta.append(X[i,j]); j+=1;
-    psi.append(X[i,j]); j+=1;
-    vx.append(X[i,j]); j+=1;
-    vy.append(X[i,j]); j+=1;
-    vz.append(X[i,j]); j+=1;
-    phidot.append(X[i,j]); j+=1;
-    thetadot.append(X[i,j]); j+=1;
-    psidot.append(X[i,j]); j+=1;
-    KE_temp= 0.5*Ixx*(phidot[i] - psidot[i]*sin(theta[i]))**2 + 0.5*Iyy*(psidot[i]*sin(phi[i])*cos(theta[i]) + thetadot[i]*cos(phi[i]))**2 + 0.5*Izz*(psidot[i]*cos(phi[i])*cos(theta[i]) - thetadot[i]*sin(phi[i]))**2 + 0.5*m*(vx[i]**2 + vy[i]**2 + vz[i]**2)
-    PE_temp= g*m*z[i]
-    PE.append(PE_temp);
-    KE.append(KE_temp);
-    TE.append(PE_temp+KE_temp)
-    X_pos.append(np.array([x[i], y[i], z[i]]))
-    X_ang.append(np.array([phi[i], theta[i], psi[i]]))
+    # initial conditions
+    x0, y0, z0, phi0, theta0, psi0 = 0, 0, 0, 0, 0, 0
+    vx0, vy0, vz0, phidot0, thetadot0, psidot0 = 0, 0, 5, 3, -4, 5
 
+    t = np.linspace(0, 1, 101)
+    X0 = np.array([x0, y0, z0, phi0, theta0, psi0, vx0, vy0, vz0, phidot0, thetadot0, psidot0])
+    
+    m, Ixx, Iyy, Izz, g = parms.m, parms.Ixx, parms.Iyy, parms.Izz, parms.g
+    all_parms = (m, Ixx, Iyy, Izz, g)
+    X = odeint(eom, X0, t, args=all_parms)
 
-    R_we = np.zeros((3,3))
-    R_we[ 0 , 0 ]= cos(psi[i])*cos(theta[i])
-    R_we[ 0 , 1 ]= -sin(psi[i])
-    R_we[ 0 , 2 ]= 0
-    R_we[ 1 , 0 ]= sin(psi[i])*cos(theta[i])
-    R_we[ 1 , 1 ]= cos(psi[i])
-    R_we[ 1 , 2 ]= 0
-    R_we[ 2 , 0 ]= -sin(theta[i])
-    R_we[ 2 , 1 ]= 0
-    R_we[ 2 , 2 ]= 1
-    rates = np.array([phidot[i], thetadot[i], psidot[i]])
-    omega = R_we.dot(rates);
-    omega_x.append(omega[0])
-    omega_y.append(omega[1])
-    omega_z.append(omega[2])
-
-    R_be = np.zeros((3,3))
-    R_be[ 0 , 0 ]= 1
-    R_be[ 0 , 1 ]= 0
-    R_be[ 0 , 2 ]= -sin(theta[i])
-    R_be[ 1 , 0 ]= 0
-    R_be[ 1 , 1 ]= cos(phi[i])
-    R_be[ 1 , 2 ]= sin(phi[i])*cos(theta[i])
-    R_be[ 2 , 0 ]= 0
-    R_be[ 2 , 1 ]= -sin(phi[i])
-    R_be[ 2 , 2 ]= cos(phi[i])*cos(theta[i])
-    rates = np.array([phidot[i], thetadot[i], psidot[i]])
-    omega_body = R_be.dot(rates);
-    omega_body_x.append(omega_body[0])
-    omega_body_y.append(omega_body[1])
-    omega_body_z.append(omega_body[2])
+    mm = len(X)
+    
+    x = []; y = []; z = []
+    phi = []; theta = []; psi = []
+    
+    vx = []; vy = []; vz = []
+    phidot = []; thetadot = []; psidot = []
+    
+    KE = []; PE = []; TE = []
+    
+    omega_x=[]; omega_y=[]; omega_z = []
+    omega_body_x=[]; omega_body_y=[]; omega_body_z = []
+    
+    X_pos = []
+    X_ang = []
+    for i in range(0,mm):
+        j = 0;
+        x.append(X[i,j]); j+=1;
+        y.append(X[i,j]); j+=1;
+        z.append(X[i,j]); j+=1;
+        phi.append(X[i,j]); j+=1;
+        theta.append(X[i,j]); j+=1;
+        psi.append(X[i,j]); j+=1;
+        vx.append(X[i,j]); j+=1;
+        vy.append(X[i,j]); j+=1;
+        vz.append(X[i,j]); j+=1;
+        phidot.append(X[i,j]); j+=1;
+        thetadot.append(X[i,j]); j+=1;
+        psidot.append(X[i,j]); j+=1;
+        KE_temp= 0.5*Ixx*(phidot[i] - psidot[i]*sin(theta[i]))**2 + \
+                0.5*Iyy*(psidot[i]*sin(phi[i])*cos(theta[i]) + thetadot[i]*cos(phi[i]))**2 + \
+                0.5*Izz*(psidot[i]*cos(phi[i])*cos(theta[i]) - thetadot[i]*sin(phi[i]))**2 + \
+                0.5*m*(vx[i]**2 + vy[i]**2 + vz[i]**2)
+        PE_temp= g*m*z[i]
+        PE.append(PE_temp);
+        KE.append(KE_temp);
+        TE.append(PE_temp+KE_temp)
+        X_pos.append(np.array([x[i], y[i], z[i]]))
+        X_ang.append(np.array([phi[i], theta[i], psi[i]]))
 
 
-# plt.figure(1)
-# plt.subplot(2,1,1)
-# plt.plot(t,x);
-# plt.plot(t,y)
-# plt.plot(t,z)
-# plt.ylabel('linear position');
-# plt.subplot(2,1,2)
-# plt.plot(t,vx);
-# plt.plot(t,vy)
-# plt.plot(t,vz)
-# plt.xlabel('time')
-# plt.ylabel('linear velocity');
+        R_we = np.zeros((3,3))
+        R_we[ 0 , 0 ]= cos(psi[i])*cos(theta[i])
+        R_we[ 0 , 1 ]= -sin(psi[i])
+        R_we[ 0 , 2 ]= 0
+        R_we[ 1 , 0 ]= sin(psi[i])*cos(theta[i])
+        R_we[ 1 , 1 ]= cos(psi[i])
+        R_we[ 1 , 2 ]= 0
+        R_we[ 2 , 0 ]= -sin(theta[i])
+        R_we[ 2 , 1 ]= 0
+        R_we[ 2 , 2 ]= 1
+        rates = np.array([phidot[i], thetadot[i], psidot[i]])
+        omega = R_we.dot(rates);
+        omega_x.append(omega[0])
+        omega_y.append(omega[1])
+        omega_z.append(omega[2])
 
-# plt.figure(2)
-# plt.subplot(2,1,1)
-# plt.plot(t,phi);
-# plt.plot(t,theta)
-# plt.plot(t,psi)
-# plt.ylabel('angular position');
-# plt.subplot(2,1,2)
-# plt.plot(t,phidot);
-# plt.plot(t,thetadot)
-# plt.plot(t,psidot)
-# plt.xlabel('time')
-# plt.ylabel('angular velocity');
-
-# ax=plt.figure(3)
-# plt.plot(t,PE,'b-.')
-# plt.plot(t,KE,'r:')
-# plt.plot(t,TE,'k')
-# plt.xlabel('time')
-# plt.ylabel('energy');
-# ax.legend(['PE', 'KE','TE'])
-
-# ax=plt.figure(4)
-# plt.subplot(2,1,1)
-# plt.plot(t,omega_x);
-# plt.plot(t,omega_y);
-# plt.plot(t,omega_z);
-# ax.legend(['x', 'y','z'])
-# plt.ylabel('omega world');
-# plt.subplot(2,1,2)
-# plt.plot(t,omega_body_x);
-# plt.plot(t,omega_body_y);
-# plt.plot(t,omega_body_z);
-# ax.legend(['x', 'y','z'])
-# plt.ylabel('omega body');
-# plt.xlabel('time')
+        R_be = np.zeros((3,3))
+        R_be[ 0 , 0 ]= 1
+        R_be[ 0 , 1 ]= 0
+        R_be[ 0 , 2 ]= -sin(theta[i])
+        R_be[ 1 , 0 ]= 0
+        R_be[ 1 , 1 ]= cos(phi[i])
+        R_be[ 1 , 2 ]= sin(phi[i])*cos(theta[i])
+        R_be[ 2 , 0 ]= 0
+        R_be[ 2 , 1 ]= -sin(phi[i])
+        R_be[ 2 , 2 ]= cos(phi[i])*cos(theta[i])
+        rates = np.array([phidot[i], thetadot[i], psidot[i]])
+        omega_body = R_be.dot(rates);
+        omega_body_x.append(omega_body[0])
+        omega_body_y.append(omega_body[1])
+        omega_body_z.append(omega_body[2])
 
 
-# #plt.show()
-# plt.show(block=False)
-# plt.pause(2)
-# plt.close()
+    # plt.figure(1)
+    # plt.subplot(2,1,1)
+    # plt.plot(t,x);
+    # plt.plot(t,y)
+    # plt.plot(t,z)
+    # plt.ylabel('linear position');
+    # plt.subplot(2,1,2)
+    # plt.plot(t,vx);
+    # plt.plot(t,vy)
+    # plt.plot(t,vz)
+    # plt.xlabel('time')
+    # plt.ylabel('linear velocity');
 
-# fig = plt.figure(5)
-fig = plt.figure(1)
-animate(t,X_pos,X_ang,parms)
+    # plt.figure(2)
+    # plt.subplot(2,1,1)
+    # plt.plot(t,phi);
+    # plt.plot(t,theta)
+    # plt.plot(t,psi)
+    # plt.ylabel('angular position');
+    # plt.subplot(2,1,2)
+    # plt.plot(t,phidot);
+    # plt.plot(t,thetadot)
+    # plt.plot(t,psidot)
+    # plt.xlabel('time')
+    # plt.ylabel('angular velocity');
+
+    # ax=plt.figure(3)
+    # plt.plot(t,PE,'b-.')
+    # plt.plot(t,KE,'r:')
+    # plt.plot(t,TE,'k')
+    # plt.xlabel('time')
+    # plt.ylabel('energy');
+    # ax.legend(['PE', 'KE','TE'])
+
+    # ax=plt.figure(4)
+    # plt.subplot(2,1,1)
+    # plt.plot(t,omega_x);
+    # plt.plot(t,omega_y);
+    # plt.plot(t,omega_z);
+    # ax.legend(['x', 'y','z'])
+    # plt.ylabel('omega world');
+    # plt.subplot(2,1,2)
+    # plt.plot(t,omega_body_x);
+    # plt.plot(t,omega_body_y);
+    # plt.plot(t,omega_body_z);
+    # ax.legend(['x', 'y','z'])
+    # plt.ylabel('omega body');
+    # plt.xlabel('time')
+
+
+    # #plt.show()
+    # plt.show(block=False)
+    # plt.pause(2)
+    # plt.close()
+
+    # fig = plt.figure(5)
+    fig = plt.figure(1)
+    animate(t,X_pos,X_ang,parms)
