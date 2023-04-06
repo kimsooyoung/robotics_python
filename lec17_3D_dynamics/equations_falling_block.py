@@ -22,26 +22,27 @@ j = sy.Matrix([0, 1, 0]);
 k = sy.Matrix([0, 0, 1]);
 
 # 1) position and angles
-R_x = np.array([
-    [1,            0,         0],
-    [0,     cos(phi), -sin(phi)],
-    [0,     sin(phi),  cos(phi)]
+
+R_x = sy.Matrix([
+    [1,        0,         0],
+    [0, cos(phi), -sin(phi)],
+    [0, sin(phi),  cos(phi)]
 ])
 
-R_y = np.array([
+R_y = sy.Matrix([
     [cos(theta),  0, sin(theta)],
     [0,           1,          0],
-    [-sin(theta),  0, cos(theta)]
+    [-sin(theta), 0, cos(theta)]
 ])
 
-R_z = np.array( [
+R_z = sy.Matrix([
     [cos(psi), -sin(psi), 0],
     [sin(psi),  cos(psi), 0],
-    [0,            0,         1]
+    [0,                0, 1]
 ])
 
 #2) angular velocity and energy
-om_b = phidot*i +  R_x.transpose()*(thetadot*j) + R_x.transpose()*R_y.transpose()*(psidot*k);
+om_b = phidot*i +  R_x.transpose()*(thetadot*j) + R_x.transpose()*R_y.transpose()*(psidot*k)
 
 I = sy.Matrix([
     [Ixx, 0, 0],
@@ -55,7 +56,6 @@ V = m*g*z;
 L = T - V
 print('KE=',T);
 print('PE=',V);
-print('TE= PE+KE');
 
 # #3) Derive equations
 q = sy.Matrix([x,y,z,phi,theta,psi])
@@ -77,9 +77,6 @@ for ii in range(0,mm):
 
 ndof = len(q)
 EOM = sy.Matrix([EOM[0],EOM[1],EOM[2],EOM[3],EOM[4],EOM[5]])
-# # print(len(EOM))
-# # print(type(qddot))
-# # print(type(EOM))
 
 A = EOM.jacobian(qddot)
 b = []

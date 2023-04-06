@@ -97,6 +97,7 @@ def animate(t,Xpos,Xang,parms):
             v1[i,1] = vec[1]+y;
             v1[i,2] = vec[2]+z;
 
+        fig = plt.figure(1)
         ax = fig.add_subplot(projection="3d")
         # pc0 = art3d.Poly3DCollection(v0[f], facecolors="lightblue",alpha=0.5) #, edgecolor="black")
         pc1 = art3d.Poly3DCollection(v1[f], facecolors="blue",alpha=0.25) #, edgecolor="black")
@@ -126,20 +127,7 @@ def animate(t,Xpos,Xang,parms):
 
 def eom(X,t ,m,Ixx,Iyy,Izz,g):
 
-    i = 0;
-    x = X[i]; i +=1;
-    y = X[i]; i +=1;
-    z = X[i]; i +=1;
-    phi = X[i]; i +=1;
-    theta = X[i]; i +=1;
-    psi = X[i]; i+=1;
-    
-    vx = X[i]; i +=1;
-    vy = X[i]; i +=1;
-    vz = X[i]; i +=1;
-    phidot = X[i]; i +=1;
-    thetadot = X[i]; i +=1;
-    psidot = X[i]; i+=1;
+    x,y,z,phi,theta,psi,vx,vy,vz,phidot,thetadot,psidot = X
 
     A = np.zeros((6,6))
     b = np.zeros((6,1))
@@ -190,19 +178,63 @@ def eom(X,t ,m,Ixx,Iyy,Izz,g):
     invA = np.linalg.inv(A)
     Xddot = invA.dot(b)
     
-    ax, ay, az, phiddot, thetaddot, psiddot = Xddot[0:6,0]
-    
-    # i = 0;
-    # ax = Xddot[i,0]; i+=1
-    # ay = Xddot[i,0]; i+=1
-    # az = Xddot[i,0]; i+=1
-    # phiddot = Xddot[i,0]; i+=1
-    # thetaddot = Xddot[i,0]; i+=1
-    # psiddot = Xddot[i,0]; i+=1
-
+    ax, ay, az, phiddot, thetaddot, psiddot = Xddot[:,0]
     dXdt = np.array([vx, vy, vz, phidot, thetadot, psidot, ax, ay, az, phiddot,thetaddot,psiddot]);
     return dXdt
 
+
+def plot(ts, x, y, z, vx, vy, vz, phi, theta, psi, phidot, thetadot, psidot, KE, PE, TE, omega_x, omega_y, omega_z, omega_body_x, omega_body_y, omega_body_z):
+    plt.figure(2)
+    plt.subplot(2,1,1)
+    plt.plot(ts,x);
+    plt.plot(ts,y)
+    plt.plot(ts,z)
+    plt.ylabel('linear position');
+    plt.subplot(2,1,2)
+    plt.plot(ts,vx);
+    plt.plot(ts,vy)
+    plt.plot(ts,vz)
+    plt.xlabel('time')
+    plt.ylabel('linear velocity');
+
+    plt.figure(3)
+    plt.subplot(2,1,1)
+    plt.plot(ts,phi);
+    plt.plot(ts,theta)
+    plt.plot(ts,psi)
+    plt.ylabel('angular position');
+    plt.subplot(2,1,2)
+    plt.plot(ts,phidot);
+    plt.plot(ts,thetadot)
+    plt.plot(ts,psidot)
+    plt.xlabel('time')
+    plt.ylabel('angular velocity');
+
+    ax=plt.figure(4)
+    plt.plot(ts,PE,'b-.')
+    plt.plot(ts,KE,'r:')
+    plt.plot(ts,TE,'k')
+    plt.xlabel('time')
+    plt.ylabel('energy');
+    ax.legend(['PE', 'KE','TE'])
+
+    ax=plt.figure(5)
+    plt.subplot(2,1,1)
+    plt.plot(ts,omega_x);
+    plt.plot(ts,omega_y);
+    plt.plot(ts,omega_z);
+    ax.legend(['x', 'y','z'])
+    plt.ylabel('omega world');
+    plt.subplot(2,1,2)
+    plt.plot(ts,omega_body_x);
+    plt.plot(ts,omega_body_y);
+    plt.plot(ts,omega_body_z);
+    ax.legend(['x', 'y','z'])
+    plt.ylabel('omega body');
+    plt.xlabel('time')
+
+    plt.show()
+    
 
 if __name__=='__main__':
 
@@ -212,14 +244,14 @@ if __name__=='__main__':
     x0, y0, z0, phi0, theta0, psi0 = 0, 0, 0, 0, 0, 0
     vx0, vy0, vz0, phidot0, thetadot0, psidot0 = 0, 0, 5, 3, -4, 5
 
-    t = np.linspace(0, 1, 101)
+    t0, tend, N = 0, 1, 100
+    ts = np.linspace(0, 1, N)
     X0 = np.array([x0, y0, z0, phi0, theta0, psi0, vx0, vy0, vz0, phidot0, thetadot0, psidot0])
     
     m, Ixx, Iyy, Izz, g = parms.m, parms.Ixx, parms.Iyy, parms.Izz, parms.g
     all_parms = (m, Ixx, Iyy, Izz, g)
-    X = odeint(eom, X0, t, args=all_parms)
-
-    mm = len(X)
+    
+    X = odeint(eom, X0, ts, args=all_parms)
     
     x = []; y = []; z = []
     phi = []; theta = []; psi = []
@@ -234,7 +266,7 @@ if __name__=='__main__':
     
     X_pos = []
     X_ang = []
-    for i in range(0,mm):
+    for i in range(N):
         j = 0;
         x.append(X[i,j]); j+=1;
         y.append(X[i,j]); j+=1;
@@ -259,7 +291,6 @@ if __name__=='__main__':
         X_pos.append(np.array([x[i], y[i], z[i]]))
         X_ang.append(np.array([phi[i], theta[i], psi[i]]))
 
-
         R_we = np.zeros((3,3))
         R_we[ 0 , 0 ]= cos(psi[i])*cos(theta[i])
         R_we[ 0 , 1 ]= -sin(psi[i])
@@ -270,6 +301,7 @@ if __name__=='__main__':
         R_we[ 2 , 0 ]= -sin(theta[i])
         R_we[ 2 , 1 ]= 0
         R_we[ 2 , 2 ]= 1
+        
         rates = np.array([phidot[i], thetadot[i], psidot[i]])
         omega = R_we.dot(rates);
         omega_x.append(omega[0])
@@ -292,62 +324,5 @@ if __name__=='__main__':
         omega_body_y.append(omega_body[1])
         omega_body_z.append(omega_body[2])
 
-
-    # plt.figure(1)
-    # plt.subplot(2,1,1)
-    # plt.plot(t,x);
-    # plt.plot(t,y)
-    # plt.plot(t,z)
-    # plt.ylabel('linear position');
-    # plt.subplot(2,1,2)
-    # plt.plot(t,vx);
-    # plt.plot(t,vy)
-    # plt.plot(t,vz)
-    # plt.xlabel('time')
-    # plt.ylabel('linear velocity');
-
-    # plt.figure(2)
-    # plt.subplot(2,1,1)
-    # plt.plot(t,phi);
-    # plt.plot(t,theta)
-    # plt.plot(t,psi)
-    # plt.ylabel('angular position');
-    # plt.subplot(2,1,2)
-    # plt.plot(t,phidot);
-    # plt.plot(t,thetadot)
-    # plt.plot(t,psidot)
-    # plt.xlabel('time')
-    # plt.ylabel('angular velocity');
-
-    # ax=plt.figure(3)
-    # plt.plot(t,PE,'b-.')
-    # plt.plot(t,KE,'r:')
-    # plt.plot(t,TE,'k')
-    # plt.xlabel('time')
-    # plt.ylabel('energy');
-    # ax.legend(['PE', 'KE','TE'])
-
-    # ax=plt.figure(4)
-    # plt.subplot(2,1,1)
-    # plt.plot(t,omega_x);
-    # plt.plot(t,omega_y);
-    # plt.plot(t,omega_z);
-    # ax.legend(['x', 'y','z'])
-    # plt.ylabel('omega world');
-    # plt.subplot(2,1,2)
-    # plt.plot(t,omega_body_x);
-    # plt.plot(t,omega_body_y);
-    # plt.plot(t,omega_body_z);
-    # ax.legend(['x', 'y','z'])
-    # plt.ylabel('omega body');
-    # plt.xlabel('time')
-
-
-    # #plt.show()
-    # plt.show(block=False)
-    # plt.pause(2)
-    # plt.close()
-
-    # fig = plt.figure(5)
-    fig = plt.figure(1)
-    animate(t,X_pos,X_ang,parms)
+    animate(ts, X_pos, X_ang, parms)
+    plot(ts, x, y, z, vx, vy, vz, phi, theta, psi, phidot, thetadot, psidot, KE, PE, TE, omega_x, omega_y, omega_z, omega_body_x, omega_body_y, omega_body_z)
