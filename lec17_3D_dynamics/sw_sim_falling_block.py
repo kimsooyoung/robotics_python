@@ -184,6 +184,120 @@ def animate(t, Xpos, Xang, parms):
 
     plt.close()
 
+
+def calc_engery(z, params):
+    
+    P_e, K_e, T_e = [], [], []
+    
+    m, g, Ixx, Iyy, Izz = params.m, params.g, params.Ixx, params.Iyy, params.Izz
+    
+    for state in z:
+        x, y, z, phi, theta, psi, vx, vy, vz, phi_d, theta_d, psi_d = state
+        
+        T = 0.5*Ixx*(phi_d - psi_d*sin(theta))**2 + \
+            0.5*Iyy*(psi_d*sin(phi)*cos(theta) + theta_d*cos(phi))**2 + \
+            0.5*Izz*(psi_d*cos(phi)*cos(theta) - theta_d*sin(phi))**2 + \
+            0.5*m*(vx**2 + vy**2 + vz**2)
+        
+        V = g*m*z
+        
+        P_e.append(V)
+        K_e.append(T)
+        T_e.append(V+T)
+    
+    return P_e, K_e, T_e
+
+def calc_ang_vel(z, params):
+    
+    w_b = np.zeros((len(z), 3))
+    w_w = np.zeros((len(z), 3))
+    
+    for i, state in enumerate(z):
+        x, y, z, phi, theta, psi, vx, vy, vz, phi_d, theta_d, psi_d = state
+        rates = np.array([phi_d, theta_d, psi_d])
+        
+        R_we = np.zeros((3,3))
+        R_we[ 0 , 0 ]= cos(psi)*cos(theta)
+        R_we[ 0 , 1 ]= -sin(psi)
+        R_we[ 0 , 2 ]= 0
+        R_we[ 1 , 0 ]= sin(psi)*cos(theta)
+        R_we[ 1 , 1 ]= cos(psi)
+        R_we[ 1 , 2 ]= 0
+        R_we[ 2 , 0 ]= -sin(theta)
+        R_we[ 2 , 1 ]= 0
+        R_we[ 2 , 2 ]= 1        
+        w_w[i] = R_we.dot(rates)
+        
+        R_be = np.zeros((3,3))
+        R_be[ 0 , 0 ]= 1
+        R_be[ 0 , 1 ]= 0
+        R_be[ 0 , 2 ]= -sin(theta)
+        R_be[ 1 , 0 ]= 0
+        R_be[ 1 , 1 ]= cos(phi)
+        R_be[ 1 , 2 ]= sin(phi)*cos(theta)
+        R_be[ 2 , 0 ]= 0
+        R_be[ 2 , 1 ]= -sin(phi)
+        R_be[ 2 , 2 ]= cos(phi)*cos(theta)
+        w_b[i] = R_be.dot(rates)        
+    
+    return w_b, w_w
+
+
+def plot(ts, z, PE, KE, TE, w_b, w_w):
+    
+    ax=plt.figure(2, figsize=(15, 7))
+    
+    plt.subplot(2,3,1)
+    plt.plot(ts, z[:,0]);
+    plt.plot(ts, z[:,1])
+    plt.plot(ts, z[:,2])
+    plt.ylabel('linear position');
+
+    plt.subplot(2,3,4)
+    plt.plot(ts, z[:,6]);
+    plt.plot(ts, z[:,7])
+    plt.plot(ts, z[:,8])
+    plt.xlabel('time')
+    plt.ylabel('linear velocity');
+
+    plt.subplot(2,3,2)
+    plt.plot(ts,z[:,3]);
+    plt.plot(ts,z[:,4])
+    plt.plot(ts,z[:,5])
+    plt.ylabel('angular position');
+    
+    plt.subplot(2,3,5)
+    plt.plot(ts,z[:,9]);
+    plt.plot(ts,z[:,10])
+    plt.plot(ts,z[:,11])
+    plt.xlabel('time')
+    plt.ylabel('angular velocity');
+    
+    plt.subplot(2,3,3)
+    plt.plot(ts,w_w[:,0]);
+    plt.plot(ts,w_w[:,1]);
+    plt.plot(ts,w_w[:,2]);
+    ax.legend(['x', 'y','z'])
+    plt.ylabel('omega world');
+    
+    plt.subplot(2,3,6)
+    plt.plot(ts,w_b[:,0]);
+    plt.plot(ts,w_b[:,1]);
+    plt.plot(ts,w_b[:,2]);
+    ax.legend(['x', 'y','z'])
+    plt.ylabel('omega body');
+    plt.xlabel('time')
+
+    ax=plt.figure(3)
+    plt.plot(ts,PE,'b-.')
+    plt.plot(ts,KE,'r:')
+    plt.plot(ts,TE,'k')
+    plt.xlabel('time')
+    plt.ylabel('energy');
+    ax.legend(['PE', 'KE','TE'])
+
+    plt.show()
+
 if __name__=="__main__":
     params = Parameters()
     
@@ -191,14 +305,14 @@ if __name__=="__main__":
     lx, ly, lz = params.lx, params.ly, params.lz
     Ixx, Iyy, Izz = params.Ixx, params.Iyy, params.Izz
     
-    t0, tend, N = 0, 3, 100
+    t0, tend, N = 0, 2, 100
     ts = np.linspace(t0, tend, N)
     
     x0, y0, z0 = 0, 0, 0
     phi0, theta0, psi0 = 0, 0, 0
     
-    vx0, vy0, vz0 = 0, 1, 5
-    phi_d0, theta_d0, psi_d0 = 0, 0, 0
+    vx0, vy0, vz0 = 0, 0, 10
+    phi_d0, theta_d0, psi_d0 = 3, -4, 5
     
     z = np.zeros((N, 12))
     z0 = np.array([x0, y0, z0, phi0, theta0, psi0, vx0, vy0, vz0, phi_d0, theta_d0, psi_d0])
@@ -217,6 +331,11 @@ if __name__=="__main__":
     position = pose[:,0:3]
     orientation = pose[:,3:6]
     
+    # calc potential and kinetic energy and total energy
+    P_e, K_e, T_e = calc_engery(z, params)
+    
+    # calc body frame angular velocity & world frame angular velocity
+    w_b, w_w = calc_ang_vel(z, params)
+
     animate(ts, position, orientation, params)
-    
-    
+    plot(ts, z, P_e, K_e, T_e, w_b, w_w)
