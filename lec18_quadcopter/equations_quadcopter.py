@@ -63,8 +63,8 @@ v = sy.Matrix([vx, vy, vz]);
 T = 0.5*m*v.dot(v) + 0.5*om_b.dot(I*om_b);
 V = m*g*z;
 L = T - V
-# print('KE=',T);
-# print('PE=',V);
+print('KE=',T);
+print('PE=',V);
 # print('TE= PE+KE');
 
 #external force
@@ -77,8 +77,8 @@ tau_theta = K*l*(omega3**2 - omega1**2);
 tau_psi = b*(omega1**2-omega2**2+omega3**2-omega4**2);
 tau_ext = sy.Matrix([tau_phi,tau_theta,tau_psi])
 # T_ext = np.concatenate(F_ext,tau_ext)
-# print(T_ext)
 T_ext = F_ext.col_join(tau_ext)
+print(T_ext)
 
 # T_ext = [F_ext; tau_ext];
 
