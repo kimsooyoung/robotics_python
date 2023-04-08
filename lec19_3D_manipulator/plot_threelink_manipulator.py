@@ -56,7 +56,7 @@ if __name__ == '__main__':
     a2, alpha2, d2, theta2 = 0, 0, 0.4, 0
     H12 = DH(a2,alpha2,d2,theta2); #H^1_2
 
-    a3, alpha3, d3, theta3 = 0, 0, 0.25, 0
+    a3, alpha3, d3, theta3 = 0, 0, 0.25, np.pi/2
     H23 = DH(a3,alpha3,d3,theta3); #H^2_3
 
     #%Location of joint 1
