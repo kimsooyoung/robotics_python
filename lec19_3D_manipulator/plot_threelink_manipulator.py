@@ -46,49 +46,65 @@ def DH(a,alpha,d,theta):
 
     return H
 
-a1 = 0; alpha1 = 0; d1=0.5; theta1 = np.pi/3;
-H01 = DH(a1,alpha1,d1,theta1); #H^0_1
+if __name__ == '__main__':
+    
+    # a1, alpha1, d1, theta1 = 0, 0, 0.5, np.pi/3
+    a1, alpha1, d1, theta1 = 0, 0, 0.5, 0
+    H01 = DH(a1,alpha1,d1,theta1); #H^0_1
 
-a2 = 0; alpha2 = -np.pi/2; d2=0.4; theta2 = 0;
-H12 = DH(a2,alpha2,d2,theta2); #H^1_2
+    # a2, alpha2, d2, theta2 = 0, -np.pi/2, 0.4, 0
+    a2, alpha2, d2, theta2 = 0, 0, 0.4, 0
+    H12 = DH(a2,alpha2,d2,theta2); #H^1_2
 
-a3 = 0; alpha3 = 0; d3=0.25; theta3 = 0;
-H23 = DH(a3,alpha3,d3,theta3); #H^2_3
+    a3, alpha3, d3, theta3 = 0, 0, 0.25, 0
+    H23 = DH(a3,alpha3,d3,theta3); #H^2_3
 
-#%Location of joint 1
-endOfLink1 = H01[0:3,3];
-# print(endOfLink1)
+    #%Location of joint 1
+    endOfLink1 = H01[0:3,3];
+    # print(endOfLink1)
 
-#Location of joint 2
-H02 = np.matmul(H01,H12);
-endOfLink2 = H02[0:3,3];
-# print(endOfLink2)
+    #Location of joint 2
+    H02 = H01@H12
+    endOfLink2 = H02[0:3,3];
+    # print(endOfLink2)
 
-#Location of joint 3
-H03 = np.matmul(H02,H23); #H01*H12*H23;
-endOfLink3 = H03[0:3,3];
-# print(endOfLink3)
+    #Location of joint 3
+    H03 = H02@H23
+    endOfLink3 = H03[0:3,3];
+    # print(endOfLink3)
 
-#end-effector position and orientation.
-position_of_end_effector = H03[0:3,3];
-orientation_of_end_effector = H03[0:3,0:3];
-print(position_of_end_effector)
-print(orientation_of_end_effector)
+    #end-effector position and orientation.
+    position_of_end_effector = H03[0:3,3];
+    orientation_of_end_effector = H03[0:3,0:3];
+    print(position_of_end_effector)
+    print(orientation_of_end_effector)
 
-fig = plt.figure()
-ax = p3.Axes3D(fig)
+    fig = plt.figure()
+    ax = p3.Axes3D(fig)
 
-line1, = ax.plot([0, endOfLink1[0]],[0, endOfLink1[1]],[0, endOfLink1[2]], color='red', linewidth=2)
-line2, = ax.plot([endOfLink1[0], endOfLink2[0]],[endOfLink1[1], endOfLink2[1]],[endOfLink1[2], endOfLink2[2]],
-                  color='blue', linewidth=2)
-line3, = ax.plot([endOfLink2[0], endOfLink3[0]],[endOfLink2[1], endOfLink3[1]],[endOfLink2[2], endOfLink3[2]],
-                  color='lightblue', linewidth=2)
+    line1, = ax.plot(
+        [0, endOfLink1[0]],
+        [0, endOfLink1[1]],
+        [0, endOfLink1[2]], 
+        color='red', linewidth=2
+    )
+    line2, = ax.plot(
+        [endOfLink1[0], endOfLink2[0]],
+        [endOfLink1[1], endOfLink2[1]],
+        [endOfLink1[2], endOfLink2[2]],
+        color='blue', linewidth=2
+    )
+    line3, = ax.plot(
+        [endOfLink2[0], endOfLink3[0]],
+        [endOfLink2[1], endOfLink3[1]],
+        [endOfLink2[2], endOfLink3[2]],
+        color='lightblue', linewidth=2
+    )
 
-ax.set_xlim([-1, 1])
-ax.set_ylim([-1, 1])
-ax.set_zlim([-1, 1])
-ax.view_init(azim=64,elev=29)
-plt.show()
-# plt.show(block=False)
-# plt.pause(2)
-# plt.close()
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
+    ax.view_init(azim=64,elev=29)
+    
+    plt.show()
+    
