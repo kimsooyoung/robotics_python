@@ -2,139 +2,118 @@ import numpy as np
 from matplotlib import pyplot as plt
 import mpl_toolkits.mplot3d.axes3d as p3
 
-pi = np.pi
+class Parameters:
+    
+    def __init__(self):
+        
+        self.l1 = 0.5
+        self.l2 = 0.4
+        self.l3 = 0.25
+        
+        self.a1 = 0
+        self.alpha1 = np.pi/2
+        self.d1 = self.l1
 
-def cos(angle):
-    return np.cos(angle)
-
-def sin(angle):
-    return np.sin(angle)
-
-def DH(a,alpha,d,theta):
-
-    cth = cos(theta);
-    sth = sin(theta);
-    cal = cos(alpha);
-    sal = sin(alpha);
-
+        self.a2 = self.l2
+        self.alpha2 = 0
+        self.d2 = 0
+        
+        self.a3 = self.l3
+        self.alpha3 = 0
+        self.d3 = 0
+        
+        self.pause = 0.01
+        
+def DH2Matrix(a, alpha, d, theta):
+        
     H_z_theta = np.array([
-                   [cth, -sth, 0, 0],
-                   [sth,  cth, 0, 0],
-                   [0 ,    0, 1, 0],
-                   [0 ,    0, 0, 1]]);
+        [np.cos(theta), -np.sin(theta), 0, 0],
+        [np.sin(theta),  np.cos(theta), 0, 0],
+        [0,              0,             1, 0],
+        [0,              0,             0, 1]
+    ])
 
     H_z_d = np.array([
-                [1, 0, 0, 0],
-                [0, 1, 0, 0],
-                [0, 0, 1, d],
-                [0, 0, 0, 1]]);
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, d],
+        [0, 0, 0, 1]
+    ])
 
     H_x_a = np.array([
-                    [1, 0, 0, a],
-                    [0, 1, 0, 0],
-                    [0, 0, 1, 0],
-                    [0, 0, 0, 1]]);
+        [1, 0, 0, a],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+    ])
 
     H_x_alpha = np.array([
-                  [1,   0,   0,   0],
-                  [0,  cal, -sal, 0],
-                  [0,  sal,  cal, 0],
-                  [0,   0,    0,  1]]);
+        [1,             0,              0, 0],
+        [0, np.cos(alpha), -np.sin(alpha), 0],
+        [0, np.sin(alpha),  np.cos(alpha), 0],
+        [0,             0,              0, 1]
+    ])
 
-    H = H_z_theta@H_z_d@H_x_a@H_x_alpha;
-
+    H = H_z_theta@H_z_d@H_x_a@H_x_alpha
+    
     return H
-
-def animate(z):
+        
+if __name__=="__main__":
+    
+    params = Parameters()
+    
+    a1, alpa1, d1 = params.a1, params.alpha1, params.d1
+    a2, alpa2, d2 = params.a2, params.alpha2, params.d2
+    a3, alpa3, d3 = params.a3, params.alpha3, params.d3
+    
+    theta1, theta2, theta3 = 0, 0, 0
+    
+    H_01 = DH2Matrix(a1, alpa1, d1, theta1)
+    H_12 = DH2Matrix(a2, alpa2, d2, theta2)
+    H_23 = DH2Matrix(a3, alpa3, d3, theta3)
+    
+    H_01 = H_01
+    H_02 = H_01@H_12
+    H_03 = H_02@H_23
+    
+    point1 = H_01[0:3, 3]
+    point2 = H_02[0:3, 3]
+    point3 = H_03[0:3, 3]
     
     fig = plt.figure(1)
+    ax = p3.Axes3D(fig)
+    
+    line1, = ax.plot(
+        [0, point1[0]],
+        [0, point1[1]],
+        [0, point1[2]], 
+        color='red', linewidth=2
+    )
+    line2, = ax.plot(
+        [point1[0], point2[0]],
+        [point1[1], point2[1]],
+        [point1[2], point2[2]],
+        color='blue', linewidth=2
+    )
+    line3, = ax.plot(
+        [point2[0], point3[0]],
+        [point2[1], point3[1]],
+        [point2[2], point3[2]],
+        color='lightblue', linewidth=2
+    )
 
-    for z_temp in z:
-        
-        ax = p3.Axes3D(fig)
-        
-        line1, = ax.plot(
-            [0, z_temp[0]],
-            [0, z_temp[1]],
-            [0, z_temp[2]], 
-            color='red', linewidth=2
-        )
-        line2, = ax.plot(
-            [z_temp[0], z_temp[3]],
-            [z_temp[1], z_temp[4]],
-            [z_temp[2], z_temp[5]],
-            color='blue', linewidth=2
-        )
-        line3, = ax.plot(
-            [z_temp[3], z_temp[6]],
-            [z_temp[4], z_temp[7]],
-            [z_temp[5], z_temp[8]],
-            color='lightblue', linewidth=2
-        )
-
-        ax.set_xlim([-1, 1])
-        ax.set_ylim([-1, 1])
-        ax.set_zlim([-1, 1])
-        
-        # angle 1
-        # ax.view_init(elev=90,azim=0)
-        
-        # angle 2
-        ax.view_init(elev=0,azim=-90)
-        
-        ax.set_xlabel('X Label')
-        ax.set_ylabel('Y Label')
-        ax.set_zlabel('Z Label')
-        
-        plt.pause(0.01)
+    ax.set_xlim([-1, 1])
+    ax.set_ylim([-1, 1])
+    ax.set_zlim([-1, 1])
     
-    plt.close()
-
-if __name__ == '__main__':
+    # angle 1
+    # ax.view_init(elev=90,azim=0)
     
-    theta1, theta2, theta3 = pi/4, 0, pi/4
-    l1, l2, l3 = 0.5, 0.4, 0.25
+    # angle 2
+    ax.view_init(elev=30,azim=-70)
     
-    a1, alpha1, d1 = 0, pi/2, l1
-    a2, alpha2, d2 = l2, 0, 0
-    a3, alpha3, d3 = l3, 0, 0
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
     
-    N = 50
-    
-    # # case 1 - theta1
-    # theta1_ts = np.linspace(0, pi/4, N)
-    # theta2_ts = np.linspace(0, 0, N)
-    # theta3_ts = np.linspace(0, 0, N)
-    
-    # # case 2 - theta2
-    # theta1_ts = np.linspace(0, 0, N)
-    # theta2_ts = np.linspace(0, pi/4, N)
-    # theta3_ts = np.linspace(0, 0, N)
- 
-    # case 3 - theta3
-    theta1_ts = np.linspace(0, 0, N)
-    theta2_ts = np.linspace(0, 0, N)
-    theta3_ts = np.linspace(0, pi/4, N)
- 
- 
-    z = np.zeros((N, 9))
- 
-    for i in range(N):
-        theta1, theta2, theta3 = theta1_ts[i], theta2_ts[i], theta3_ts[i]
-
-        H01 = DH(a1, alpha1, d1, theta1)
-        H12 = DH(a2, alpha2, d2, theta2)
-        H23 = DH(a3, alpha3, d3, theta3)
-
-        H01 = H01
-        H02 = H01@H12
-        H03 = H02@H23
-        
-        endOfLink1 = H01[0:3,3]
-        endOfLink2 = H02[0:3,3]
-        endOfLink3 = H03[0:3,3]
-        
-        z_temp = np.array([*endOfLink1, *endOfLink2, *endOfLink3])
-        z[i] = z_temp
-    
-    animate(z)
+    plt.show()
