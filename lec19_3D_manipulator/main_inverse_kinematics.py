@@ -122,13 +122,11 @@ def inverse_kinematics(X,Xdes):
     phi=np.arcsin(R[2,1]/cos(theta));
     psi=np.arcsin(R[1,0]/cos(theta));
 
-
-
     return endOfLink6[0]-x_des,endOfLink6[1]-y_des,endOfLink6[2]-z_des, \
            phi-phi_des,theta-theta_des,psi - psi_des
 
 
-def animate(X,parms,order,title):
+def animate(X,Xdes,order,title):
     theta1 = X[0];
     theta2 = X[1]
     d3 = X[2];
@@ -240,6 +238,7 @@ if __name__=="__main__":
     X = fsolve(inverse_kinematics, X0,Xdes,maxfev=500,xtol=1e-6)
     FVAL = inverse_kinematics(X,Xdes)
     print(f"IK result : {X}")
+    print(f"FVAL : {FVAL}")
     
     animate(X, Xdes, 122, "Final Solution")
     plt.show()
