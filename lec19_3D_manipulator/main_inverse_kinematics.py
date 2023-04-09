@@ -128,7 +128,7 @@ def inverse_kinematics(X,Xdes):
            phi-phi_des,theta-theta_des,psi - psi_des
 
 
-def animate(X,parms):
+def animate(X,parms,order,title):
     theta1 = X[0];
     theta2 = X[1]
     d3 = X[2];
@@ -191,9 +191,11 @@ def animate(X,parms):
     orientation_of_end_effector = H06[0:3,0:3];
     # print(position_of_end_effector)
     # print(orientation_of_end_effector)
-
-
-    ax = p3.Axes3D(fig)
+    
+    ax = fig.add_subplot(order, projection='3d')
+    # ax = p3.Axes3D(fig)
+    
+    ax.set_title(title)
 
     line1, = ax.plot([0, endOfLink1[0]],[0, endOfLink1[1]],[0, endOfLink1[2]], color='red', linewidth=2)
     line2, = ax.plot([endOfLink1[0], endOfLink2[0]],[endOfLink1[1], endOfLink2[1]],[endOfLink1[2], endOfLink2[2]],
@@ -207,43 +209,38 @@ def animate(X,parms):
     line6, = ax.plot([endOfLink5[0], endOfLink6[0]],[endOfLink5[1], endOfLink6[1]],[endOfLink5[2], endOfLink6[2]],
                           color='red', linewidth=2)
     point = ax.plot(Xdes[0],Xdes[1],Xdes[2],'ko')
-
-
+    
     ax.set_xlim([-3, 3])
     ax.set_ylim([-3, 3])
     ax.set_zlim([-3, 3])
+    
+    ax.set_xlabel('X Label')
+    ax.set_ylabel('Y Label')
+    ax.set_zlabel('Z Label')
+    
     ax.view_init(azim=63,elev=14)
 
+if __name__=="__main__":
+    parms = parameters();
 
-parms = parameters();
+    #initial guess
+    theta1, theta2, d3 = 0, 0, 0
+    theta4, theta5, theta6 = 1, -1, 1
+    
+    x_des, y_des, z_des = 1.5, 1.5, 2
+    phi_des, theta_des, psi_des = 0, 0, 0
+    
+    Xdes = np.array([x_des,y_des,z_des,phi_des,theta_des,psi_des])
+    X0 = np.array([theta1, theta2, d3, theta4, theta5, theta6])
 
-#initial guess
-theta1 =0;
-theta2 = 0
-d3 = 0
-theta4 = 1
-theta5 = -1
-theta6 = -1
+    fig = plt.figure(figsize = (16, 8))
+    animate(X0, Xdes, 121, "Initial Guess")
 
-x_des = 1.5; y_des = 1.5; z_des = 2;
-phi_des=0; theta_des=0; psi_des=0;
-Xdes = np.array([x_des,y_des,z_des,phi_des,theta_des,psi_des]);
-
-X0 = np.array([theta1, theta2, d3, theta4, theta5, theta6]);
-
-fig = plt.figure(1)
-animate(X0,Xdes)
-# plt.show()
-
-#X0 = np.array([0.064624220597635 ,  1.695634896738484 ,  0.706237840485306,   1.570796326794651,  -1.695634896731934,  -0.064624220594252]);
-X = fsolve(inverse_kinematics, X0,Xdes,maxfev=500,xtol=1e-6)
-FVAL = inverse_kinematics(X,Xdes)
-print(X)
-# print(FVAL)
-# print(X)
-fig = plt.figure(2)
-animate(X,Xdes)
-plt.show()
-# plt.show(block=False)
-# plt.pause(2)
-# plt.close()
+    #X0 = np.array([0.064624220597635 ,  1.695634896738484 ,  0.706237840485306,   1.570796326794651,  -1.695634896731934,  -0.064624220594252]);
+    X = fsolve(inverse_kinematics, X0,Xdes,maxfev=500,xtol=1e-6)
+    FVAL = inverse_kinematics(X,Xdes)
+    print(f"IK result : {X}")
+    
+    animate(X, Xdes, 122, "Final Solution")
+    plt.show()
+    
