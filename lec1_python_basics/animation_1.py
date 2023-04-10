@@ -7,7 +7,7 @@ y = np.cos(t)
 plt.plot(t,y)
 for i in range(len(y)):
     temp,  = plt.plot(t[i], y[i], color="green", marker="o", markersize=10)
-    plt.pause(0.02)
+    plt.pause(0.005)
     temp.remove()
 
 plt.show()
