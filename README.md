@@ -50,22 +50,25 @@ pip install msvc-runtime kiwisolver
     <img src="./images/lec5.jpg" height="300">
 </p>
 
-* Lecture 6 - Dynamics based Double pendulum modeling
+* Lecture 6 - Dynamics based Double pendulum modeling (without and torque)
 
 <p align="center">
-    <img src="./images/parking.gif" height="300">
+    <img src="./images/lec6.gif" height="200">
+    <img src="./images/lec6.png" height="200">
 </p>
 
 * Lecture 7 - About Jacobian and it's usages
 
 <p align="center">
-    <img src="./images/parking.gif" height="300">
+    <img src="./images/lec7.gif" height="200">
+    <img src="./images/lec7.png" height="200">
 </p>
 
 * Leture 8 - Hybrid Dynamics (jumping ball)
 
 <p align="center">
-    <img src="./images/parking.gif" height="300">
+    <img src="./images/lec8.gif" height="200">
+    <img src="./images/lec8.png" height="200">
 </p>
 
 * Leture 9 - Passive Dynamic Walker Modeling and simulation
