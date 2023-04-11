@@ -43,7 +43,6 @@ def animate(t,z,parms):
     c1 = parms.c1
     c2 = parms.c2
 
-    # #plot
     for i in range(0,len(t_interp)):
         theta1 = z_interp[i,0];
         theta2 = z_interp[i,2];
@@ -62,7 +61,6 @@ def animate(t,z,parms):
         plt.xlim(-2,2)
         plt.ylim(-2,2)
         plt.gca().set_aspect('equal')
-
 
         plt.pause(parms.pause)
         pend1.remove()

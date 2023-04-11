@@ -271,5 +271,5 @@ if __name__=="__main__":
         z[i] = z0
         tau[i] = tau_temp
     
-    # animate(ts,z,params)
-    plot(ts,z,q1_p_ref,q2_p_ref,q1_v_ref,q2_v_ref,tau[:,0],tau[:,1],q1_a_ref,q2_a_ref)
+    animate(ts,z,params)
+    # plot(ts,z,q1_p_ref,q2_p_ref,q1_v_ref,q2_v_ref,tau[:,0],tau[:,1],q1_a_ref,q2_a_ref)

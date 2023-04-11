@@ -51,19 +51,19 @@ def animate(t, z, params):
     plt.xlim(-2, 2)
     plt.ylim(-2, 2)
     plt.gca().set_aspect('equal')
-    
+
     for i in range(len(t_anim)):
+
         theta = z_anim[i,0]
         O = np.array([0, 0])
         P = np.array([l*np.cos(theta), l*np.sin(theta)])
         
         pendulum, = plt.plot([O[0], P[0]], [O[1], P[1]], linewidth=5, color='red')
-        
+
         plt.pause(params.pause)
         pendulum.remove()
     
     plt.close()
-
 
 def plot(t, z, tau, params):
     

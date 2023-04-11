@@ -13,7 +13,7 @@ class Parameters():
         self.r = 0.05
         self.I = self.m*self.l**2/12
         
-        self.pause = 0.01
+        self.pause = 0.005
         self.fps =30
 
         self.Kp_x = 300
