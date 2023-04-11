@@ -1,7 +1,10 @@
+# numpy basic
+
 import numpy as np
 
+# 1. numpy matrix
 A = np.array([[2,4],[5,-6]])
-print(A)
+print(f"A = \n{A}\n")
 
 # rotation matrix generation func
 def rot_mat(theta):
@@ -10,31 +13,39 @@ def rot_mat(theta):
         [np.sin(theta), np.cos(theta)],    
     ]) 
 
-theta = 0.5
-print(rot_mat(theta))
+def trans_vec(x, y):
+    return np.array([
+        [x],
+        [y],
+    ])
 
-# (2 X 2) dot (2 X 1) => (2 X 1)
-B = np.array([[2],[2]])
-D = A.dot(B)
-D_ = A @ B
-print(D)
-print(B)
+if __name__=="__main__":
 
-# Transpose
-print(A.transpose())
-# or
-print(np.transpose(A))
+    # (2 X 2) dot (2 X 1) => (2 X 1)
+    B = np.array([[2],[2]])
+    D = A.dot(B)
+    D_ = A @ B
+    print(f"D = \n{D}\n")
+    print(f"D_ = \n{D_}\n")
 
-# inverse
-inv_a = np.linalg.inv(A)
-print(inv_a)
+    # Transpose
+    print(A.transpose())
+    # or
+    print(np.transpose(A))
 
-# Element-wise mult & Matrix mult
-print(inv_a * A)
-print()
-print(np.matmul(inv_a, A))
-print(inv_a.dot(A))
-print(inv_a @ A)
+    # inverse
+    inv_a = np.linalg.inv(A)
+    print(inv_a)
 
-# identity matrix
-print(np.identity(5))
+    # Element-wise mult & Matrix mult
+    print(inv_a * A)
+    print()
+    print(np.matmul(inv_a, A))
+    print(inv_a.dot(A))
+    print(inv_a @ A)
+
+    theta = 0.5
+    print(rot_mat(theta))
+
+    # identity matrix
+    print(np.identity(5))
