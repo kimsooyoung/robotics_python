@@ -98,13 +98,13 @@ pip install msvc-runtime kiwisolver
 3. Torque base Trajectory control
 
 <p align="center">
-    <img src="./images/lec12_0.gif" height="300">
-    <img src="./images/lec12_1.gif" height="300">
+    <img src="./images/lec12_0.gif" height="200">
+    <img src="./images/lec12_1.gif" height="200">
 </p>
 
 <p align="center">
-    <img src="./images/lec12_2.gif" height="300">
-    <img src="./images/lec12_3.gif" height="300">
+    <img src="./images/lec12_2.gif" height="200">
+    <img src="./images/lec12_3.gif" height="200">
 </p>
 
 * Lecture 13 - Control (Linear Control)
