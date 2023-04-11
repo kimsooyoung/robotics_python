@@ -178,7 +178,12 @@ def animate(t,Xpos,Xang,parms):
         # print(new_axle_y)
 
         fig = plt.figure(1)
-        ax = p3.Axes3D(fig)
+        # For MacOS Users
+        # ax = p3.Axes3D(fig)
+
+        # For Windows/Linux Users
+        ax = fig.add_subplot(111, projection='3d')
+
         axle1, = ax.plot(new_axle_x[:,0],new_axle_x[:,1],new_axle_x[:,2], 'ro-', linewidth=3)
         axle2, = ax.plot(new_axle_y[:,0],new_axle_y[:,1],new_axle_y[:,2], 'bo-', linewidth=3)
 
