@@ -86,9 +86,9 @@ pip install msvc-runtime kiwisolver
 * Lecture 11 - Trajectory generation (position/velocity/torque traj)
 
 <p align="center">
-    <img src="./images/lec11_1.png" height="300">
-    <img src="./images/lec11_2.png" height="300">
-    <img src="./images/lec11.png" height="300">
+    <img src="./images/lec11_1.png" height="200">
+    <img src="./images/lec11_2.png" height="200">
+    <img src="./images/lec11.png" height="200">
 </p>
 
 * Lecture 12 - Control (Feedback Linearization)
@@ -138,7 +138,7 @@ Check Observability and learn how Kalman Filter works
 * Lecture 17 - 3D dyanmics (free fall in 3D world)
 
 <p align="center">
-    <img src="./images/parking.gif" height="300">
+    <img src="./images/lec17.gif" height="300">
 </p>
 
 * Lecture 18 - 3D quadcopter modeling and control
@@ -150,7 +150,7 @@ Check Observability and learn how Kalman Filter works
 * Lecture 19 - 3D manipulator modeling and Inverse Kinematics
 
 <p align="center">
-    <img src="./images/lec19.gif" height="300">
+    <img src="./images/lec19.png" height="300">
 </p>
 
 
