@@ -25,27 +25,32 @@ if __name__=="__main__":
     B = np.array([[2],[2]])
     D = A.dot(B)
     D_ = A @ B
-    print(f"D = \n{D}\n")
-    print(f"D_ = \n{D_}\n")
+    print(f"D dot B = \n{D}\n")
+    print(f"D @ B = \n{D_}\n")
 
     # Transpose
-    print(A.transpose())
+    A_T = A.transpose()
+    print(f"A_T = \n{A_T}\n")
     # or
-    print(np.transpose(A))
+    # print(np.transpose(A))
 
     # inverse
     inv_a = np.linalg.inv(A)
-    print(inv_a)
+    print(f"inv_a = \n{inv_a}\n")
 
     # Element-wise mult & Matrix mult
-    print(inv_a * A)
+    print("inv_a * A =\n", inv_a * A)
+    print("np.matmul(inv_a, A) =\n", np.matmul(inv_a, A))
+    print("inv_a.dot(A) =\n", inv_a.dot(A))
+    print("inv_a @ A =\n", inv_a @ A)
     print()
-    print(np.matmul(inv_a, A))
-    print(inv_a.dot(A))
-    print(inv_a @ A)
 
-    theta = 0.5
-    print(rot_mat(theta))
+    theta = 30 * np.pi / 180
+    print("Rotation Matrix = \n", rot_mat(theta))
+    lx, ly = 0.5, 1.0
+    print("Translation Vector = \n", trans_vec(lx, ly))
 
     # identity matrix
-    print(np.identity(5))
+    print()
+    print(np.identity(3))
+    print(np.zeros((3,3)))
