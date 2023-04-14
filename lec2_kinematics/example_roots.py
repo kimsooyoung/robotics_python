@@ -5,10 +5,10 @@ import numpy as np
 def func(x):
     return x**2 - x - 2
 
-# # case 1
-# root = fsolve(func, 3)
+# case 1
+root = fsolve(func, 3)
 # case 2
-root = fsolve(func, 0)
+# root = fsolve(func, 0)
 
 x = np.arange(-6,6,0.1)   # start,stop,step
 y = func(x)

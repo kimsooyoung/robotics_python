@@ -4,6 +4,7 @@ from scipy.optimize import fsolve
 import numpy as np
 import matrix_helper as mh
 
+link1, link2 = None, None
 
 class Parameter():
     def __init__(self):
@@ -50,7 +51,20 @@ def inverse_kinematics(theta, params):
     
 def plot(o, p, q):
     
-    plt.cla()
+    global link1, link2
+    
+    if link1 != None:
+        link1.remove()
+        link2.remove()
+    
+    plt.xlabel("x")
+    plt.ylabel("y")
+
+    plt.xlim(-2,2)
+    plt.ylim(-2,2)
+    plt.grid()
+    
+    plt.gca().set_aspect('equal')
     
     # %Draw line from origin to end of link 1
     link1, = plt.plot([o[0], p[0]],[o[1], p[1]],linewidth=5, color='red')
@@ -61,15 +75,7 @@ def plot(o, p, q):
     # Draw end point
     point, = plt.plot(q[0],q[1],color = 'black',marker = 'o',markersize=5)
 
-    plt.xlabel("x")
-    plt.ylabel("y")
-
-    plt.xlim(-2,2)
-    plt.ylim(-2,2)
-    plt.grid()
-    plt.pause(0.2)
-    plt.gca().set_aspect('equal')
-
+    plt.pause(0.1)
     plt.show(block=False)
     
 def main():
@@ -77,17 +83,16 @@ def main():
     params = Parameter()
     l1, l2 = params.l1, params.l2
     
-    while True:
-        print("=== Type New Ref Points ===")
-        x_ref = float(input('x_ref : '))
-        y_ref = float(input('y_ref : '))
+    phi  = np.arange(0,2*np.pi,0.2)
+    x_ref_list = 1  + 0.5*np.cos(phi)
+    y_ref_list = 0.5+ 0.5*np.sin(phi)
+    
+    for x_ref, y_ref in zip(x_ref_list, y_ref_list):
         
         fsolve_params = [l1, l2, x_ref, y_ref]
 
         theta = fsolve(inverse_kinematics, [0.01,0.5],fsolve_params)
         theta1, theta2 = theta
-        print(f"theta1 : {theta1}")
-        print(f"theta2 : {theta2}")
 
         o, p, q = forward_kinematics(l1, l2, theta1, theta2)
         
