@@ -61,8 +61,8 @@ def plot(o, p, q):
     plt.xlabel("x")
     plt.ylabel("y")
 
-    plt.xlim(-2,2)
-    plt.ylim(-2,2)
+    plt.xlim(-300,300)
+    plt.ylim(-600,100)
     plt.grid()
     
     plt.gca().set_aspect('equal')
@@ -76,15 +76,9 @@ def plot(o, p, q):
     # Draw end point
     point, = plt.plot(q[0],q[1],color = 'black',marker = 'o',markersize=5)
 
-    plt.pause(0.1)
+    plt.pause(0.01)
     plt.show(block=False)
 
-def getTraj(points):
-    
-    traj = fullTraj(points, delta=50, num_sample=500)
-    
-    return traj
-    
 def main():
     
     params = Parameter()
@@ -105,11 +99,15 @@ def main():
         [170, -470],
     ]
     
-    phi  = np.arange(0,2*np.pi,0.2)
-    x_ref_list = 1  + 0.5*np.cos(phi)
-    y_ref_list = 0.5+ 0.5*np.sin(phi)
+    traj = fullTraj(points, delta=50, num_sample=500)
     
-    for x_ref, y_ref in zip(x_ref_list, y_ref_list):
+    # phi  = np.arange(0,2*np.pi,0.2)
+    # x_ref_list = 1  + 0.5*np.cos(phi)
+    # y_ref_list = 0.5+ 0.5*np.sin(phi)
+    
+    for refs in traj:
+        
+        x_ref, y_ref = refs
         
         fsolve_params = [l1, l2, x_ref, y_ref]
 
