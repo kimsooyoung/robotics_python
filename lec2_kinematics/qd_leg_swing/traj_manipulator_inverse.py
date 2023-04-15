@@ -1,12 +1,9 @@
-from matplotlib import pyplot as plt
-from scipy.optimize import fsolve
-from scipy.optimize import least_squares
-import scipy.optimize as opt
-
-
 import numpy as np
-from MatrixHelper import calc_homogeneous_2d
+from matplotlib import pyplot as plt
+from scipy.optimize import least_squares
+
 from QDTraj import fullTraj
+from MatrixHelper import calc_homogeneous_2d
 
 link1, link2 = None, None
 
@@ -43,15 +40,23 @@ def forward_kinematics(l1,l2,theta1,theta2):
 
     return o,p,q
 
-def inverse_kinematics(theta, params):
+# def inverse_kinematics(theta, params):
+    
+#     theta1, theta2 = theta
+#     l1, l2, x_ref, y_ref = params
+    
+#     _, _, q = forward_kinematics(l1, l2, theta1, theta2)
+    
+#     # return difference btw ref & end-point
+#     return q[0] - x_ref, q[1] - y_ref
+
+def inverse_kinematics(theta, l1, l2, x_ref, y_ref):
     
     theta1, theta2 = theta
-    l1, l2, x_ref, y_ref = params
-    
     _, _, q = forward_kinematics(l1, l2, theta1, theta2)
     
     # return difference btw ref & end-point
-    return q[0] - x_ref, q[1] - y_ref
+    return np.linalg.norm(np.array(q) - np.array([x_ref, y_ref]))
     
 def plot(o, p, q):
     
@@ -105,30 +110,16 @@ def main():
     num_sample = 30
     traj = fullTraj(points, delta=30, num_sample=num_sample)
     
-    # phi  = np.arange(0,2*np.pi,0.2)
-    # x_ref_list = 1  + 0.5*np.cos(phi)
-    # y_ref_list = 0.5+ 0.5*np.sin(phi)
-    
-    for i, refs in enumerate(traj):
+    for refs in traj:
         
         x_ref, y_ref = refs
         
-        fsolve_params = [l1, l2, x_ref, y_ref]
-
-        if i < (num_sample/4):
-            guess = [np.pi*4/5, 0.0]
-        elif i < (num_sample/2):
-            guess = [np.pi*4/5, 0.0]
-        elif i < (num_sample*3/4):  
-            guess = [np.pi*4/5, 0.0]
-        else:
-            guess = [np.pi*4/5, 0.0]
-
-        theta = fsolve(inverse_kinematics, [-0.2,0.2],fsolve_params)
-        theta1, theta2 = theta
-
-        # bounds와 parameter를 받을 수 있는 solver가 필요
-        # theta = least_squares(inverse_kinematics, [np.pi*4/5, 0.0], args=fsolve_params, bounds = ((np.pi, 0), (np.pi*3/2, np.pi/2)))
+        thetas = least_squares(
+            inverse_kinematics, (np.pi, 0), 
+            bounds = ((np.pi, 0), (np.pi * 3/2, np.pi)),
+            args=(l1, l2, x_ref, y_ref)
+        )
+        theta1, theta2 = thetas.x
 
         o, p, q = forward_kinematics(l1, l2, theta1, theta2)
         

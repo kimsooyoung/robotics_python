@@ -25,6 +25,6 @@ nothing = 12.34
 res3 = least_squares(
     multi_var_func_w_params, (0, 0), 
     bounds = ((-1, -1), (2, 2)),
-    args=([radius, nothing])
+    args=(radius, nothing)
 )
 print(res3.x)
