@@ -9,7 +9,7 @@ class parameters:
         # 목적지와 딱 맞게 가고 싶다면 px=0.0이어야 하는건가? => yes
         self.px = 0.01
         self.py = 0.0
-        self.Kp = 100;
+        self.Kp = 10;
         # 로봇 반지름
         self.R = 0.1
         self.pause = 0.1
@@ -127,7 +127,7 @@ def motion_simulation(params, path):
         e[i+1] = error
 
         # 4. get u = [v, omega] from the errors
-        # b = [ 10.0 + params.Kp * error[0], 10.0 + params.Kp * error[1]]
+        # b = [ 1.0 + params.Kp * error[0], 5.0 + params.Kp * error[1]]
         b = [ params.Kp * error[0], params.Kp * error[1]]
         cos = np.cos(theta)
         sin = np.sin(theta)
@@ -150,20 +150,14 @@ if __name__=="__main__":
     # "astroid" or "circle"
     path = generate_path(params, path_type="astroid", show_path=True)
     
-    z, z_dot, err = motion_simulation(params, path)
-    
-    t_interp, z_interp = sw_dd_helper.interpolation(params, z)
-    
-    animate(params, t_interp, z_interp, z_dot, err)
-    
     try:
         # pre calculate motion states
-        # robot_endpoint, traj, plot_data = motion_simulation(params, path)
+        z, z_dot, err = motion_simulation(params, path)
     except Exception as e:
         print(e)
     finally:
         # interpolation for animaltion
-        t_interp, z_interp, p_interp = sw_dd_helper.interpolation(params, robot_endpoint, traj)
+        t_interp, z_interp = sw_dd_helper.interpolation(params, z)
         # draw motion
-        animate(params, t_interp,z_interp,p_interp, plot_data)
+        animate(params, t_interp, z_interp, z_dot, err)
         print("Everything done!")
