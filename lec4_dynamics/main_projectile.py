@@ -56,11 +56,9 @@ def animate(t_interp,z_interp,parms):
 
     plt.show()
 
-
 def projectile(z, t, m,g,c):
 
-    xdot = z[1]
-    ydot = z[3]
+    x, xdot, y, ydot = z
     v = np.sqrt(xdot**2+ydot**2)
 
     #%%%% drag is prop to v^2
@@ -71,8 +69,7 @@ def projectile(z, t, m,g,c):
     ax =  0 - (dragX / m) #xddot
     ay = -g - (dragY / m) #yddot
 
-    dzdt = np.array([xdot, ax, ydot, ay])
-    return dzdt
+    return np.array([xdot, ax, ydot, ay])
 
 if __name__=="__main__":
     params = parameters()
