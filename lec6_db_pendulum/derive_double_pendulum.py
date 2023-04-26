@@ -75,6 +75,9 @@ for i in range(len(q)):
 
 EOM = sy.Matrix([EOM[0],EOM[1]])
 
+# print(sy.simplify(EOM[0]))
+# print(sy.simplify(EOM[1]))
+
 # M(q)*q_dd + C(q, q_d)*q_d + G(q) -Tau = 0
 M = EOM.jacobian(q_dd)
 b = EOM.subs([ 
