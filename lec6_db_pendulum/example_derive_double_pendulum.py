@@ -88,7 +88,7 @@ C1 = b1 - G1
 C2 = b2 - G2
 
 # C : 코리올리
-# G : gravity?
+# G : gravity
 # M(q)*q_dd + C(q, q_d)*q_d + G(q) -Tau = 0
 # b = C(q, q_d)*q_d + G(q) -Tau
 # G = G(q)
