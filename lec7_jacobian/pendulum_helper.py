@@ -9,7 +9,10 @@ def sin(theta):
     return np.sin(theta)
 
 def jacobian_E(l, theta1, theta2):
-    J = np.array([[l*(cos(theta1) + cos(theta1 + theta2)), l*cos(theta1 + theta2)], [l*(sin(theta1) + sin(theta1 + theta2)), l*sin(theta1 + theta2)]])
+    J = np.array([
+        [l*(cos(theta1) + cos(theta1 + theta2)), l*cos(theta1 + theta2)], 
+        [l*(sin(theta1) + sin(theta1 + theta2)), l*sin(theta1 + theta2)]
+    ])
     return J
 
 def forward_kinematics(l,theta1,theta2):

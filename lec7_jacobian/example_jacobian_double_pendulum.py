@@ -20,15 +20,15 @@ H_02 = H_01 * H_12
 
 G1_1 = sy.Matrix([c1, 0, 1])
 G1_0 = H_01 * G1_1
+G1_0.row_del(2)
 
 G2_2 = sy.Matrix([c2, 0, 1])
 G2_0 = H_02 * G2_2
+G2_0.row_del(2)
+
 # End point
 E2_2 = sy.Matrix([l, 0, 1])
 E2_0 = H_02 * E2_2
-
-G1_0.row_del(2)
-G2_0.row_del(2)
 E2_0.row_del(2)
 
 q = sy.Matrix([theta1, theta2])
@@ -54,9 +54,9 @@ print(V_G2)
 
 # Application2 - static forces
 m1, m2, g = sy.symbols("m1 m2 g", real=True)
-F_G1 = sy.Matrix([0, -m1 * g])
-F_G2 = sy.Matrix([0, -m2 * g])
+F1 = sy.Matrix([0, -m1*g])
+F2 = sy.Matrix([0, -m2*g])
+tau = sy.simplify(J_G1.transpose()*F1) + sy.simplify(J_G2.transpose()*F2)
 
-tau = sy.simplify(J_G1.transpose() * F_G1) + sy.simplify(J_G2 * F_G2)
-print("Tau")
-print(tau)
+print(f"tau0 = {tau[0]}")
+print(f"tau1 = {tau[1]}")
