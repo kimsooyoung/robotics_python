@@ -121,13 +121,10 @@ def double_pendulum(z0, t, m1, m2, I1, I2, c1, c2, link1, g):
     G1 =  g*(c1*m1*sin(theta1) + m2*(c2*sin(theta1 + theta2) + link1*sin(theta1)))
     G2 =  c2*g*m2*sin(theta1 + theta2)
 
-    A = np.array([
-        [M11, M12],
-        [M21, M22],
-    ])
-    b = -1 * np.array([ C1 + G1, C2 + G2 ])
-
-    x = np.linalg.inv(A) @ b
+    A = np.array([[M11, M12], [M21, M22]])
+    b = -np.array([[C1 + G1], [C2 + G2]])
+    
+    x = np.linalg.solve(A, b)
     
     return [omega1, x[0], omega2, x[1]]
 
@@ -138,6 +135,7 @@ if __name__=="__main__":
     t = np.linspace(0, 10, 500)
     
     # initlal state
+    # [theta1, omega1, theta2, omega2]
     z0 = np.array([np.pi, 0.001, 0, 0])
     all_params = (
         params.m1, params.m2,
