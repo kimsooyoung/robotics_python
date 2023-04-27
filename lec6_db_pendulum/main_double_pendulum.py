@@ -135,7 +135,7 @@ if __name__=="__main__":
 
     params = parameters()
 
-    t = np.linspace(0, 10, 50)
+    t = np.linspace(0, 10, 500)
     
     # initlal state
     z0 = np.array([np.pi, 0.001, 0, 0])
