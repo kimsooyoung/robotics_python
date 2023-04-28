@@ -12,12 +12,11 @@ def f(t, r):
 
 sol = integrate.solve_ivp(
     f, t_span=(0,10), y0=(1,1),
-    t_eval=np.linspace(0,10,100)    
+    t_eval=np.linspace(0,10,100),
 )
 
+t = sol.t
 x, y = sol.y
-print(sol.y)
-
 plt.plot(x, y)
 plt.axis("scaled")
 plt.show()
