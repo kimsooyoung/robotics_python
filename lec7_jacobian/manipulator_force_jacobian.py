@@ -134,11 +134,11 @@ def double_pendulum(z0, t, m1, m2, I1, I2, c1, c2, l, g, kp, kd, q_des):
     tau1 = -c2*g*m2*sin(theta1 + theta2)
     
     ## pd controller => robust
-    # gain0 = get_tau(theta1, omega1, kp, kd, q_des)
-    # gain1 = get_tau(theta2, omega2, kp, kd, q_des)
+    gain0 = get_tau(theta1, omega1, kp, kd, q_des)
+    gain1 = get_tau(theta2, omega2, kp, kd, q_des)
     
-    # tau0 = gain0 -c1*g*m1*sin(theta1) - g*m2*(c2*sin(theta1 + theta2) + l*sin(theta1))
-    # tau1 = gain1 -c2*g*m2*sin(theta1 + theta2)
+    tau0 = gain0 -c1*g*m1*sin(theta1) - g*m2*(c2*sin(theta1 + theta2) + l*sin(theta1))
+    tau1 = gain1 -c2*g*m2*sin(theta1 + theta2)
 
     A = np.array([[M11, M12], [M21, M22]])
     b = -np.array([[C1 + G1 - tau0], [C2 + G2 - tau1]])

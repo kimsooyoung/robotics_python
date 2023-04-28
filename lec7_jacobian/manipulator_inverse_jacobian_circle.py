@@ -14,6 +14,47 @@ class Parameter():
         self.r = 0.5
         self.step_size = 0.2
 
+def animation(params, x_all, y_all, theta1_all, theta2_all):
+    phi  = np.arange(0, 2*np.pi, params.step_size)
+
+    for i in range(len(phi)):
+        [o, p, q] = ph.forward_kinematics(params.l, theta1_all[i], theta2_all[i])
+
+        plt.plot(q[0],q[1],color = 'black',marker = 'o',markersize=5)
+
+        # %Draw line from origin to end of link 1
+        tmp1, = plt.plot([o[0], p[0]],[o[1], p[1]],linewidth=5, color='red')
+
+        # %Draw line from end of link 1 to end of link 2
+        tmp2, = plt.plot([p[0], q[0]],[p[1], q[1]],linewidth=5, color='blue')
+
+        plt.xlabel("x")
+        plt.ylabel("y")
+
+        # plt.grid()
+        plt.xlim(-2,2)
+        plt.ylim(-2,2)
+        plt.gca().set_aspect('equal')
+
+        plt.pause(0.01)
+        tmp1.remove()
+        tmp2.remove()
+
+    plt.close()
+    plt.figure(1)
+    
+    plt.plot(x_all, y_all, 'b--')
+    plt.plot(x_ref, y_ref, 'r-.')
+    plt.ylabel("y")
+    plt.xlabel("x")
+    
+    plt.gca().set_aspect('equal')
+    
+    plt.show(block=False)
+    plt.pause(5)
+    plt.close()
+
+
 def generate_path(params, q):
     
     phi = np.arange(0, 2*np.pi, params.step_size)
@@ -64,47 +105,6 @@ def simualtion(params, x_ref, y_ref):
         theta2_all.append(theta2)
         
     return x_all, y_all, theta1_all, theta2_all
-
-
-def animation(params, x_all, y_all, theta1_all, theta2_all):
-    phi  = np.arange(0, 2*np.pi, params.step_size)
-
-    for i in range(len(phi)):
-        [o, p, q] = ph.forward_kinematics(params.l, theta1_all[i], theta2_all[i])
-
-        plt.plot(q[0],q[1],color = 'black',marker = 'o',markersize=5)
-
-        # %Draw line from origin to end of link 1
-        tmp1, = plt.plot([o[0], p[0]],[o[1], p[1]],linewidth=5, color='red')
-
-        # %Draw line from end of link 1 to end of link 2
-        tmp2, = plt.plot([p[0], q[0]],[p[1], q[1]],linewidth=5, color='blue')
-
-        plt.xlabel("x")
-        plt.ylabel("y")
-
-        # plt.grid()
-        plt.xlim(-2,2)
-        plt.ylim(-2,2)
-        plt.gca().set_aspect('equal')
-
-        plt.pause(0.01)
-        tmp1.remove()
-        tmp2.remove()
-
-    plt.close()
-    plt.figure(1)
-    
-    plt.plot(x_all, y_all, 'b--')
-    plt.plot(x_ref, y_ref, 'r-.')
-    plt.ylabel("y")
-    plt.xlabel("x")
-    
-    plt.gca().set_aspect('equal')
-    
-    plt.show(block=False)
-    plt.pause(5)
-    plt.close()
 
 if __name__=="__main__":
     

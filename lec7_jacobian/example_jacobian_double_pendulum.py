@@ -26,21 +26,14 @@ G2_2 = sy.Matrix([c2, 0, 1])
 G2_0 = H_02 * G2_2
 G2_0.row_del(2)
 
-# End point
-E2_2 = sy.Matrix([l, 0, 1])
-E2_0 = H_02 * E2_2
-E2_0.row_del(2)
-
 q = sy.Matrix([theta1, theta2])
 # Jacobian of link1 COM
 J_G1 = G1_0.jacobian(q)
 # Jacobian of link2 COM
 J_G2 = sy.simplify(G2_0.jacobian(q))
-# Jacobian of End Point
-E_G2 = sy.simplify(E2_0.jacobian(q))
+
 print(J_G1)
 print(J_G2)
-print(E_G2)
 
 # Application1 - cartesian velocity 
 omega1, omega2 = sy.symbols("omega1 omega2", real=True)
@@ -60,3 +53,18 @@ tau = sy.simplify(J_G1.transpose()*F1) + sy.simplify(J_G2.transpose()*F2)
 
 print(f"tau0 = {tau[0]}")
 print(f"tau1 = {tau[1]}")
+
+
+# Application3 - inverse kinematics
+
+# End point
+E2_2 = sy.Matrix([l, 0, 1])
+E2_0 = H_02 * E2_2
+E2_0.row_del(2)
+
+# Jacobian of End Point
+E_G2 = sy.simplify(E2_0.jacobian(q))
+print(f"E_Jacobi00 = {E_G2[0,0]}")
+print(f"E_Jacobi01 = {E_G2[0,1]}")
+print(f"E_Jacobi10 = {E_G2[1,0]}")
+print(f"E_Jacobi11 = {E_G2[1,1]}")
