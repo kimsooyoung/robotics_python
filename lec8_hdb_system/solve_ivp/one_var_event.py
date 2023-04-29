@@ -9,6 +9,9 @@ def dydt(t, y):
 def event(t, y):
     return y[0] - 1
 
+event.terminal = False
+event.direction = -1
+
 ts = np.linspace(0, 10, 100)
 initial_state = (1, 1)
 sol = solve_ivp(dydt, t_span=(0, 10), y0=[10], t_eval=ts, events=event)
