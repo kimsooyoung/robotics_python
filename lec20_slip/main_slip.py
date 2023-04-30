@@ -8,6 +8,10 @@ from scipy.integrate import solve_ivp
 #    - apex event
 # 2. stance eom
 #    - release event
+#
+# 3. one bounce
+#
+# 4. animation
 
 class Params:
     def __init__(self):
@@ -33,8 +37,6 @@ def contact(t, z, l0, theta):
     x, x_dot, y, y_dot = z
     # contact event
     return y - l0 * np.cos(theta)
-# contact.direction = -1
-# contact.terminal = True
 
 def apex(t, z):
     x, x_dot, y, y_dot = z
@@ -64,8 +66,53 @@ def release(t, z, l0):
 # release.direction = +1
 # release.terminal = True
 
+def onestep(z0, t0, params):
+    
+    dt = 5
+    x, x_d, y, y_d = z0
+    l, theta = params.l, params.theta
+    
+    # z_output = [x, x_dot, y, y_dot, x_foot, y_foot]
+    z_output = np.zeros((1,6))
+    z_output[0] = [*z0, x+l*np.sin(theta), y-l*np.cos(theta)]
+    
+    print(z_output)
+    
+    contact.direction = -1
+    contact.terminal = True
+    
+    ts = np.linspace(t0, t0+dt, 1001)
+    # def contact(t, z, l0, theta):
+    contact_sol = solve_ivp(
+        flight, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
+        dense_output=True, events=contact, atol = 1e-13, rtol = 1e-12, 
+        args=(l, theta)
+    )
+    
+    t_temp = contact_sol.t
+    m, n = np.shape(contact_sol.y)
+    
+
+
+def n_step(zstar,params,steps):
+    
+    # x0 = 0; x0dot = z0(1);  
+    # y0 = z0(2); y0dot = 0;
+    
+    z0 = zstar
+    t0 = 0
+    
+    for i in range(steps):
+        onestep(z0, t0, params)
+        
+
+
 if __name__=="__main__":
     
     params = Params()
+
+    x, x_d, y, y_d = 0, 1, 1.2, 0
+    z0 = np.array([x, x_d, y, y_d])
     
+    n_step(z0, params, 1)
     
