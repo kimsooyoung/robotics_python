@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+from scipy import interpolate
 from scipy.integrate import solve_ivp
 
 # TODO:
@@ -73,12 +75,15 @@ def onestep(z0, t0, params):
     m, g, k = params.m, params.g, params.k
     l0, theta = params.l, params.theta
     
+    t_output = np.zeros(1)
+    t_output[0] = t0
     # z_output = [x, x_dot, y, y_dot, x_foot, y_foot]
     z_output = np.zeros((1,6))
     z_output[0] = [*z0, x+l0*np.sin(theta), y-l0*np.cos(theta)]
-    
-    print(z_output)
-    
+
+    #####################################
+    ###         contact phase         ###
+    #####################################
     contact.direction = -1
     contact.terminal = True
     
@@ -90,22 +95,94 @@ def onestep(z0, t0, params):
         args=(m, g, l0, k, theta)
     )
     
-    t_temp = contact_sol.t
-    m, n = np.shape(contact_sol.y)
-    z_temp = contact_sol.y.T
+    t_contact = contact_sol.t
+    m, n = contact_sol.y.shape
+    z_contact = contact_sol.y.T
     
-    t0, z0 = t_temp[-1], z_temp[-1]
-    
-    ts = np.linspace(t0, t0+dt, 1001)
-    # def stance(t, z, m, g, l0, k, theta)
-    release_sol = solve_ivp(
-        stance, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
-        dense_output=True, events=contact, atol = 1e-13, rtol = 1e-12, 
-        args=(m, g, l0, k, theta)
-    )
-    
-    
+    # calculate foot position for animation
+    x_foot = z_contact[:,0] + l0*np.sin(theta)
+    y_foot = z_contact[:,2] - l0*np.cos(theta)
 
+    # append foot position into z vector
+    z_contact_output = np.concatenate((z_contact, x_foot.reshape(-1,1), y_foot.reshape(-1,1)), axis=1)
+    
+    # add to output
+    t_output = np.concatenate((t_output, t_contact[1:]))
+    z_output = np.concatenate((z_output, z_contact_output[1:]))
+
+    #####################################
+    ## adjust new state for next phase ##
+    #####################################
+    t0, z0 = t_contact[-1], z_contact[-1]
+    # save the x position for future
+    x_com = z0[0]
+    # relative distance wrt contact point because of 
+    # non-holonomic nature of the system
+    z0[0] = -l0*np.sin(theta)
+    x_foot_gnd = x_com + l0*np.sin(theta)
+    y_foot_gnd = params.ground
+
+    # #####################################
+    # ###          stance phase         ###
+    # #####################################
+    # release.direction = +1
+    # release.terminal = True
+
+    # ts = np.linspace(t0, t0+dt, 1001)
+    # # def stance(t, z, m, g, l0, k, theta)
+    # release_sol = solve_ivp(
+    #     stance, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
+    #     dense_output=True, events=release, atol = 1e-13, rtol = 1e-12, 
+    #     args=(m, g, l0, k, theta)
+    # )
+
+    # t_release = release_sol.t
+    # m, n = release_sol.y.shape
+    # z_release = release_sol.y.T
+    # z_release[:,0] = z_release[:,0] + x_com + l0*np.sin(theta)
+
+    # # append foot position for animation
+    # x_foot = x_foot_gnd * np.ones((n,1))
+    # y_foot = y_foot_gnd * np.ones((n,1))
+    # z_release_output = np.concatenate((z_release, x_foot, y_foot), axis=1)
+    
+    # # add to output
+    # t_output = np.concatenate((t_output, t_release[1:]))
+    # z_output = np.concatenate((z_output, z_release_output[1:]))
+
+    # #####################################
+    # ## adjust new state for next phase ##
+    # #####################################
+    # t0, z0 = t_release[-1], z_release[-1]
+
+    # #####################################
+    # ###           apex  phase         ###
+    # #####################################
+    # apex.direction = 0
+    # apex.terminal = True
+
+    # ts = np.linspace(t0, t0+dt, 1001)
+    # # def stance(t, z, m, g, l0, k, theta)
+    # apex_sol = solve_ivp(
+    #     flight, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
+    #     dense_output=True, events=apex, atol = 1e-13, rtol = 1e-12, 
+    #     args=(m, g, l0, k, theta)
+    # )
+
+    # t_apex = apex_sol.t
+    # m, n = apex_sol.y.shape
+    # z_apex = apex_sol.y.T
+
+    # # calculate foot position for animation
+    # x_foot = z_apex[:,0] + l0*np.sin(theta)
+    # y_foot = z_apex[:,2] - l0*np.cos(theta)
+    # z_apex_output = np.concatenate((z_apex, x_foot.reshape(-1,1), y_foot.reshape(-1,1)), axis=1)
+
+    # # add to output
+    # t_output = np.concatenate((t_output, t_apex[1:]))
+    # z_output = np.concatenate((z_output, z_apex_output[1:]))
+
+    return z_output, t_output
 
 def n_step(zstar,params,steps):
     
@@ -114,11 +191,66 @@ def n_step(zstar,params,steps):
     
     z0 = zstar
     t0 = 0
-    
-    for i in range(steps):
-        onestep(z0, t0, params)
-        
 
+    z = np.zeros((1,6))
+    t = np.zeros(1)
+
+    i = 0    
+    for i in range(steps):
+        
+        if i == 0:
+            z_step, t_step = onestep(z0, t0, params)
+        else:
+            z_step_temp, t_step_temp = onestep(z0, t0, params)
+            z_step = np.concatenate((z_step, z_step_temp[1:]))
+            t_step = np.concatenate((t_step, t_step_temp[1:]))
+
+        z0 = z_step[-1][:-2]
+        t0 = t_step[-1]
+    
+    return z, t
+
+def animate(z, t, parms):
+    #interpolation
+    data_pts = 1/parms.fps
+    t_interp = np.arange(t[0], t[len(t)-1], data_pts)
+    
+    m, n = np.shape(z)
+    shape = (len(t_interp),n)
+    z_interp = np.zeros(shape)
+    for i in range(0, n):
+        f = interpolate.interp1d(t, z[:,i])
+        z_interp[:,i] = f(t_interp)
+
+    l = parms.l
+
+    min_xh = min(z[:,0]); max_xh = max(z[:,0]);
+    
+    dist_travelled = max_xh - min_xh;
+    camera_rate = dist_travelled/len(t_interp);
+
+
+    window_xmin = -1*l; window_xmax = 1*l;
+    window_ymin = -0.1; window_ymax = 1.9*l;
+
+    #plot
+    for i in range(0,len(t_interp)):
+
+        x, y = z_interp[i,0], z_interp[i,2]
+        x_foot, y_foot = z_interp[i,4], z_interp[i,5]
+
+        hip, = plt.plot(x, y, color='black', marker='o', markersize=10)
+
+        window_xmin = window_xmin + camera_rate;
+        window_xmax = window_xmax + camera_rate;
+        plt.xlim(window_xmin,window_xmax)
+        plt.ylim(window_ymin,window_ymax)
+        plt.gca().set_aspect('equal')
+
+        plt.pause(parms.pause)
+        hip.remove()
+
+    plt.close()
 
 if __name__=="__main__":
     
@@ -127,5 +259,5 @@ if __name__=="__main__":
     x, x_d, y, y_d = 0, 1, 1.2, 0
     z0 = np.array([x, x_d, y, y_d])
     
-    n_step(z0, params, 1)
-    
+    z, t = n_step(z0, params, 1)
+    animate(z, t, params)

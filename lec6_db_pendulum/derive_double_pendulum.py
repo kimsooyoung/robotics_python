@@ -100,3 +100,5 @@ print('C1 = ', sy.simplify(C[0]))
 print('C2 = ', sy.simplify(C[1]),'\n')
 print('G1 = ', sy.simplify(G[0]))
 print('G2 = ', sy.simplify(G[1]),'\n')
+
+
