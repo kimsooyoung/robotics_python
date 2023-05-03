@@ -26,9 +26,9 @@ class Params:
         # sprint stiffness
         self.k = 200
         # fixed angle
-        self.theta = 10 * (np.pi / 180)
+        self.theta = 5 * (np.pi / 180)
         
-        self.pause = 0.5
+        self.pause = 0.1
         self.fps = 10
 
 def flight(t, z, m, g, l0, k, theta):
@@ -279,15 +279,18 @@ def partialder(z0, parms):
 def fixedpt(z0, parms):
     t0 = 0
     z1, t1 = onestep(z0, t0, parms)
-    N = len(t1) - 1
+    N = len(t1)-1
+
+    # print(f"z1[N] : {z1[N]}")
+    # print(f"z0 : {z0}")
     #F(x0) - x0 = 0
-    return z1[-1,0]-z0[0], z1[-1,1]-z0[1],z1[-1,2]-z0[2],z1[-1,3]-z0[3]
+    return z1[N,0]-z0[0], z1[N,1]-z0[1],z1[N,2]-z0[2],z1[N,3]-z0[3]
 
 if __name__=="__main__":
     
     params = Params()
 
-    x, x_d, y, y_d = 0, 0.35, 1.2, 0
+    x, x_d, y, y_d = 0, 0.34271, 1.1, 0
     z0 = np.array([x, x_d, y, y_d])
 
     # 실패하지 않는 초기 조건을 찾아보자. Jacobian의 최대 eigenvalue를 통해 판별할 수 있다.
@@ -296,14 +299,14 @@ if __name__=="__main__":
     # max(eig(J)) = 1 => neutrally stable
     # max(eig(J)) > 1 => unstable
     zstar = fsolve(fixedpt, z0, params)
-    print(zstar)
+    print(f"zstar : {zstar}")
     
     # Jacobian을 구할 수식이 없다. 따라서 수치적으로 구해본다.
     J = partialder(zstar, params)
     eigVal, eigVec = np.linalg.eig(J)
-    # print(f"eigVal {eigVal}")
-    # print(f"eigVec {eigVec}")
+    print(f"eigVal {eigVal}")
+    print(f"eigVec {eigVec}")
     print(f"abs(eigVal) : {np.abs(eigVal)}")
 
-    z, t = n_step(zstar, params, 1)
+    z, t = n_step(z0, params, 5)
     animate(z, t, params)
