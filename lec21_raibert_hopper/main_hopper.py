@@ -24,7 +24,8 @@ class Params:
         self.m = 1
         
         # sprint stiffness
-        self.k = 200
+        # self.k = 200
+        self.k = 100
         # fixed angle
         self.theta = 5 * (np.pi / 180)
         
@@ -35,10 +36,10 @@ class Params:
         self.T = np.pi * np.sqrt(self.m/self.k)
         
         # TODO: Adjust Kp 
-        self.Kp = 0.001
+        self.Kp = 0.1
         # self.vdes = [0] * 3
-        self.vdes = [0, 0.2, 0.2, 0.2, 0.2]
-        # self.vdes = [0, 0.5, 0.6, 0.9, 1.0, 1.1, 0.7, 0.3, 0]
+        self.vdes = [0, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
+        self.vdes = [0.0, 0.2, 0.3, 0.3, 0.3, 0]
 
 def flight(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot = z
@@ -252,6 +253,7 @@ def animate(z, t, parms):
     l = parms.l
 
     min_xh = min(z[:,0]); max_xh = max(z[:,0]);
+    # print(f"min_xh: {min_xh}, max_xh: {max_xh}")
     dist_travelled = max_xh - min_xh;
     camera_rate = dist_travelled/len(t_interp);
 
@@ -352,7 +354,7 @@ if __name__=="__main__":
         params.Kp*(x0_d - params.vdes[0])
     
     # x, x_d, y, y_d = 0, 0.34271, 1.1, 0
-    x, x_d, y, y_d = 0, x0_d, 1.1, 0
+    x, x_d, y, y_d = 0, x0_d, 1.2, 0
     z0 = np.array([x, x_d, y, y_d])
 
     # # 실패하지 않는 초기 조건을 찾아보자. Jacobian의 최대 eigenvalue를 통해 판별할 수 있다.
@@ -372,4 +374,4 @@ if __name__=="__main__":
 
     z, t, v_apex = n_step(z0, params)
     # animate(z, t, params)
-    plot(z, t, params, v_apex)
+    # plot(z, t, params, v_apex)
