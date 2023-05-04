@@ -30,6 +30,15 @@ class Params:
         
         self.pause = 0.1
         self.fps = 10
+        
+        # new params for raibert hopper
+        self.T = np.pi * np.sqrt(self.m/self.k)
+        
+        # TODO: Adjust Kp 
+        self.Kp = 0.001
+        # self.vdes = [0] * 3
+        self.vdes = [0, 0.2, 0.2, 0.2, 0.2]
+        # self.vdes = [0, 0.5, 0.6, 0.9, 1.0, 1.1, 0.7, 0.3, 0]
 
 def flight(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot = z
@@ -189,7 +198,7 @@ def onestep(z0, t0, params):
 
     return z_output, t_output
 
-def n_step(zstar,params,steps):
+def n_step(zstar, params):
     
     # x0 = 0; x0dot = z0(1);  
     # y0 = z0(2); y0dot = 0;
@@ -200,11 +209,23 @@ def n_step(zstar,params,steps):
     z = np.zeros((1,6))
     t = np.zeros(1)
 
+    steps = len(params.vdes)
+    v_apex = []
+    
     i = 0    
     for i in range(steps):
         
+        vdes = params.vdes[i]
+        x0dot = z0[1]
+        v_apex = np.append(v_apex, x0dot)
+        print(f"x0dot: {x0dot}")
+        
+        params.theta = np.arcsin((x0dot * params.T)/(2*params.l)) + \
+            params.Kp*(x0dot - vdes)
+        
         if i == 0:
             z, t = onestep(z0, t0, params)
+            print(f'apex horizontal velocity: {vdes}')
         else:
             z_step, t_step = onestep(z0, t0, params)
             z = np.concatenate((z, z_step[1:]))
@@ -292,23 +313,28 @@ if __name__=="__main__":
     
     params = Params()
 
-    x, x_d, y, y_d = 0, 0.34271, 1.1, 0
+    x0_d = params.vdes[0]
+    params.theta = np.arcsin((x0_d * params.T)/(2*params.l)) + \
+        params.Kp*(x0_d - params.vdes[0])
+    
+    # x, x_d, y, y_d = 0, 0.34271, 1.1, 0
+    x, x_d, y, y_d = 0, x0_d, 1.1, 0
     z0 = np.array([x, x_d, y, y_d])
 
-    # 실패하지 않는 초기 조건을 찾아보자. Jacobian의 최대 eigenvalue를 통해 판별할 수 있다.
-    # 
-    # max(eig(J)) < 1 => stable
-    # max(eig(J)) = 1 => neutrally stable
-    # max(eig(J)) > 1 => unstable
-    zstar = fsolve(fixedpt, z0, params)
-    print(f"zstar : {zstar}")
+    # # 실패하지 않는 초기 조건을 찾아보자. Jacobian의 최대 eigenvalue를 통해 판별할 수 있다.
+    # # 
+    # # max(eig(J)) < 1 => stable
+    # # max(eig(J)) = 1 => neutrally stable
+    # # max(eig(J)) > 1 => unstable
+    # zstar = fsolve(fixedpt, z0, params)
+    # print(f"zstar : {zstar}")
     
-    # Jacobian을 구할 수식이 없다. 따라서 수치적으로 구해본다.
-    J = partialder(zstar, params)
-    eigVal, eigVec = np.linalg.eig(J)
-    print(f"eigVal {eigVal}")
-    print(f"eigVec {eigVec}")
-    print(f"abs(eigVal) : {np.abs(eigVal)}")
+    # # Jacobian을 구할 수식이 없다. 따라서 수치적으로 구해본다.
+    # J = partialder(zstar, params)
+    # eigVal, eigVec = np.linalg.eig(J)
+    # print(f"eigVal {eigVal}")
+    # print(f"eigVec {eigVec}")
+    # print(f"abs(eigVal) : {np.abs(eigVal)}")
 
-    z, t = n_step(z0, params, 5)
+    z, t = n_step(z0, params)
     animate(z, t, params)
