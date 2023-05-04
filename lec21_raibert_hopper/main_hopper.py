@@ -217,7 +217,8 @@ def n_step(zstar, params):
         
         vdes = params.vdes[i]
         x0dot = z0[1]
-        v_apex = np.append(v_apex, x0dot)
+        v_apex.append(x0dot)
+        # print(v_apex)
         print(f"x0dot: {x0dot}")
         
         params.theta = np.arcsin((x0dot * params.T)/(2*params.l)) + \
@@ -234,7 +235,7 @@ def n_step(zstar, params):
         z0 = z[-1][:-2]
         t0 = t[-1]
     
-    return z, t
+    return z, t, v_apex
 
 def animate(z, t, parms):
     #interpolation
@@ -276,7 +277,43 @@ def animate(z, t, parms):
         hip.remove()
         leg.remove()
 
-    # plt.close()
+    plt.close()
+
+def plot(z, t, params, v_apex):
+    plt.figure(1)
+    
+    plt.subplot(2,1,1)
+    plt.plot(t,z[:,0],'r--')
+    plt.plot(t,z[:,2],'b')
+    plt.ylabel('Position (m)')
+    plt.xlabel('time')
+    
+    plt.subplot(2,1,2)
+    plt.plot(t,z[:,1],'r--')
+    plt.plot(t,z[:,3],'b')
+    plt.ylabel('Velocity (m/s)')
+    plt.xlabel('time')
+
+    plt.figure(2)
+    plt.title('Trajectory y vs x')
+    plt.plot(z[:,0],z[:,2],'r')
+    plt.ylabel('y')
+    plt.xlabel('x')
+
+    plt.figure(3)
+    plt.step(params.vdes,'k--', linewidth=2, label='Desired')
+    plt.step(v_apex,'r', linewidth=2, label='Actual')
+    plt.legend()
+
+    plt.show(block=False)
+    plt.pause(3)
+    plt.close()
+    
+    # ### 
+    # figure(4)
+    # stairs(robot.control.vdes,'k--','Linewidth',2); hold on
+    # stairs(v_apex,'r','Linewidth',2); 
+    # legend('desired','actual');
 
 def partialder(z0, parms):
 
@@ -304,9 +341,6 @@ def fixedpt(z0, parms):
     z1, t1 = onestep(z0, t0, parms)
     N = len(t1)-1
 
-    # print(f"z1[N] : {z1[N]}")
-    # print(f"z0 : {z0}")
-    #F(x0) - x0 = 0
     return z1[N,0]-z0[0], z1[N,1]-z0[1],z1[N,2]-z0[2],z1[N,3]-z0[3]
 
 if __name__=="__main__":
@@ -336,5 +370,6 @@ if __name__=="__main__":
     # print(f"eigVec {eigVec}")
     # print(f"abs(eigVal) : {np.abs(eigVal)}")
 
-    z, t = n_step(z0, params)
-    animate(z, t, params)
+    z, t, v_apex = n_step(z0, params)
+    # animate(z, t, params)
+    plot(z, t, params, v_apex)
