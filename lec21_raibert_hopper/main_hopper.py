@@ -18,7 +18,7 @@ from scipy.integrate import solve_ivp
 
 class Params:
     def __init__(self):
-        self.g = 9.81
+        self.g = 10.0
         self.ground = 0.0
         self.l = 1
         self.m = 1
@@ -27,7 +27,7 @@ class Params:
         # self.k = 200
         self.k = 100
         # fixed angle
-        self.theta = 5 * (np.pi / 180)
+        self.theta = 10 * (np.pi / 180)
         
         self.pause = 0.1
         self.fps = 10
@@ -38,8 +38,8 @@ class Params:
         # TODO: Adjust Kp 
         self.Kp = 0.1
         # self.vdes = [0] * 3
-        self.vdes = [0, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
-        self.vdes = [0.0, 0.2, 0.3, 0.3, 0.3, 0]
+        # self.vdes = [0, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
+        self.vdes = [0.0, 0.2]
 
 def flight(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot = z
@@ -55,7 +55,7 @@ def contact(t, z, m, g, l0, k, theta):
 
 def apex(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot = z
-    return y_dot
+    return y_dot - 0
 # apex.direction = 0
 # apex.terminal = True
 
@@ -69,8 +69,8 @@ def stance(t, z, m, g, l0, k, theta):
     Fy_spring = F_spring * (y / l)
     Fy_gravity = m*g
     
-    x_dd = (Fx_spring) / m
-    y_dd = (Fy_spring - Fy_gravity) / m
+    x_dd = (1/m)*(Fx_spring)
+    y_dd = (1/m)*(-Fy_gravity + Fy_spring)
     
     return [x_dot, x_dd, y_dot, y_dd]
 
@@ -101,12 +101,12 @@ def onestep(z0, t0, params):
     contact.direction = -1
     contact.terminal = True
     
-    ts = np.linspace(t0, t0+dt, 1001)
+    ts = np.linspace(t0, t0+dt, dt*1000)
 
     # def contact(t, z, l0, theta):
     contact_sol = solve_ivp(
         flight, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
-        dense_output=True, events=contact, atol = 1e-13, rtol = 1e-12, 
+        dense_output=True, events=contact, atol = 1e-13, rtol = 1e-13, 
         args=(m, g, l0, k, theta)
     )
     
@@ -129,24 +129,32 @@ def onestep(z0, t0, params):
     ## adjust new state for next phase ##
     #####################################
     t0, z0 = t_contact[-1], z_contact[-1]
+    print(f"z_contact: {z0}")
     # save the x position for future
     x_com = z0[0]
     # relative distance wrt contact point because of 
     # non-holonomic nature of the system
     z0[0] = -l0*np.sin(theta)
+    print(f"z_contact2: {z0}")
     x_foot_gnd = x_com + l0*np.sin(theta)
     y_foot_gnd = params.ground
 
     #####################################
     ###          stance phase         ###
     #####################################
-    release.direction = +1
+    release.direction = 1
     release.terminal = True
 
-    ts = np.linspace(t0, t0+dt, 1001)
+    # TODO: current stance has error!!!
+    ts = np.linspace(t0, t0+dt, dt*2000)
     # def stance(t, z, m, g, l0, k, theta)
+    # release_sol = solve_ivp(
+    #     stance, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
+    #     dense_output=True, events=release, atol = 1e-13, rtol = 1e-13, 
+    #     args=(m, g, l0, k, theta)
+    # )
     release_sol = solve_ivp(
-        stance, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
+        stance, [t0, t0+dt], z0, t_eval=np.linspace(t0, t0+dt, 1001),
         dense_output=True, events=release, atol = 1e-13, rtol = 1e-13, 
         args=(m, g, l0, k, theta)
     )
@@ -154,6 +162,7 @@ def onestep(z0, t0, params):
     t_release = release_sol.t
     m, n = release_sol.y.shape
     z_release = release_sol.y.T
+    print(f"z_release1 : {z_release[-1]}")
     z_release[:,0] = z_release[:,0] + x_com + l0*np.sin(theta)
 
     # append foot position for animation
@@ -169,14 +178,15 @@ def onestep(z0, t0, params):
     ## adjust new state for next phase ##
     #####################################
     t0, z0 = t_release[-1], z_release[-1]
+    print(f"z_release : {z0}")
 
     #####################################
     ###           apex  phase         ###
     #####################################
-    apex.direction = 0
+    apex.direction = -1
     apex.terminal = True
 
-    ts = np.linspace(t0, t0+dt, 1001)
+    ts = np.linspace(t0, t0+dt, dt*1000)
     # def stance(t, z, m, g, l0, k, theta)
     apex_sol = solve_ivp(
         flight, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
@@ -196,6 +206,8 @@ def onestep(z0, t0, params):
     # add to output
     t_output = np.concatenate((t_output, t_apex[1:]))
     z_output = np.concatenate((z_output, z_apex_output[1:]))
+    
+    print(f"z_apex : {z_output[-1]}")
 
     return z_output, t_output
 
@@ -224,6 +236,7 @@ def n_step(zstar, params):
         
         params.theta = np.arcsin((x0dot * params.T)/(2*params.l)) + \
             params.Kp*(x0dot - vdes)
+        print(f"theta : {params.theta}")
         
         if i == 0:
             z, t = onestep(z0, t0, params)
@@ -351,8 +364,9 @@ if __name__=="__main__":
 
     x0_d = params.vdes[0]
     params.theta = np.arcsin((x0_d * params.T)/(2*params.l)) + \
-        params.Kp*(x0_d - params.vdes[0])
-    
+        params.Kp*(x0_d - params.vdes[0])        
+    print(f"theta : {params.theta}")
+
     # x, x_d, y, y_d = 0, 0.34271, 1.1, 0
     x, x_d, y, y_d = 0, x0_d, 1.2, 0
     z0 = np.array([x, x_d, y, y_d])
