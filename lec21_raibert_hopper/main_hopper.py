@@ -129,13 +129,13 @@ def onestep(z0, t0, params):
     ## adjust new state for next phase ##
     #####################################
     t0, z0 = t_contact[-1], z_contact[-1]
-    print(f"z_contact: {z0}")
+    # print(f"z_contact: {z0}")
     # save the x position for future
     x_com = z0[0]
     # relative distance wrt contact point because of 
     # non-holonomic nature of the system
     z0[0] = -l0*np.sin(theta)
-    print(f"z_contact2: {z0}")
+    # print(f"z_contact2: {z0}")
     x_foot_gnd = x_com + l0*np.sin(theta)
     y_foot_gnd = params.ground
 
@@ -145,14 +145,9 @@ def onestep(z0, t0, params):
     release.direction = 1
     release.terminal = True
 
-    # TODO: current stance has error!!!
+    # TODO: robust stance
     ts = np.linspace(t0, t0+dt, dt*2000)
     # def stance(t, z, m, g, l0, k, theta)
-    # release_sol = solve_ivp(
-    #     stance, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
-    #     dense_output=True, events=release, atol = 1e-13, rtol = 1e-13, 
-    #     args=(m, g, l0, k, theta)
-    # )
     release_sol = solve_ivp(
         stance, [t0, t0+dt], z0, t_eval=np.linspace(t0, t0+dt, 1001),
         dense_output=True, events=release, atol = 1e-13, rtol = 1e-13, 
@@ -162,7 +157,7 @@ def onestep(z0, t0, params):
     t_release = release_sol.t
     m, n = release_sol.y.shape
     z_release = release_sol.y.T
-    print(f"z_release1 : {z_release[-1]}")
+    # print(f"z_release1 : {z_release[-1]}")
     z_release[:,0] = z_release[:,0] + x_com + l0*np.sin(theta)
 
     # append foot position for animation
@@ -178,7 +173,7 @@ def onestep(z0, t0, params):
     ## adjust new state for next phase ##
     #####################################
     t0, z0 = t_release[-1], z_release[-1]
-    print(f"z_release : {z0}")
+    # print(f"z_release : {z0}")
 
     #####################################
     ###           apex  phase         ###
@@ -207,7 +202,7 @@ def onestep(z0, t0, params):
     t_output = np.concatenate((t_output, t_apex[1:]))
     z_output = np.concatenate((z_output, z_apex_output[1:]))
     
-    print(f"z_apex : {z_output[-1]}")
+    # print(f"z_apex : {z_output[-1]}")
 
     return z_output, t_output
 
@@ -388,4 +383,4 @@ if __name__=="__main__":
 
     z, t, v_apex = n_step(z0, params)
     # animate(z, t, params)
-    # plot(z, t, params, v_apex)
+    plot(z, t, params, v_apex)
