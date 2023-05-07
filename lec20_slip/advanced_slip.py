@@ -24,7 +24,7 @@ class Params:
         self.m = 1
         
         # sprint stiffness
-        self.k = 200
+        self.k = 150
         # fixed angle
         self.theta = 5 * (np.pi / 180)
         
@@ -33,9 +33,9 @@ class Params:
         
         # theta control
         self.I = 0.75
-        self.phi_des = np.pi / 12
-        self.Kp = 3.0
-        self.Kd = 3.0
+        self.phi_des = np.pi / 15
+        self.Kp = 0.5
+        self.Kd = 5.0
 
 def flight(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot, phi, phi_d = z
@@ -62,14 +62,15 @@ def stance(t, z, m, g, l0, k, I, phi_des, Kp, Kd):
     x, x_dot, y, y_dot, phi, phi_d = z
     
     l = np.sqrt(x**2 + y**2)
-    F_spring = k * (l0 - l)
-    # F_spring = k * (l - l0)
-    Fx_spring = F_spring * (x / l)
-    Fy_spring = F_spring * (y / l)
-    Fy_gravity = m*g
+
+    # F_spring = k * (l0 - l)
+    # # F_spring = k * (l - l0)
+    # Fx_spring = F_spring * (x / l)
+    # Fy_spring = F_spring * (y / l)
+    # Fy_gravity = m*g
     
-    x_dd = (Fx_spring) / m
-    y_dd = (Fy_spring - Fy_gravity) / m
+    # x_dd = (Fx_spring) / m
+    # y_dd = (Fy_spring - Fy_gravity) / m
     
     Tphi = controller(Kp, Kd, phi, phi_d, phi_des)
     
@@ -80,7 +81,7 @@ def stance(t, z, m, g, l0, k, I, phi_des, Kp, Kd):
     ])
     
     G1 = k*(l0 - l) * (x / l)
-    G2 = k*(l0 - l) * (y / l) + m*g
+    G2 = k*(l0 - l) * (y / l) - m*g
     G3 = 0
     
     tau1 = -(Tphi*y)/(l*l)
@@ -130,7 +131,6 @@ def onestep(z0, t0, params):
     
     ts = np.linspace(t0, t0+dt, 1001)
 
-    print(z0)
     # def contact(t, z, l0, theta):
     contact_sol = solve_ivp(
         flight, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
@@ -141,7 +141,9 @@ def onestep(z0, t0, params):
     t_contact = contact_sol.t
     m, n = contact_sol.y.shape
     z_contact = contact_sol.y.T
-    
+    # print(z_contact[-1])
+    phi = z_contact[-1,4]
+
     # calculate foot position for animation
     x_foot = z_contact[:,0] + l0*np.sin(phi)
     y_foot = z_contact[:,2] - l0*np.cos(phi)
@@ -153,76 +155,77 @@ def onestep(z0, t0, params):
     t_output = np.concatenate((t_output, t_contact[1:]))
     z_output = np.concatenate((z_output, z_contact_output[1:]))
 
-    # #####################################
-    # ## adjust new state for next phase ##
-    # #####################################
-    # t0, z0 = t_contact[-1], z_contact[-1]
-    # # save the x position for future
-    # x_com = z0[0]
-    # # relative distance wrt contact point because of 
-    # # non-holonomic nature of the system
-    # z0[0] = -l0*np.sin(phi)
-    # x_foot_gnd = x_com + l0*np.sin(phi)
-    # y_foot_gnd = params.ground
+    #####################################
+    ## adjust new state for next phase ##
+    #####################################
+    t0, z0 = t_contact[-1], z_contact[-1]
+    # save the x position for future
+    x_com = z0[0]
+    # relative distance wrt contact point because of 
+    # non-holonomic nature of the system
+    z0[0] = -l0*np.sin(phi)
+    x_foot_gnd = x_com + l0*np.sin(phi)
+    y_foot_gnd = params.ground
 
-    # #####################################
-    # ###          stance phase         ###
-    # #####################################
-    # release.direction = +1
-    # release.terminal = True
+    #####################################
+    ###          stance phase         ###
+    #####################################
+    release.direction = +1
+    release.terminal = True
 
-    # ts = np.linspace(t0, t0+dt, 1001)
-    # # def stance(t, z, m, g, l0, k, theta)
-    # release_sol = solve_ivp(
-    #     stance, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
-    #     dense_output=True, events=release, atol = 1e-13, rtol = 1e-13, 
-    #     args=(m, g, l0, k, I, phi_des, Kp, Kd)
-    # )
+    ts = np.linspace(t0, t0+dt, 1001)
+    # def stance(t, z, m, g, l0, k, theta)
+    release_sol = solve_ivp(
+        stance, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
+        dense_output=True, events=release, atol = 1e-13, rtol = 1e-13, 
+        args=(m, g, l0, k, I, phi_des, Kp, Kd)
+    )
 
-    # t_release = release_sol.t
-    # m, n = release_sol.y.shape
-    # z_release = release_sol.y.T
-    # z_release[:,0] = z_release[:,0] + x_com + l0*np.sin(phi)
+    t_release = release_sol.t
+    m, n = release_sol.y.shape
+    z_release = release_sol.y.T
+    phi = z_release[-1,4]
+    z_release[:,0] = z_release[:,0] + x_com + l0*np.sin(phi)
 
-    # # append foot position for animation
-    # x_foot = x_foot_gnd * np.ones((n,1))
-    # y_foot = y_foot_gnd * np.ones((n,1))
-    # z_release_output = np.concatenate((z_release, x_foot, y_foot), axis=1)
+    # append foot position for animation
+    x_foot = x_foot_gnd * np.ones((n,1))
+    y_foot = y_foot_gnd * np.ones((n,1))
+    z_release_output = np.concatenate((z_release, x_foot, y_foot), axis=1)
     
-    # # add to output
-    # t_output = np.concatenate((t_output, t_release[1:]))
-    # z_output = np.concatenate((z_output, z_release_output[1:]))
+    # add to output
+    t_output = np.concatenate((t_output, t_release[1:]))
+    z_output = np.concatenate((z_output, z_release_output[1:]))
 
-    # #####################################
-    # ## adjust new state for next phase ##
-    # #####################################
-    # t0, z0 = t_release[-1], z_release[-1]
+    #####################################
+    ## adjust new state for next phase ##
+    #####################################
+    t0, z0 = t_release[-1], z_release[-1]
 
-    # #####################################
-    # ###           apex  phase         ###
-    # #####################################
-    # apex.direction = 0
-    # apex.terminal = True
+    #####################################
+    ###           apex  phase         ###
+    #####################################
+    apex.direction = 0
+    apex.terminal = True
 
-    # ts = np.linspace(t0, t0+dt, 1001)
-    # apex_sol = solve_ivp(
-    #     flight, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
-    #     dense_output=True, events=apex, atol = 1e-13, rtol = 1e-13, 
-    #     args=(m, g, l0, k, phi)
-    # )
+    ts = np.linspace(t0, t0+dt, 1001)
+    apex_sol = solve_ivp(
+        flight, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
+        dense_output=True, events=apex, atol = 1e-13, rtol = 1e-13, 
+        args=(m, g, l0, k, phi)
+    )
 
-    # t_apex = apex_sol.t
-    # m, n = apex_sol.y.shape
-    # z_apex = apex_sol.y.T
+    t_apex = apex_sol.t
+    m, n = apex_sol.y.shape
+    z_apex = apex_sol.y.T
 
-    # # calculate foot position for animation
-    # x_foot = z_apex[:,0] + l0*np.sin(phi)
-    # y_foot = z_apex[:,2] - l0*np.cos(phi)
-    # z_apex_output = np.concatenate((z_apex, x_foot.reshape(-1,1), y_foot.reshape(-1,1)), axis=1)
+    # calculate foot position for animation
+    x_foot = z_apex[:,0] + l0*np.sin(phi)
+    y_foot = z_apex[:,2] - l0*np.cos(phi)
+    z_apex_output = np.concatenate((z_apex, x_foot.reshape(-1,1), y_foot.reshape(-1,1)), axis=1)
 
-    # # add to output
-    # t_output = np.concatenate((t_output, t_apex[1:]))
-    # z_output = np.concatenate((z_output, z_apex_output[1:]))
+    # add to output
+    t_output = np.concatenate((t_output, t_apex[1:]))
+    z_output = np.concatenate((z_output, z_apex_output[1:]))
 
     return z_output, t_output
 
@@ -324,7 +327,9 @@ def fixedpt(z0, parms):
     # print(f"z1[N] : {z1[N]}")
     # print(f"z0 : {z0}")
     #F(x0) - x0 = 0
-    return z1[N,0]-z0[0], z1[N,1]-z0[1],z1[N,2]-z0[2],z1[N,3]-z0[3]
+    return z1[N,0]-z0[0], z1[N,1]-z0[1],\
+        z1[N,2]-z0[2], z1[N,3]-z0[3],\
+        z1[N,4]-z0[4], z1[N,5]-z0[5]
 
 if __name__=="__main__":
     
@@ -339,15 +344,15 @@ if __name__=="__main__":
     # max(eig(J)) < 1 => stable
     # max(eig(J)) = 1 => neutrally stable
     # max(eig(J)) > 1 => unstable
-    # zstar = fsolve(fixedpt, z0, params)
-    # print(f"zstar : {zstar}")
+    zstar = fsolve(fixedpt, z0, params)
+    print(f"zstar : {zstar}")
     
     # Jacobian을 구할 수식이 없다. 따라서 수치적으로 구해본다.
-    # J = partialder(zstar, params)
-    # eigVal, eigVec = np.linalg.eig(J)
-    # print(f"eigVal {eigVal}")
-    # print(f"eigVec {eigVec}")
-    # print(f"abs(eigVal) : {np.abs(eigVal)}")
+    J = partialder(zstar, params)
+    eigVal, eigVec = np.linalg.eig(J)
+    print(f"eigVal {eigVal}")
+    print(f"eigVec {eigVec}")
+    print(f"abs(eigVal) : {np.abs(eigVal)}")
 
-    z, t = n_step(z0, params, 5)
+    z, t = n_step(z0, params, 10)
     animate(z, t, params)

@@ -156,7 +156,7 @@ Check Observability and learn how Kalman Filter works
 * Lecture 20 - SLIP (Spring Loaded Inverted Pendulum)
 
 <p align="center">
-    <img src="./images/slip.gif" height="300">
+    <img src="./images/lec20_slip.gif" height="300">
 </p>
 
 ---
