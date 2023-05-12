@@ -33,7 +33,8 @@ cos = sy.cos
 sin = sy.sin
 
 angle_1 = pi/2 + theta1
-# 여기 x, y, 1 이라는 점에 유의
+
+# floating base => x, y, 1 
 H_01 = sy.Matrix([
     [cos(angle_1), -sin(angle_1), x],
     [sin(angle_1), cos(angle_1), y],
@@ -74,6 +75,7 @@ q_d = sy.Matrix([vx, vy, omega1, omega2])
 # double pendulum에서는 [theta1, theta2]였고 이것만으로도 운동에너지 구했다.
 # 
 # => double pendulum에서는 고정된 점이 있었는데, 지금은 모두 움직여서 그런가?
+# A) impact map을 고려해야 하니 x, y term도 추가한 것임
 
 H_xy = sy.Matrix([H[0], H[1]])
 G1_xy = sy.Matrix([G1[0], G1[1]])
