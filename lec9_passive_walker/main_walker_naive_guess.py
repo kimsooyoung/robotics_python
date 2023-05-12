@@ -280,7 +280,7 @@ u2 = 0.2
 z0 = np.array([q1,u1,q2,u2])
 
 t0 = 0;
-steps = 5;
+steps = 4;
 [z,t] = n_steps(t0,z0,parms,steps)
 
 animate(t,z,parms)
