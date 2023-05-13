@@ -1,11 +1,8 @@
 from matplotlib import pyplot as plt
 import numpy as np
 
-import math
 from scipy import interpolate
-from scipy.integrate import odeint
 from scipy.integrate import solve_ivp
-from scipy.optimize import fsolve
 
 def cos(x):
     return np.cos(x)
