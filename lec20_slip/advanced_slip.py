@@ -103,8 +103,6 @@ def release(t, z, m, g, l0, k, I, phi_des, Kp, Kd):
     l = np.sqrt(x**2 + y**2)
     
     return l - l0
-# release.direction = +1
-# release.terminal = True
 
 def onestep(z0, t0, params):
     
