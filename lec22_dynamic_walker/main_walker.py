@@ -7,7 +7,6 @@ from scipy.integrate import odeint
 from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
 
-
 def cos(x):
     return np.cos(x)
 
@@ -22,19 +21,17 @@ class Parameters:
         self.g = 9.81
         self.gam = 0.1
         
-        self.pause = 0.02
-        self.fps = 10
+        self.pause = 0.05
+        self.fps = 30
         
-        self.Kp = 1
+        self.Kp = 5
 
 def controller(z0, theta_dot_desire, params):
     theta1, theta1_dot = z0
     
-    # -Kp * (theta1_dot - thetadot_des)
     output = -params.Kp * (theta1_dot - theta_dot_desire)
     
     return output
-
 
 # output이 0이면 충돌이 일어났다는 뜻
 def collision(t, z, phi, M, I, l, g, gam):
@@ -127,10 +124,6 @@ def footstrike(t_minus, z_minus, phi, params):
     
 def one_step(step_i, z0, t0, phi, xh_start, params):
     
-    # first swing - event: collision
-    # foot strike - 
-    # second swing - event: midstance
-    
     z_output = []
     t_output = []
 
@@ -154,9 +147,6 @@ def one_step(step_i, z0, t0, phi, xh_start, params):
 
     xh_temp1 = xh_start + params.l*sin(z_first_swing[0,0]) - params.l*sin(z_first_swing[:,0]); 
     yh_temp1 = params.l * cos(z_first_swing[:,0]);
-    
-    # print(z_first_swing[:,0])
-    # print(yh_temp1)
     
     if(step_i % 2 == 0):
         xb_foot1 = xh_temp1 + params.l*sin(z_first_swing[:,0]);
@@ -211,7 +201,6 @@ def one_step(step_i, z0, t0, phi, xh_start, params):
     
     m = len(t_second_swing)
     phi_traj = np.linspace(2*z_first_swing[-1,0], phi, m).T
-    # print(phi_traj.shape)
 
     if(step_i % 2 == 0):
         xa_foot2 = xh_temp2 + params.l*sin(z_second_swing[:,0]);
@@ -224,11 +213,12 @@ def one_step(step_i, z0, t0, phi, xh_start, params):
         xa_foot2 = xh_temp2 + params.l*sin(phi_traj+z_second_swing[:,0]);
         ya_foot2 = yh_temp2 - params.l*cos(phi_traj+z_second_swing[:,0]);        
 
-    z_temp = np.concatenate((z_second_swing,
-            xh_temp2.reshape(len(xh_temp2), 1), yh_temp2.reshape(len(yh_temp2), 1),
-            xa_foot2.reshape(len(xa_foot2), 1), ya_foot2.reshape(len(ya_foot2), 1),
-            xb_foot2.reshape(len(xb_foot2), 1), yb_foot2.reshape(len(yb_foot2), 1)
-        ), axis=1)
+    z_temp = np.concatenate((
+        z_second_swing,
+        xh_temp2.reshape(len(xh_temp2), 1), yh_temp2.reshape(len(yh_temp2), 1),
+        xa_foot2.reshape(len(xa_foot2), 1), ya_foot2.reshape(len(ya_foot2), 1),
+        xb_foot2.reshape(len(xb_foot2), 1), yb_foot2.reshape(len(yb_foot2), 1)
+    ), axis=1)
     
     z_output = np.concatenate((z_output, z_temp), axis=0)
     t_output = np.concatenate((t_output, t_second_swing), axis=0)
@@ -241,6 +231,7 @@ def n_steps(z0, t0, step_size, theta_dot_desire, params):
     xh_start, yh_start = 0, params.l * cos(z0[0])
 
     t = np.array([t0])
+
     # theta2 (=phi)에 대한 정보가 없기 때문에 leg endpoint도 싹다 집어넣는다.
     # theta1 theta1_dot xh yh x_c1 y_c1 x_c2 y_c2
     z = np.zeros((1, 8))
@@ -259,20 +250,6 @@ def n_steps(z0, t0, step_size, theta_dot_desire, params):
         
         z = np.concatenate((z, z_temp), axis=0)
         t = np.concatenate((t, t_temp), axis=0)
-        
-        # zz_temp = np.zeros((len(t_temp), 6))
-
-        # # append xh, yh - hip position
-        # for j in range(len(t_temp)):
-        #     xh = xh_start + params.l * sin(z_temp[0,0]) - params.l * sin(z_temp[j,0])
-        #     yh = params.l * cos(z_temp[j,0])
-        #     # z_temp[j,:] = np.append(z_temp[j,:], np.array([xh, yh]))
-        #     # 이렇게 하고 싶지만 numpy array는 초기에 크기가 정해지면 append가 안된다.
-        #     # ValueError: could not broadcast input array from shape (6,) into shape (4,)
-        #     zz_temp[j,:] = np.append(z_temp[j,:], np.array([xh, yh]))
-
-        # z = np.concatenate((z, zz_temp), axis=0)
-        # t = np.concatenate((t, t_temp), axis=0)
 
         theta1, omega1 = z_temp[-1,0], z_temp[-1,1]
         z0 = np.array([theta1, omega1])
