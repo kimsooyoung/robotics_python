@@ -22,7 +22,7 @@ class Parameters:
         self.g = 9.81
         self.gam = 0.1
         
-        self.pause = 0.01
+        self.pause = 0.02
         self.fps = 10
         
         self.Kp = 1
@@ -339,18 +339,13 @@ if __name__=="__main__":
     
     params = Parameters()
 
-    theta_dot_des = [-0.5, -0.5]
+    # theta_dot_des = [-0.5, -0.5]
+    theta_dot_des = [-0.5, -1, -1.2, -0.9, -0.7, -0.7, -1, -1.5]
     steps = len(theta_dot_des)
     
     t0 = 0.0
     z0 = [0, theta_dot_des[0]]
     
     z, t = n_steps(z0, t0, steps, theta_dot_des, params)
-    # print(z[0])
     animate(t, z, params)
 
-
-# %%%%%%%% initialize %%%%%
-# thetadot0 = walker.thetadot_des(1); %initial speed at step 1
-# [thetadot,flag,z,t] = walker_sim(thetadot0,phi,walker);
-# v_apex = thetadot(:,2);
