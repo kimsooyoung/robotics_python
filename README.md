@@ -71,10 +71,11 @@ pip install msvc-runtime kiwisolver
     <img src="./images/lec8.png" height="200">
 </p>
 
-* Leture 9 - Passive Dynamic Walker Modeling and simulation
+* Leture 9 / 22 - Passive Dynamic Walker Modeling and simulation / Dynamic Walker
 
 <p align="center">
-    <img src="./images/lec9.gif" height="300">
+    <img src="./images/lec9.gif" height="200">
+    <img src="./images/lec22.gif" height="200">
 </p>
 
 * Leture 10 - Control Optimization
@@ -153,7 +154,13 @@ Check Observability and learn how Kalman Filter works
     <img src="./images/lec19.png" height="300">
 </p>
 
-* Lecture 20 - SLIP (Spring Loaded Inverted Pendulum)
+* Lecture 20 / 21 - SLIP (Spring Loaded Inverted Pendulum) & Raibert Hopper
+
+<p align="center">
+    <img src="./images/lec20_slip.gif" height="300">
+</p>
+
+* Lecture 22 - SLIP (Spring Loaded Inverted Pendulum)
 
 <p align="center">
     <img src="./images/lec20_slip.gif" height="300">
