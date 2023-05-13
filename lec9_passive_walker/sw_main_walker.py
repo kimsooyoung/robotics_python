@@ -1,9 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 
-import math
 from scipy import interpolate
-from scipy.integrate import odeint
 from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
 from copy import deepcopy
@@ -22,6 +20,8 @@ class Parameters:
         # c, l : leg length, body length
         # gam : slope angle
         # pause, fps : var for animation
+        
+        # 9.81...?
         self.g = 1
         self.m = 0.5
         self.M = 1
@@ -369,5 +369,5 @@ if __name__=="__main__":
     
     # # z, t = n_steps(z0, t0, step_size, params)
     z, t = n_steps(z_star, t0, step_size, params)
-    animate(t, z, params)
+    # animate(t, z, params)
     plot(t, z)
