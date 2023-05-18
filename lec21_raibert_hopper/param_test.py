@@ -25,6 +25,7 @@ class Params:
         self.T = np.pi * np.sqrt(self.m/self.k)
         self.Kp = 0.1
         self.vdes = [0, 0.5, 0.6, 0.9, 1.0, 1.1, 0.7, 0.3, 0]
+        
 
 param = Params()
 print(param.g)
