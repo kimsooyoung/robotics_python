@@ -21,5 +21,5 @@ nonlinear_const = opt.NonlinearConstraint(
 x0 = np.array([1, 1, 1, 2, 1])
 res = opt.minimize(cost, x0, method='trust-constr', 
                constraints=[linear_const, nonlinear_const], 
-               options={'verbose': 1}, bounds=limits)
+               options={'xtol': 1e-9, 'verbose': 1}, bounds=limits)
 print(res.x)
