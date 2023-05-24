@@ -9,6 +9,11 @@ class Parameter():
     def __init__(self):
         self.D = 5
         self.N = 5
+        
+        # try bigger N!
+        # self.N = 10
+        # self.N = 20
+        
         self.z0 = np.array([0, 0])
     
 def cost(x):
@@ -27,19 +32,22 @@ def simulator(x, z0, N):
     
     T = x[0]
     
+    # seperate x vals into t, u
     t_sim = np.linspace(0, T, N+1)
     u_sim = x[1:]
-    # print(f"u_sim: {u_sim}")
+    print(f"u_sim: {u_sim}")
     
+    # col : N+1, row : 2
     z_sim = np.zeros((N+1, 2))
     
+    # [0, 0]
     z_sim[0, :] = z0
     
     for i in range(N):
         t = np.array([t_sim[i], t_sim[i+1]])
         args = (t[0], t[1], u_sim[i], u_sim[i+1])
         # res: input으로 시간 2개, state 2개가 들어가므로
-        # output은 2*2 행렬이다.    
+        # output은 2 x 2 행렬이다.
         res = odeint(
             car, z_sim[i], t, args=args, rtol=1e-12, atol=1e-12
         )

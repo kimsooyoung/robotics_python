@@ -8,13 +8,16 @@ import random
 import scipy.optimize as opt
 
 
-t = np.array([0, 0.1])
-t_opt = t
-u_opt = np.array([-2,2])
+for i in range(1, 10):
+    print(i)
+
+# t = np.array([0, 0.1])
+# t_opt = t
+# u_opt = np.array([-2,2])
 
 
-f = interpolate.interp1d(t_opt, u_opt)
-u = f(t)
+# f = interpolate.interp1d(t_opt, u_opt)
+# u = f(t)
 
-print(u)
+# print(u)
 # [-2.  2.]
