@@ -12,6 +12,7 @@ class Parameters:
         self.N = 12
 
 def cost(x):
+    # minimize T, Time
     return x[0]
 
 def nonlinear_func(x):
@@ -20,6 +21,7 @@ def nonlinear_func(x):
     
     N = params.N
     T = x[0]
+    # N points means N+1 steps
     t = np.linspace(0, T, N+1)
     dt = t[1] - t[0]
     
@@ -27,6 +29,7 @@ def nonlinear_func(x):
     vel = np.zeros(N+1)
     u   = np.zeros(N+1)
     
+    # seperate x vals into pos, vel, u
     # i: 0 ~ N
     for i in range(N+1):
         # x[1] ~ x[N+1] : pos
@@ -36,20 +39,28 @@ def nonlinear_func(x):
         # x[2N+3] ~ x[3N+4] : u
         u[i]   = x[i+2*N+3]
     
+    # prepare dynamics equations
     defect_pos = np.zeros(N)
     defect_vel = np.zeros(N)
     for i in range(N):
         defect_pos[i] = pos[i+1] - pos[i] - dt*vel[i]
         defect_vel[i] = vel[i+1] - vel[i] - dt*0.5*(u[i]+u[i+1])
     
-    # pos식 N개, vel식 N개
-    # pos start, max / vel start, max
+    # pos eq N ea
+    # vel eq N ea
+    # pos start, max cond
+    # vel start, max cond
+    #     => total 2N + 4 ea
     ceq = np.zeros(2*N + 4)
     
+    # pos(0) = 0, pos(N) = D
+    # vel(0) = 0, vel(N) = 0
     ceq[0] = pos[0]
     ceq[1] = vel[0]
     ceq[2] = pos[N] - params.D
     ceq[3] = vel[N]
+    
+    # dynamics eq
     for i in range(N):
         ceq[i+4] = defect_pos[i]
         ceq[i+N+4] = defect_vel[i]
@@ -83,6 +94,7 @@ if __name__=="__main__":
     params = Parameters()
     N = params.N
     
+    # T : time 
     T_initial = 2
     
     # x0 : [ T pos vel u ]
@@ -125,6 +137,11 @@ if __name__=="__main__":
         )
     
     x_result = res.x
+    
+    # x_result[0] => time
+    # x_result[1] ~ x_result[N+1] => pos
+    # x_result[N+2] ~ x_result[2N+2] => vel
+    # x_result[2N+3] ~ x_result[3N+3] => u
     T_result = x_result[0]
     pos_result = x_result[1:1+N+1]
     vel_result = x_result[1+N+1:1+2*N+2]
