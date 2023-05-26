@@ -9,7 +9,7 @@ class Parameters:
         # D : distance between start and end
         # N : number of collocation points
         self.D = 5
-        self.N = 12
+        self.N = 5
 
 def cost(x):
     # minimize T, Time
@@ -140,7 +140,7 @@ if __name__=="__main__":
     
     # x_result[0] => time
     # x_result[1] ~ x_result[N+1] => pos
-    # x_result[N+2] ~ x_result[2N+2] => vel
+    # x_result[N+2] ~ x_result[2N+2] => veㅇl
     # x_result[2N+3] ~ x_result[3N+3] => u
     T_result = x_result[0]
     pos_result = x_result[1:1+N+1]

@@ -8,10 +8,10 @@ from scipy.integrate import odeint
 class Parameter():
     def __init__(self):
         self.D = 5
-        self.N = 5
+        # self.N = 5
         
         # try bigger N!
-        # self.N = 10
+        self.N = 10
         # self.N = 20
         
         self.z0 = np.array([0, 0])

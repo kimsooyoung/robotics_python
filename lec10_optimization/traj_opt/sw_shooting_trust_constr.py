@@ -8,7 +8,12 @@ from scipy.integrate import odeint
 class Parameter():
     def __init__(self):
         self.D = 5
-        self.N = 5
+        # self.N = 5
+
+        # try bigger N!
+        self.N = 10
+        # self.N = 20
+        
         self.z0 = np.array([0, 0])
     
 def cost(x):
@@ -29,7 +34,7 @@ def simulator(x, z0, N):
     
     t_sim = np.linspace(0, T, N+1)
     u_sim = x[1:]
-    # print(f"u_sim: {u_sim}")
+    print(f"u_sim: {u_sim}")
     
     z_sim = np.zeros((N+1, 2))
     
