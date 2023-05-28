@@ -66,7 +66,7 @@ def nonlinear_func(x, phase=1):
         ceq[1] = vel[0]
         ceq[2] = pos[-1] - params.D1
         ceq[3] = vel[-1] - params.V1
-        ceq[4] = u[0]
+        ceq[4] = u[-1]
     # pos(0) = D1, pos(N) = D2
     # vel(0) = V1, vel(N) = V2
     elif phase == 2:
@@ -74,7 +74,7 @@ def nonlinear_func(x, phase=1):
         ceq[1] = vel[0] - params.V1
         ceq[2] = pos[-1] - params.D2
         ceq[3] = vel[-1] - params.V2
-        ceq[4] = u[-1]
+        ceq[4] = u[0]
     
     # dynamics eq
     for i in range(N):
@@ -90,26 +90,32 @@ def nonlinear_func2(x):
     return nonlinear_func(x, 2)
 
 
-def plot(T_result, pos_result, vel_result, u_result):
+def plot(
+        T_result_1, pos_result_1, vel_result_1, u_result_1,
+        T_result_2, pos_result_2, vel_result_2, u_result_2,
+    ):
 
     plt.figure(1)
     
     plt.subplot(311)
-    plt.plot(T_result, pos_result)
+    plt.plot(T_result_1, pos_result_1, 'b-')
+    plt.plot(T_result_2, pos_result_2, 'r-')
     plt.ylabel('pos')
     
     plt.subplot(312)
-    plt.plot(T_result, vel_result)
+    plt.plot(T_result_1, vel_result_1, 'b-')
+    plt.plot(T_result_2, vel_result_2, 'r-')
     plt.ylabel('vel')
     
     plt.subplot(313)
-    plt.plot(T_result, u_result)
+    plt.plot(T_result_1, u_result_1, 'b-')
+    plt.plot(T_result_2, u_result_2, 'r-')
     plt.xlabel('time')
     plt.ylabel('u')
     
     plt.show()
     plt.pause(10)
-    plt.close()    
+    plt.close()
 
 if __name__=="__main__":
     
@@ -127,8 +133,8 @@ if __name__=="__main__":
     # boundary conditions 선언
     T_min, T_max = 1, 5
     pos_min, pos_max = 0, params.D2
-    vel_min, vel_max = -2.5, 2.5
-    # vel_min, vel_max = -0.5, 0.5
+    # vel_min, vel_max = -2.5, 2.5
+    vel_min, vel_max = -0.5, 0.5
     u_min, u_max = -5, 5
     
     x0[0] = T_initial
@@ -168,22 +174,27 @@ if __name__=="__main__":
     # x_result[1] ~ x_result[N+1] => pos
     # x_result[N+2] ~ x_result[2N+2] => vel
     # x_result[2N+3] ~ x_result[3N+3] => u
-    T_result = np.linspace(0, x_result[0], N+1)
-    pos_result = x_result[1:1+N+1]
-    vel_result = x_result[1+N+1:1+2*N+2]
-    u_result = x_result[1+2*N+2:1+3*N+3]
+    T_result_1 = np.linspace(0, x_result[0], N+1)
+    pos_result_1 = x_result[1:1+N+1]
+    vel_result_1 = x_result[1+N+1:1+2*N+2]
+    u_result_1 = x_result[1+2*N+2:1+3*N+3]
     
     ###############
     ### Phase 2 ###
     ############### 
        
+    x0 = np.zeros(3*N + 4)
+    
+    x0[0] = T_initial
+    
+    T_min, T_max = 2, 5
+    x_min[0] = T_min
+    x_max[0] = T_max
+    
     constraints2 = {
         'type': 'eq', 
         'fun': nonlinear_func2
     }
-
-    x0 = np.zeros(3*N + 4)
-    x0[0] = T_initial
     
     res2 = opt.minimize(cost, x0, method='SLSQP', 
             bounds=limits, constraints=constraints2,
@@ -192,16 +203,13 @@ if __name__=="__main__":
     
     x_result2 = res2.x
     
-    T_result_2 = np.linspace(T_result[-1], T_result[-1] + x_result2[0], N+1)
+    T_result_2 = np.linspace(T_result_1[-1], T_result_1[-1] + x_result2[0], N+1)
     pos_result_2 = x_result2[1:1+N+1]
     vel_result_2 = x_result2[1+N+1:1+2*N+2]
     u_result_2 = x_result2[1+2*N+2:1+3*N+3]
-    
-    # collect all results
-    T_result = np.concatenate((T_result, T_result_2))
-    pos_result = np.concatenate((pos_result, x_result2[1:1+N+1]))
-    vel_result = np.concatenate((vel_result, x_result2[1+N+1:1+2*N+2]))
-    u_result = np.concatenate((u_result, x_result2[1+2*N+2:1+3*N+3]))
-    
-    plot(T_result, pos_result, vel_result, u_result)
+        
+    plot(
+        T_result_1, pos_result_1, vel_result_1, u_result_1,
+        T_result_2, pos_result_2, vel_result_2, u_result_2,
+    )
     
