@@ -1,70 +1,87 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import scipy.optimize as opt
+import numpy as np
 
-# q1(0) = 0
-# q1(1) = 0.5
-# q2(1) = 0.5
-# q2(3) = 1
-# q1_d(0) = 0
-# q1_d(1) = q2_d(1)
-# q1_dd(1) = q2_dd(1)
-# q2_d(3) = 0
-# q1_ddd(1) = q2_ddd(1)
 
-A = np.matrix('1 0 0 0 0 0 0 0 0 0; \
-           1 1 1 1 1 0 0 0 0 0; \
-           0 0 0 0 0 1 1 1 1 1; \
-           0 0 0 0 0 1 3 9 27 81; \
-           0 1 0 0 0 0 0 0 0 0 ; \
-           0 1 2 3 4 0 -1 -2 -3 -4; \
-           0 0 2 6 12 0 0 -2 -6 -12; \
-           0 0 0 0 0 0 1 6 27 108; \
-           0 0 0 6 24 0 0 0 -6 -24'
-)    
+class Parameters:
+    def __init__(self):
+        # D : distance between start and end
+        # N : number of collocation points
+        self.D1 = 0.5
+        self.V1 = 0.2
+        
+        self.D2 = 1
+        self.V2 = 0
+        
+        self.N = 20
 
-b = np.matrix('0; 0.5; 0.5; 1; 0; 0; 0; 0; 0')
-# print(A.getI())
-x = A.getI()*b
-# print(x)
+def nonlinear_func(x, phase=1):
+    
+    params = Parameters()
+    
+    N = params.N
+    T = x[0]
+    # N points means N+1 steps
+    t = np.linspace(0, T, N+1)
+    dt = t[1] - t[0]
+    
+    pos = np.zeros(N+1)
+    vel = np.zeros(N+1)
+    u   = np.zeros(N+1)
+    
+    # seperate x vals into pos, vel, u
+    # i: 0 ~ N
+    for i in range(N+1):
+        # x[1] ~ x[N+1] : pos
+        pos[i] = x[i+1]
+        # x[N+2] ~ x[2N+2] : vel
+        vel[i] = x[i+N+2]
+        # x[2N+3] ~ x[3N+4] : u
+        u[i]   = x[i+2*N+3]
+    
+    # prepare dynamics equations
+    defect_pos = np.zeros(N)
+    defect_vel = np.zeros(N)
+    for i in range(N):
+        defect_pos[i] = pos[i+1] - pos[i] - dt*vel[i]
+        defect_vel[i] = vel[i+1] - vel[i] - dt*0.5*(u[i]+u[i+1])
+    
+    # pos dynamics eq N ea
+    # vel dynamics eq N ea
+    # pos start, end cond
+    # vel start, end cond
+    # acc start cond 
+    #     => total 2N + 5 ea
+    ceq = np.zeros(2*N + 5)
+    
+    # pos(0) = 0, pos(N) = D
+    # vel(0) = 0, vel(N) = 0
+    if phase == 1:
+        ceq[0] = pos[0]
+        ceq[1] = vel[0]
+        ceq[2] = pos[N] - params.D1
+        ceq[3] = vel[N] - params.V1
+        ceq[4] = u[0]
+    elif phase == 2:
+        ceq[0] = pos[0] - params.D1
+        ceq[1] = vel[0] - params.V1
+        ceq[2] = pos[N] - params.D2
+        ceq[3] = vel[N] - params.V2
+        ceq[4] = u[-1]
+    
+    # dynamics eq
+    for i in range(N):
+        ceq[i+5] = defect_pos[i]
+        ceq[i+N+5] = defect_vel[i]
+    
+    return ceq
+        
+def nonlinear_func1(x):
+    return nonlinear_func(x, 1)
 
-a10 = x[0,0]; a11 = x[1,0]; a12 = x[2,0]; a13 = x[3,0]; a14 = x[4,0];
-a20 = x[5,0]; a21 = x[6,0]; a22 = x[7,0]; a23 = x[8,0]; a24 = x[9,0];
+def nonlinear_func2(x):
+    return nonlinear_func(x, 1)
 
-t1 = np.linspace(0, 1, 101)
-t2 = np.linspace(1, 3, 101)
+x0 = np.zeros(3*20 + 4)
 
-q1 = a10 + a11*t1 + a12*t1**2 + a13*t1**3 + a14*t1**4;
-q2 = a20 + a21*t2 + a22*t2**2 + a23*t2**3 + a24*t2**4;
-
-q1dot = a11 + 2*a12*t1 + 3*a13*t1**2 + 4*a14*t1**3;
-q2dot = a21 + 2*a22*t2 + 3*a23*t2**2 + 4*a24*t2**3;
-
-q1ddot = 2*a12 + 6*a13*t1 + 12*a14*t1**2;
-q2ddot = 2*a22 + 6*a23*t2 + 12*a24*t2**2;
-
-q1dddot = 6*a13 + 24*a14*t1;
-q2dddot = 6*a23 + 24*a24*t2; 
-
-plt.figure(1)
-
-plt.subplot(4, 1, 1)
-plt.plot(t1,q1,'b-')
-plt.plot(t2,q2,'r--')
-plt.ylabel("q");
-
-plt.subplot(4, 1, 2)
-plt.plot(t1,q1dot,'b-')
-plt.plot(t2,q2dot,'r--')
-plt.ylabel('qdot');
-
-plt.subplot(4, 1, 3)
-plt.plot(t1,q1ddot,'b-')
-plt.plot(t2,q2ddot,'r--')
-plt.ylabel('qddot');
-
-plt.subplot(4, 1, 4)
-plt.plot(t1,q1dddot,'b-')
-plt.plot(t2,q2dddot,'r--')
-plt.ylabel('qdddot');
-
-plt.show()
+print(nonlinear_func(x0, 1))
