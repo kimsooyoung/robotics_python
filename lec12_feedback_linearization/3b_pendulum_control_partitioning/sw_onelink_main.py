@@ -5,9 +5,9 @@ from scipy.integrate import odeint
 from scipy import interpolate
 
 class Parameters():
-
+    
     def __init__(self):
-
+        
         self.m = 1
         self.l = 1
         self.g = 9.81
@@ -21,17 +21,18 @@ class Parameters():
         self.kd = 2 * np.sqrt(self.kp)
         
         self.q_des = np.pi / 2
-
+         
         self.pause = 0.001
         self.fps = 30
-
-def get_tau(theta, omega, kp, kd, q_des):
-    return -kp * (theta - q_des) - kd * omega 
+        
+def get_tau(theta, omega, kp, kd, q_des, m, l, g, I):
+    # return -kp * (theta - q_des) - kd * omega
+    return (I + m*l**2/4) * ( -kp*(theta-q_des) - kd*omega ) + m*g*l*np.cos(theta)/2
 
 def one_link_manipulator(q0, t, m, l, g, I, kp, kd, q_des):
     
     theta, omega = q0
-    tau = get_tau(theta, omega, kp, kd, q_des)
+    tau = get_tau(theta, omega, kp, kd, q_des, m, l, g, I)
     
     angular_acc = ( tau - (m*g*l*np.cos(theta))/2 ) / (I + m*l**2/4 )
     return np.array([omega, angular_acc])
@@ -51,15 +52,14 @@ def animate(t, z, params):
     plt.xlim(-2, 2)
     plt.ylim(-2, 2)
     plt.gca().set_aspect('equal')
-
+    
     for i in range(len(t_anim)):
-
         theta = z_anim[i,0]
         O = np.array([0, 0])
         P = np.array([l*np.cos(theta), l*np.sin(theta)])
         
         pendulum, = plt.plot([O[0], P[0]], [O[1], P[1]], linewidth=5, color='red')
-
+        
         plt.pause(params.pause)
         pendulum.remove()
     
@@ -110,13 +110,14 @@ if __name__=="__main__":
 
     for i in range(len(t)-1):
         
-        t_temp = np.array([t[i], t[i+1]])
+        time_temp = np.array([t[i], t[i+1]])
+        
         result = odeint(
-            one_link_manipulator, z0, t, args=(m, l, g, I, kp, kd, q_des)
+            one_link_manipulator, z0, time_temp, args=(m, l, g, I, kp, kd, q_des)
         )
         
         z[i+1] = result[1]
-        tau[i+1] = get_tau(z0[0], z0[1], kp, kd, q_des)
+        tau[i+1] = get_tau(z0[0], z0[1], kp, kd, q_des, m, l, g, I)
         z0 = result[1]
         
     animate(t, z, params)
