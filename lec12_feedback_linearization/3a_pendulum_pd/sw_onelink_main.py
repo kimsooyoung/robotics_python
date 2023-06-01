@@ -28,7 +28,7 @@ class Parameters():
 def get_tau(theta, omega, kp, kd, q_des):
     return -kp * (theta - q_des) - kd * omega 
 
-def eom(q0, t, m, l, g, I, kp, kd, q_des):
+def one_link_manipulator(q0, t, m, l, g, I, kp, kd, q_des):
     
     theta, omega = q0
     tau = get_tau(theta, omega, kp, kd, q_des)
@@ -112,12 +112,12 @@ if __name__=="__main__":
         
         t_temp = np.array([t[i], t[i+1]])
         result = odeint(
-            eom, z0, t, args=(m, l, g, I, kp, kd, q_des)
+            one_link_manipulator, z0, t, args=(m, l, g, I, kp, kd, q_des)
         )
         
         z[i+1] = result[1]
         tau[i+1] = get_tau(z0[0], z0[1], kp, kd, q_des)
         z0 = result[1]
         
-    animate(t, z, params)
+    # animate(t, z, params)
     plot(t, z, tau, params)

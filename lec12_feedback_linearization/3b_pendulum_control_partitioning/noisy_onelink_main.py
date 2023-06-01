@@ -33,7 +33,7 @@ def get_tau(theta, omega, kp, kd, q_des, m, l, g, I):
     # return -kp * (theta - q_des) - kd * omega
     return (I + m*l**2/4) * ( -kp*(theta-q_des) - kd*omega ) + m*g*l*np.cos(theta)/2
 
-def eom(q0, t, m, l, g, I, kp, kd, q_des, tau_disturb):
+def one_link_manipulator(q0, t, m, l, g, I, kp, kd, q_des, tau_disturb):
     
     theta, omega = q0
     tau = get_tau(theta, omega, kp, kd, q_des, m, l, g, I) - tau_disturb
@@ -121,7 +121,7 @@ if __name__=="__main__":
         tau_disturb = np.random.normal(t_mean, t_std)
         
         result = odeint(
-            eom, z0, time_temp, args=(m, l, g, I, kp, kd, q_des, tau_disturb)
+            one_link_manipulator, z0, time_temp, args=(m, l, g, I, kp, kd, q_des, tau_disturb)
         )
         
         z0 = np.array([
