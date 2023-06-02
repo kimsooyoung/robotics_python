@@ -26,8 +26,9 @@ class Parameters():
         self.fps = 30
         
         self.tau_noise_mean, self.tau_noise_std = 0, 0.1 * 20
-        self.theta_noise_mean, self.theta_noise_std = 0, 0.01 * 5
-        self.omega_noise_mean, self.omega_noise_std = 0, 0.1 * 0.0
+        # self.theta_noise_mean, self.theta_noise_std = 0, 0.01 * 5
+        self.theta_noise_mean, self.theta_noise_std = 0, 0.01 * 10
+        self.omega_noise_mean, self.omega_noise_std = 0, 0.1 * 1.0
 
 def get_tau(theta, omega, kp, kd, q_des, m, l, g, I):
     # return -kp * (theta - q_des) - kd * omega
@@ -132,5 +133,5 @@ if __name__=="__main__":
         z[i+1] = z0
         tau[i+1] = get_tau(z0[0], z0[1], kp, kd, q_des, m, l, g, I)
         
-    animate(t, z, params)
+    # animate(t, z, params)
     plot(t, z, tau, params)

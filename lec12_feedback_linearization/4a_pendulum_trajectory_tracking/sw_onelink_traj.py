@@ -16,6 +16,10 @@ theta0, theta1, theta2 = 0.0, 0.5*pi, 0.0
 f0_d, f1_d = sy.diff(f0, t), sy.diff(f1, t)
 f0_dd, f1_dd = sy.diff(f0_d, t), sy.diff(f1_d, t)
 
+# theta1(0) = 0 / theta1(1.5) = 0.5*pi
+# theta2(1.5) = 0.5*pi / theta(3) = 0
+# theta1_d(0) = 0 / theta2_d(3) = 0
+# theta1_d(1.5) = theta2_d(1.5) / theta1_dd(1.5) = theta2_dd(1.5)
 equ0 = f0.subs(t, t0) - theta0
 equ1 = f0.subs(t, t1) - theta1
 equ2 = f1.subs(t, t1) - theta1

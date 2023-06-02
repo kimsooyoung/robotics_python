@@ -146,7 +146,6 @@ def animate(t,z,parms):
 def plot(t,z,theta1_ref,theta2_ref,omega1_ref,omega2_ref,T1,T2,tau1_ref,tau2_ref):
 
     plt.figure(1)
-    
     plt.subplot(2,1,1)
     plt.plot(t,z[:,0])
     plt.plot(t,theta1_ref,'r-.');
@@ -181,6 +180,7 @@ def plot(t,z,theta1_ref,theta2_ref,omega1_ref,omega2_ref,T1,T2,tau1_ref,tau2_ref
     plt.plot(t,T1)
     plt.plot(t,tau1_ref,'r-.');
     plt.ylabel("Torque 1")
+    plt.title("Plot of acceleration vs. time")
     
     plt.subplot(2,1,2)
     plt.plot(t,T2)
@@ -192,7 +192,7 @@ def plot(t,z,theta1_ref,theta2_ref,omega1_ref,omega2_ref,T1,T2,tau1_ref,tau2_ref
     plt.pause(4)
     plt.close()
 
-def get_ep_cart_traj(ts):
+def get_circle(ts):
 
     x_ref, y_ref = [], []
     x_d_ref, y_d_ref = [], []
@@ -209,6 +209,29 @@ def get_ep_cart_traj(ts):
         x_dd_ref.append(-0.5*cos(theta)*theta_d**2)
         y_dd_ref.append(-0.5*sin(theta)*theta_d**2)
     
+    return x_ref, y_ref, x_d_ref, y_d_ref, x_dd_ref, y_dd_ref
+
+def get_eight(ts):
+    
+    N = len(ts)-1
+    T = ts[N];
+    A = 0.5;
+    B = A;
+    
+    a, b = 2, 1;
+    x0, y0 = 1, 0
+    
+    tau = 2*pi*(-15*(ts/T)**4 + 6*(ts/T)**5 + 10*(ts/T)**3);
+    taudot = 2*pi*(-15*4*(1/T)*(ts/T)**3 + 6*5*(1/T)*(ts/T)**4 + 10*3*(1/T)*(ts/T)**2);
+    tauddot = 2*pi*(-15*4*3*(1/T)**2*(ts/T)**2 + 6*5*4*(1/T)**2*(ts/T)**3 + 10*3*2*(1/T)**2*(ts/T));
+
+    x_ref = x0+A*sin(a*tau);
+    y_ref = y0+B*cos(b*tau);
+    x_d_ref =  A*a*cos(a*tau)*taudot;
+    y_d_ref = -B*b*sin(b*tau)*taudot;
+    x_dd_ref = -A*a*a*sin(a*tau)*taudot+A*a*cos(a*tau)*tauddot;
+    y_dd_ref = -B*b*b*sin(b*tau)*taudot-B*b*sin(b*tau)*tauddot;
+
     return x_ref, y_ref, x_d_ref, y_d_ref, x_dd_ref, y_dd_ref
 
 # input : guess theta
@@ -288,7 +311,8 @@ if __name__=="__main__":
     ts = np.linspace(t0, tend, N)
     
     # end-point cartesian traj generation
-    x_ref, y_ref, x_d_ref, y_d_ref, x_dd_ref, y_dd_ref = get_ep_cart_traj(ts)
+    # x_ref, y_ref, x_d_ref, y_d_ref, x_dd_ref, y_dd_ref = get_circle(ts)
+    x_ref, y_ref, x_d_ref, y_d_ref, x_dd_ref, y_dd_ref = get_eight(ts)
 
     # end-point joint traj generation
     q1_p_ref, q2_p_ref, q1_v_ref, q2_v_ref, q1_a_ref, q2_a_ref = get_ep_joint_traj(l, l, x_ref, y_ref, x_d_ref, y_d_ref, x_dd_ref, y_dd_ref)

@@ -26,13 +26,13 @@ class Parameters():
         self.fps = 30
         
         self.tau_noise_mean, self.tau_noise_std = 0, 0.1 * 20
-        self.theta_noise_mean, self.theta_noise_std = 0, 0.01 * 5
-        self.omega_noise_mean, self.omega_noise_std = 0, 0.1 * 0.0
+        self.theta_noise_mean, self.theta_noise_std = 0, 0.01 * 10
+        self.omega_noise_mean, self.omega_noise_std = 0, 0.1 * 1.0
 
 def get_tau(theta, omega, kp, kd, q_des):
     return -kp * (theta - q_des) - kd * omega
 
-def eom(q0, t, m, l, g, I, kp, kd, q_des, tau_disturb):
+def one_link_manipulator(q0, t, m, l, g, I, kp, kd, q_des, tau_disturb):
     
     theta, omega = q0
     tau = get_tau(theta, omega, kp, kd, q_des) - tau_disturb
@@ -120,7 +120,7 @@ if __name__=="__main__":
         tau_disturb = np.random.normal(t_mean, t_std)
         
         result = odeint(
-            eom, z0, time_temp, args=(m, l, g, I, kp, kd, q_des, tau_disturb)
+            one_link_manipulator, z0, time_temp, args=(m, l, g, I, kp, kd, q_des, tau_disturb)
         )
         
         z0 = np.array([
@@ -131,5 +131,5 @@ if __name__=="__main__":
         z[i+1] = z0
         tau[i+1] = get_tau(z0[0], z0[1], kp, kd, q_des)
         
-    animate(t, z, params)
+    # animate(t, z, params)
     plot(t, z, tau, params)

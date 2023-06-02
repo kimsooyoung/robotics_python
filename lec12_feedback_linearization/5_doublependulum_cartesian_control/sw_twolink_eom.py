@@ -98,6 +98,11 @@ print('G2 = ', sy.simplify(G2),'\n')
 # J_d = dJ/dΘ1*Θ1_d + dJ/dΘ2*Θ2_d
 E_xy = sy.Matrix([E[0],E[1]])
 J = E_xy.jacobian(q)
+print('J11 = ', sy.simplify(J[0,0]))
+print('J12 = ', sy.simplify(J[0,1]))
+print('J21 = ', sy.simplify(J[1,0]))
+print('J22 = ', sy.simplify(J[1,1]),'\n')
+
 J_d = sy.diff(J, theta1)*theta1dot + sy.diff(J, theta2)*theta2dot
 print('J_d11 = ', sy.simplify(J_d[0,0]))
 print('J_d12 = ', sy.simplify(J_d[0,1]))
