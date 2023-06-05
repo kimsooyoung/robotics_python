@@ -5,7 +5,7 @@ from scipy.integrate import odeint
 
 class Parameters():
 
-    def __init__(self) -> None:
+    def __init__(self):
         
         self.m1, self.m2 = 1, 1
         self.k1, self.k2 = 2, 3
@@ -33,7 +33,6 @@ def dynamisc(m1, m2, k1, k2):
 
     return A, B
 
-
 def get_control(x, K):
 
     return -K@x
@@ -41,7 +40,12 @@ def get_control(x, K):
 def spring_mass_linear_equ(x, t, m1, m2, k1, k2, K):
 
     A, B = dynamisc(m1, m2, k1, k2)
-    u = get_control(x, K)
+
+    #uncontrolled
+    u = np.array([0,0])
+    
+    # Linear control
+    # u = get_control(x, K)
 
     return A@x + B@u
 
@@ -52,6 +56,7 @@ def plot(result, u, ts):
     plt.subplot(2,1,1)
     plt.plot(ts, result[:,0],'r-.')
     plt.plot(ts, result[:,1],'b');
+    plt.title("Position and Velocity vs. time")
     plt.ylabel("position")
     
     plt.subplot(2,1,2)
@@ -63,6 +68,7 @@ def plot(result, u, ts):
     plt.figure(2)
     plt.subplot(2,1,1)
     plt.plot(ts, u[:,0],'b')
+    plt.title("U1 and U2 vs. time")
     plt.ylabel("u1")
     
     plt.subplot(2,1,2)
@@ -78,9 +84,17 @@ if __name__=="__main__":
     Q, R = params.Q, params.R
 
     A, B = dynamisc(m1, m2, k1, k2)
-    K, _, E = control.lqr(A, B, Q, R)
-    print(f"K = {K}")
-    print(f"E = {E}")
+    
+    # Pole placement
+    p = [-1,-2,-3,-4]
+    K = control.place(A,B,p)
+    eigVal_p, eigVec_p = np.linalg.eig(A - B@K)
+    print(f"new eigVal, eigVec: \n {eigVal_p} \n {eigVec_p}")
+    
+    # # LQR
+    # K, _, E = control.lqr(A, B, Q, R)
+    # print(f"K = {K}")
+    # print(f"E = {E}")
 
     t0, tend, N = 0, 10, 101
     ts = np.linspace(t0, tend, N)

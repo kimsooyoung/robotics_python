@@ -3,7 +3,7 @@ import numpy as np
 
 class Parameters():
 
-    def __init__(self) -> None:
+    def __init__(self):
         
         # spring-mass system
         self.m1 = 1
@@ -36,15 +36,25 @@ if __name__=="__main__":
         [-1/m1,0],
         [1/m1,1/m2],
     ])
+    
+    C = np.array([
+        [1,0,0,0],
+        [0,1,0,0],
+        [0,0,0,0],
+        [0,0,0,0]
+    ])
 
     # 1. calculate pole
     eigVal, eigVec = np.linalg.eig(A)
     print(f"eigVal: {eigVal}")
 
-    # 2. controllability 
+    # 2. controllability and observability 
     C_o = control.ctrb(A, B)
-    print(f"rank: {np.linalg.matrix_rank(C_o)}")
-
+    print(f"C_o rank: {np.linalg.matrix_rank(C_o)}")
+    
+    Q_o = control.obsv(A, C)
+    print(f"Q_o rank: {np.linalg.matrix_rank(Q_o)}")
+    
     # 3. pole placement
     p = [-1,-2,-3,-4]
     k = control.place(A,B,p)
@@ -58,8 +68,8 @@ if __name__=="__main__":
     
     # Q >> R => aggressive controller
     Q = np.eye(4)
-    R = 0.1 * np.eye(2)
-    # R = 0.0001 * np.eye(2)
+    # R = 0.1 * np.eye(2)
+    R = 0.0001 * np.eye(2)
     k,s,e = control.lqr(A,B,Q,R)
     print(f"K: {k}")
     print(f"S: {s}")
