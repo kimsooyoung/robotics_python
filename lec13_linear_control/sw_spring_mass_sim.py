@@ -11,7 +11,7 @@ class Parameters():
         self.k1, self.k2 = 2, 3
 
         self.Q = np.eye(4)
-        self.R = .01 * np.eye(2)
+        self.R = np.eye(2)
 
         self.pause = 0.01
 
@@ -42,10 +42,10 @@ def spring_mass_linear_equ(x, t, m1, m2, k1, k2, K):
     A, B = dynamisc(m1, m2, k1, k2)
 
     #uncontrolled
-    u = np.array([0,0])
+    # u = np.array([0,0])
     
     # Linear control
-    # u = get_control(x, K)
+    u = get_control(x, K)
 
     return A@x + B@u
 
@@ -54,15 +54,17 @@ def plot(result, u, ts):
     plt.figure(1)
     
     plt.subplot(2,1,1)
-    plt.plot(ts, result[:,0],'r-.')
-    plt.plot(ts, result[:,1],'b');
+    plt.plot(ts, result[:,0],'r-.', label="x1")
+    plt.plot(ts, result[:,1],'b', label="x2")
     plt.title("Position and Velocity vs. time")
     plt.ylabel("position")
+    plt.legend()
     
     plt.subplot(2,1,2)
-    plt.plot(ts, result[:,2],'r-.')
-    plt.plot(ts, result[:,3],'b');
+    plt.plot(ts, result[:,2],'r-.', label="v1")
+    plt.plot(ts, result[:,3],'b', label="v2");
     plt.ylabel("velocity")
+    plt.legend()
     plt.show()
 
     plt.figure(2)
@@ -86,15 +88,15 @@ if __name__=="__main__":
     A, B = dynamisc(m1, m2, k1, k2)
     
     # Pole placement
-    p = [-1,-2,-3,-4]
-    K = control.place(A,B,p)
-    eigVal_p, eigVec_p = np.linalg.eig(A - B@K)
-    print(f"new eigVal, eigVec: \n {eigVal_p} \n {eigVec_p}")
+    # p = [-1,-2,-3,-4]
+    # K = control.place(A,B,p)
+    # eigVal_p, eigVec_p = np.linalg.eig(A - B@K)
+    # print(f"new eigVal, eigVec: \n {eigVal_p} \n {eigVec_p}")
     
-    # # LQR
-    # K, _, E = control.lqr(A, B, Q, R)
-    # print(f"K = {K}")
-    # print(f"E = {E}")
+    # LQR
+    K, _, E = control.lqr(A, B, Q, R)
+    print(f"K = {K}")
+    print(f"E = {E}")
 
     t0, tend, N = 0, 10, 101
     ts = np.linspace(t0, tend, N)
