@@ -239,7 +239,9 @@ if __name__=="__main__":
     # initial conditions
     # It'll make double pendulum into straight pose
     pi = np.pi
+    # z0 = np.array([0, 0, 0, 0])
     z0 = np.array([pi/4, 0, 0, 0])
+    # z0 = np.array([pi/4, -pi/4, 0, 0])
     
     z = np.zeros((len(ts), 4))
     tau = np.zeros((len(ts), 2))
@@ -269,5 +271,5 @@ if __name__=="__main__":
         z0 = result[-1] + meas_noise
         z[i] = z0
     
-    animate(ts,z,params)
+    # animate(ts,z,params)
     plot(ts,z,tau)
