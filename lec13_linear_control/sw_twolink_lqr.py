@@ -30,6 +30,15 @@ class Parameters():
         self.Q = np.eye((4))
         self.R = 1e-2*np.eye((2))
         
+        # control noise and measurement noise
+        self.ctrl_noise_m, self.ctrl_noise_dev = 0, 0
+        self.pos_meas_noise_m, self.pos_meas_noise_dev = 0, 0
+        self.vel_meas_noise_m, self.vel_meas_noise_dev = 0, 0
+        
+        # self.ctrl_noise_m, self.ctrl_noise_dev = 0, 0.1
+        # self.pos_meas_noise_m, self.pos_meas_noise_dev = 0, 0.01
+        # self.vel_meas_noise_m, self.vel_meas_noise_dev = 0, 0.02
+        
         self.pause = 0.01
         self.fps = 30
 
@@ -103,17 +112,19 @@ def linearize(z, m1,m2,c1,c2,l,g,I1,I2,B):
 def get_tau(x, K):
     return -K@x
 
-def twolink_dynamics(z,t, dyn_args, control_args):
+def twolink_dynamics(z,t, dyn_args, control_args, noise_args):
     
     m1, m2, c1, c2, l, g, I1, I2 = dyn_args
     K, B = control_args
+    disturb1, disturb2 = noise_args
 
     theta1, omega1, theta2, omega2 = z
     
     M, C, G = EOM(m1,m2,c1,c2,l,g,I1,I2, theta1,theta2,omega1,omega2)
     # noisy tau here
     u = get_tau(z, K)
-    tau = B@u
+    disturb = np.array([disturb1, disturb2])
+    tau = B@u + disturb
     
     # Ax = b
     A = M
@@ -172,7 +183,7 @@ def animate(t,z,parms):
 
 def plot(t,z,u):
 
-    plt.figure(1)
+    plt.figure(1, figsize=(6,8))
     
     plt.subplot(4, 1, 1)
     plt.plot(t,z[:,0],color='red',label='theta1');
@@ -206,6 +217,10 @@ if __name__=="__main__":
     m1, m2, c1, c2, l = params.m1, params.m2, params.c1, params.c2, params.l
     I1, I2, g = params.I1, params.I2, params.g
     B, Q, R = params.B, params.Q, params.R
+    
+    ctrl_noise_m, ctrl_noise_dev = params.ctrl_noise_m, params.ctrl_noise_dev
+    pos_meas_noise_m, pos_meas_noise_dev = params.pos_meas_noise_m, params.pos_meas_noise_dev
+    vel_meas_noise_m, vel_meas_noise_dev = params.vel_meas_noise_m, params.vel_meas_noise_dev
 
     # 1. linerize
     z = np.array([0, 0, 0, 0])
@@ -220,7 +235,9 @@ if __name__=="__main__":
     N = 100
     t0, tend = 0, 5
     ts = np.linspace(t0, tend, N)
+    
     # initial conditions
+    # It'll make double pendulum into straight pose
     pi = np.pi
     z0 = np.array([pi/4, 0, 0, 0])
     
@@ -232,14 +249,24 @@ if __name__=="__main__":
     control_args = (K, B)
     
     for i in range(N-1):
-        args = (dyn_args, control_args)
+        disturb1 = np.random.normal(ctrl_noise_m, ctrl_noise_dev)
+        disturb2 = np.random.normal(ctrl_noise_m, ctrl_noise_dev)
+        noise_args = (disturb1, disturb2)
+        
+        # execute simulation 
         t_temp = np.array([ ts[i], ts[i+1] ])
-        
-        tau[i] = get_tau(z0, K)
+        args = (dyn_args, control_args, noise_args)
         result = odeint(twolink_dynamics, z0, t_temp, args=args)
-        # noisy z here
+        tau[i] = get_tau(z0, K)
         
-        z0 = result[-1]
+        # noisy z here
+        meas_noise = np.array([
+            np.random.normal(pos_meas_noise_m, pos_meas_noise_dev),
+            np.random.normal(vel_meas_noise_m, vel_meas_noise_dev),
+            np.random.normal(pos_meas_noise_m, pos_meas_noise_dev),
+            np.random.normal(vel_meas_noise_m, vel_meas_noise_dev)
+        ])
+        z0 = result[-1] + meas_noise
         z[i] = z0
     
     animate(ts,z,params)
