@@ -39,9 +39,9 @@ if __name__=="__main__":
     
     A, B, C = dynamics(m1, m2, k1, k2)
     
-    # 1. compute eigenvalues of uncontrolled system
+    # 1. compute eigenvalues of unestimated system
     eigVal, eigVec = np.linalg.eig(A)
-    print(f'eig-vals (uncontrolled)')
+    print(f'eig-vals (unestimated)')
     print(eigVal, '\n')
     
     # 2. compute observability of the system (2 ways)

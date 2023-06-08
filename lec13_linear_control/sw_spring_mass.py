@@ -69,7 +69,7 @@ if __name__=="__main__":
     # Q >> R => aggressive controller
     Q = np.eye(4)
     # R = 0.1 * np.eye(2)
-    R = 0.0001 * np.eye(2)
+    # R = 0.0001 * np.eye(2)
     k,s,e = control.lqr(A,B,Q,R)
     print(f"K: {k}")
     print(f"S: {s}")

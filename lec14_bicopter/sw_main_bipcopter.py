@@ -18,7 +18,7 @@ class Parameters():
         
 def controller(m, g, l, r, I):
     
-    us = m*g + 0.1
+    us = m*g + 0.01
     ud = 0.0
     
     return us, ud
@@ -33,7 +33,6 @@ def bicopter_dynamics(z,t, m, g, l, r, I):
     phi_dd = (l*ud)/(2*I)
     
     return x_d, y_d, phi_d, x_dd, y_dd, phi_dd
-
 
 def animate(t,z,parms):
     #interpolation
@@ -124,7 +123,7 @@ if __name__=="__main__":
     t, tend, N = 0, 5, 100
     ts = np.linspace(t, tend, N)
     
-    x, y, phi, x_d, y_d, phi_d = 0, 0, 0.1, 0, 0, 0
+    x, y, phi, x_d, y_d, phi_d = 0, 0, 0, 0, 0, 0
     z0 = x, y, phi, x_d, y_d, phi_d
     tau = np.zeros((N, 2))
     z = np.zeros((N, 6))

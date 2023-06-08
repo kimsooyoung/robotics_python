@@ -30,8 +30,8 @@ def controller(m, g, l, r, I, gains, refs, x, y, phi, x_d, y_d, phi_d):
     Kp_x, Kp_y, Kp_phi, Kd_x, Kd_y, Kd_phi = gains
     x_ref, y_ref, xd_ref, yd_ref, xdd_ref, ydd_ref = refs
 
-    us = m*g + m*(ydd_ref - Kp_y*(y - y_ref) - Kd_y*(y_d - yd_ref))
     phi_ref = -(1/g)*(xdd_ref - Kp_x*(x - x_ref) - Kd_x*(x_d - xd_ref))
+    us = m*g + m*(ydd_ref - Kp_y*(y - y_ref) - Kd_y*(y_d - yd_ref))
     ud = -Kp_phi * (phi - phi_ref) - Kd_phi * phi_d
     
     return us, ud
