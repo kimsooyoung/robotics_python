@@ -29,14 +29,25 @@ class Parameter():
             [0, 1]
         ])
         
+        self.Qe = np.diag([0.1, 0.1])
+        self.Re = np.diag([0.1, 0.1])
+        
+        # self.Qe = np.diag([2,3])
+        # self.Re = np.diag([0.5,0.5])
+        
 def spring_mass_dynamics(x,t, A, C, G, L, p_noise1, p_noise2, m_noise1, m_noise2):
     
     O_44 = np.zeros((4, 4))
     O_42 = np.zeros((4, 2))
 
+    # Gbig = np.block([
+    #     [G],
+    #     [O_42]
+    # ])
+    
     Gbig = np.block([
-        [G],
-        [O_42]
+        [O_42],
+        [G]
     ])
     
     Lbig = np.block([
@@ -98,13 +109,12 @@ if __name__=="__main__":
     param = Parameter()
     m1, m2, k1, k2 = param.m1, param.m2, param.k1, param.k2
     A, C, G = param.A, param.C, param.G
-    
-    Qe = np.diag([.1, .1])
-    Re = np.diag([.1, .1])
+    Qe, Re = param.Qe, param.Re
     
     # kalman gain
     L, P, E = control.lqe(A, G, C, Qe, Re)
-    print("L\n", L)
+    print("L\n", L)    
+    print("E\n", E)
     
     # process, measurement noise
     p_noise1_mean, p_noise1_std = 0, np.sqrt(Qe[0,0])
