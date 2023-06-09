@@ -44,9 +44,6 @@ def animate(fig_no, R, phi, theta, order):
     lx, ly, lz, ll = 0.5, 0.25, 0.1, 1
     lmax = np.max(np.array([lx, ly, lz, ll]))
 
-    # v0 = np.array([[0,0,0], [lx,0,0], [lx,ly,0], [0,ly,0],
-    #               [0,0,lz], [lx,0,lz], [lx,ly,lz], [0,ly,lz]])
-    
     # each vertex is a row
     v0 = np.array([[-lx,-ly,-lz], [lx,-ly,-lz], [lx,ly,-lz], [-lx,ly,-lz],
                   [-lx,-ly,lz], [lx,-ly,lz], [lx,ly,lz], [-lx,ly,lz]])
@@ -133,6 +130,4 @@ if __name__ == "__main__":
     animate(6, R, phi, theta, 'yx')
 
     plt.show()
-    # plt.show(block=False)
-    # plt.pause(10)
-    # plt.close()
+    

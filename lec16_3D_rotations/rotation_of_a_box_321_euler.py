@@ -16,22 +16,20 @@ def rotation(phi,theta,psi):
         [0,     cos(phi), -sin(phi)],
         [0,     sin(phi),  cos(phi)]
     ])
-
+    
     R_y = np.array([
         [cos(theta),  0, sin(theta)],
         [0,           1,          0],
-        [-sin(theta),  0, cos(theta)]
+        [-sin(theta), 0, cos(theta)]
     ])
-
+    
     R_z = np.array([
-        [cos(psi), -sin(psi), 0],
-        [sin(psi),  cos(psi), 0],
+        [cos(psi), -sin(psi),     0],
+        [sin(psi),  cos(psi),     0],
         [0,            0,         1]
     ])
-
-    R =  R_z @ R_y @ R_x
     
-    return R
+    return R_z @ R_y @ R_x
 
 def animate(fig_no,phi,theta,psi):
     lx = 0.5;
@@ -40,8 +38,6 @@ def animate(fig_no,phi,theta,psi):
     ll = 1;
     lmax = np.max(np.array([lx, ly, lz,ll]))
 
-    # v0 = np.array([[0,0,0], [lx,0,0], [lx,ly,0], [0,ly,0],
-    #               [0,0,lz], [lx,0,lz], [lx,ly,lz], [0,ly,lz]])
     v0 = np.array([[-lx,-ly,-lz], [lx,-ly,-lz], [lx,ly,-lz], [-lx,ly,-lz],
                   [-lx,-ly,lz], [lx,-ly,lz], [lx,ly,lz], [-lx,ly,lz]])
 
@@ -88,11 +84,6 @@ def animate(fig_no,phi,theta,psi):
     ax.set_ylim(-lmax,lmax)
     ax.set_zlim(-lmax,lmax)
     ax.axis('off');
-
-    #plt.show()
-    # plt.show(block=False)
-    # plt.pause(5)
-    # plt.close()
 
 if __name__ == "__main__":
         
