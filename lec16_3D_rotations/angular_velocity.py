@@ -35,16 +35,26 @@ R_z = sy.Matrix([
 q_d = sy.Matrix([phidot,thetadot,psidot])
 
 
+# Get angular velocity in the world frame
 om = psidot*k + R_z*(thetadot*j)+ R_z*R_y*(phidot*i)
 # w = R_we * q_dot임을 시용해서 R_we만 추출
 R_we = om.jacobian(q_d)
 R_we = sy.simplify(R_we)
 print(sy.simplify(R_we))
-print(sy.simplify(R_we.det()))
+print(sy.simplify(R_we.det()), "\n")
 
-print()
-
+# Get angular velocity in the body frame
 om_b = phidot*i +  R_x.transpose()*(thetadot*j) + R_x.transpose()*R_y.transpose()*(psidot*k);
 R_be = om_b.jacobian(q_d)
 print(sy.simplify(R_be))
-print(sy.simplify(R_be.det()))
+print(sy.simplify(R_be.det()), "\n")
+
+# Get linear velocity in the world frame
+rx, ry, rz = sy.symbols('rx ry rz', real=True)
+r = rx*i + ry*j + rz*k
+V = om.cross(r)
+print(sy.simplify(V), "\n")
+
+# Get linear velocity in the body frame
+V_b = om_b.cross(r)
+print(sy.simplify(V_b), "\n")
