@@ -6,26 +6,25 @@ class Parameters:
     
     def __init__(self):
         
-        self.l1 = 0.5
-        self.l2 = 0.4
-        self.l3 = 0.25
-        
         self.a1 = 0
         self.alpha1 = np.pi/2
-        self.d1 = self.l1
-
-        self.a2 = self.l2
-        self.alpha2 = 0
-        self.d2 = 0
+        self.d1 = 0.5
+        self.theta1 = 0.0 # user prefered angle
         
-        self.a3 = self.l3
-        self.alpha3 = 0
+        self.a2 = 0.4
+        self.alpha2 = 0.0
+        self.d2 = 0 
+        self.theta2 = 0.0 # user prefered length
+
+        self.a3 = 0.25
+        self.alpha3 = 0.0
         self.d3 = 0
+        self.theta3 = 0.0 # user prefered length
         
         self.pause = 0.01
         
 def DH2Matrix(a, alpha, d, theta):
-        
+    
     H_z_theta = np.array([
         [np.cos(theta), -np.sin(theta), 0, 0],
         [np.sin(theta),  np.cos(theta), 0, 0],
@@ -57,29 +56,9 @@ def DH2Matrix(a, alpha, d, theta):
     H = H_z_theta@H_z_d@H_x_a@H_x_alpha
     
     return H
+
+def plot(point1, point2, point3):
         
-if __name__=="__main__":
-    
-    params = Parameters()
-    
-    a1, alpa1, d1 = params.a1, params.alpha1, params.d1
-    a2, alpa2, d2 = params.a2, params.alpha2, params.d2
-    a3, alpa3, d3 = params.a3, params.alpha3, params.d3
-    
-    theta1, theta2, theta3 = 0, 0, 0
-    
-    H_01 = DH2Matrix(a1, alpa1, d1, theta1)
-    H_12 = DH2Matrix(a2, alpa2, d2, theta2)
-    H_23 = DH2Matrix(a3, alpa3, d3, theta3)
-    
-    H_01 = H_01
-    H_02 = H_01@H_12
-    H_03 = H_02@H_23
-    
-    point1 = H_01[0:3, 3]
-    point2 = H_02[0:3, 3]
-    point3 = H_03[0:3, 3]
-    
     fig = plt.figure(1)
     ax = p3.Axes3D(fig)
     
@@ -117,3 +96,31 @@ if __name__=="__main__":
     ax.set_zlabel('Z Label')
     
     plt.show()
+
+
+if __name__=="__main__":
+    
+    params = Parameters()
+    
+    a1, alpa1, d1, theta1 = params.a1, params.alpha1, params.d1, 0
+    a2, alpa2, d2, theta2 = params.a2, params.alpha2, params.d2, 0
+    a3, alpa3, d3, theta3 = params.a3, params.alpha3, params.d3, 0
+    
+    # example
+    # a1, alpa1, d1, theta1 = params.a1, params.alpha1, params.d1, 0
+    # a2, alpa2, d2, theta2 = params.a2, params.alpha2, params.d2, np.pi/4
+    # a3, alpa3, d3, theta3 = params.a3, params.alpha3, params.d3, -np.pi/4
+    
+    H_01 = DH2Matrix(a1, alpa1, d1, theta1)
+    H_12 = DH2Matrix(a2, alpa2, d2, theta2)
+    H_23 = DH2Matrix(a3, alpa3, d3, theta3)
+    
+    H_01 = H_01
+    H_02 = H_01@H_12
+    H_03 = H_02@H_23
+    
+    point1 = H_01[0:3, 3]
+    point2 = H_02[0:3, 3]
+    point3 = H_03[0:3, 3]
+    
+    plot(point1, point2, point3)
