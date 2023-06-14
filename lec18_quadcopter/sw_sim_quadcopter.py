@@ -22,8 +22,9 @@ class parameters:
         self.fps = 30
 
         omega = 1
-        speed = 1.075*omega*np.sqrt(1/self.K) #1.075
-        dspeed1 = 0.2*speed
+        # speed = 1.0*omega*np.sqrt(1/self.K)
+        speed = 1.075*omega*np.sqrt(1/self.K)
+        dspeed1 = 0.0*speed
         dspeed2 = 0.0*speed
         dspeed3 = 0.0*speed
         dspeed4 = 0.0*speed
@@ -31,6 +32,11 @@ class parameters:
         self.omega2 = speed+dspeed2
         self.omega3 = speed+dspeed3
         self.omega4 = speed+dspeed4
+
+        # self.omega1 = speed+dspeed1
+        # self.omega2 = speed-dspeed2
+        # self.omega3 = speed+dspeed3
+        # self.omega4 = speed-dspeed4
 
 def cos(angle):
     return np.cos(angle)
@@ -222,7 +228,8 @@ if __name__=="__main__":
     ts = np.linspace(t0, tend, N)
     
     x0, y0, z0 = 0, 0, 0
-    phi0, theta0, psi0 = 0, 0, 0
+    # phi0, theta0, psi0 = 0, 0, 0
+    phi0, theta0, psi0 = 0, 0.2, 0
     vx0, vy0, vz0 = 0, 0, 0
     phi_d0, theta_d0, psi_d0 = 0, 0, 0
     z0 = np.array([x0, y0, z0, phi0, theta0, psi0, vx0, vy0, vz0, phi_d0, theta_d0, psi_d0])

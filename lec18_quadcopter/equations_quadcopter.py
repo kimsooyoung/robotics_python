@@ -1,92 +1,93 @@
 import sympy as sy
-import numpy as np
 
-def cos(theta):
-    return sy.cos(theta)
+def cos(angle):
+    return sy.cos(angle)
 
-def sin(theta):
-    return sy.sin(theta)
+def sin(angle):
+    return sy.sin(angle)
 
-x,y,z  = sy.symbols('x y z', real=True)
-vx,vy,vz  = sy.symbols('vx vy vz', real=True)
-ax,ay,az  = sy.symbols('ax ay az', real=True)
+x,y,z    = sy.symbols('x y z', real=True)
+vx,vy,vz = sy.symbols('vx vy vz', real=True)
+ax,ay,az = sy.symbols('ax ay az', real=True)
 
-phi,theta,psi  = sy.symbols('phi theta psi', real=True)
-phidot,thetadot,psidot = sy.symbols('phidot thetadot psidot', real=True)
-phiddot,thetaddot,psiddot = sy.symbols('phiddot thetaddot psiddot', real=True)
+phi,theta,psi = sy.symbols('phi theta psi', real=True)
+phi_d,theta_d,psi_d = sy.symbols('phi_d theta_d psi_d', real=True)
+phi_dd,theta_dd,psi_dd = sy.symbols('phi_dd theta_dd psi_dd', real=True)
 
-m,g,Ixx,Iyy,Izz = sy.symbols('m g Ixx Iyy Izz', real=True)
-K,l,b,Ax,Ay,Az = sy.symbols('K l b Ax Ay Az', real=True)
+m, g, l = sy.symbols('m g l', real=True)
+Ixx, Iyy, Izz = sy.symbols('Ixx Iyy Izz', real=True)
 
-# 여기서의 omega는 모터의 회전 속도이므로 드론 내부의 상수와는 관계 없다.
-omega1,omega2,omega3,omega4 = sy.symbols('omega1 omega2 omega3 omega4', real=True)
-
-
-# %%%%%%% unit vectors %%%%%%%
-i = sy.Matrix([1, 0, 0]);
-j = sy.Matrix([0, 1, 0]);
-k = sy.Matrix([0, 0, 1]);
+K, b = sy.symbols('K b', real=True)
+Ax, Ay, Az = sy.symbols('Ax Ay Az', real=True)
+omega1, omega2, omega3, omega4 = sy.symbols('omega1 omega2 omega3 omega4', real=True)
 
 # 1) position and angles
 R_x = sy.Matrix([
-                [1,            0,         0],
-                [0,     cos(phi), -sin(phi)],
-                [0,     sin(phi),  cos(phi)]
-
-              ])
-
+    [1, 0, 0],
+    [0, cos(phi), -sin(phi)],
+    [0, sin(phi), cos(phi)]
+])
+                
 R_y = sy.Matrix([
-                    [cos(theta),  0, sin(theta)],
-                    [0,           1,          0],
-                    [-sin(theta),  0, cos(theta)]
-                  ])
+    [cos(theta), 0, sin(theta)],
+    [0, 1, 0],
+    [-sin(theta), 0, cos(theta)]
+])
 
-R_z = sy.Matrix( [
-               [cos(psi), -sin(psi), 0],
-               [sin(psi),  cos(psi), 0],
-               [0,            0,         1]
-               ])
+R_z = sy.Matrix([
+    [cos(psi), -sin(psi), 0],
+    [sin(psi), cos(psi), 0],
+    [0, 0, 1]
+])
 
-R = R_z*R_y*R_x
+# Rotation body frame to world frame
+R_b2w = R_z*R_y*R_x
 
+i = sy.Matrix([1, 0, 0])
+j = sy.Matrix([0, 1, 0])
+k = sy.Matrix([0, 0, 1])
 
-#2) angular velocity and energy
-om_b = phidot*i +  R_x.transpose()*(thetadot*j) + R_x.transpose()*R_y.transpose()*(psidot*k);
-I = sy.Matrix( [
-               [Ixx, 0, 0],
-               [0, Iyy, 0],
-               [0,  0, Izz]
-               ]) #body frame inertia
-v = sy.Matrix([vx, vy, vz]);
+I = sy.Matrix([
+    [Ixx, 0, 0],
+    [0, Iyy, 0],
+    [0, 0, Izz]
+])
+v = sy.Matrix([vx, vy, vz])
 
+# 2) angular velocity and energy
+# omega in body frame
+w_b = phi_d*i + theta_d*(R_x.T*j) + psi_d*(R_x.T*R_y.T*k)
+# omega in world frame
+w = psi_d*k + theta_d*(R_z*j) + phi_d*(R_z*R_y*i)
+
+# EL method
 # 주의 w_b.T * (I * w_b) 이렇게 쓰면 덧셈이 불가해짐 
-T = 0.5*m*v.dot(v) + 0.5*om_b.dot(I*om_b);
-V = m*g*z;
+T = m/2*(v.dot(v)) + 1/2*(w_b.dot(I*w_b))
+V = m*g*z
 L = T - V
-print('KE=',T);
-print('PE=',V);
-# print('TE= PE+KE');
 
-#external force
-Thrust = sy.Matrix([0, 0,K*(omega1**2+omega2**2+omega3**2+omega4**2)])
-Drag = sy.Matrix([Ax*vx, Ay*vy, Az*vz])
-F_ext = R*Thrust-Drag
+# print(T)
+# print(V)
 
-tau_phi = K*l*(omega4**2 - omega2**2);
-tau_theta = K*l*(omega3**2 - omega1**2);
-tau_psi = b*(omega1**2-omega2**2+omega3**2-omega4**2);
-tau_ext = sy.Matrix([tau_phi,tau_theta,tau_psi])
-# T_ext = np.concatenate(F_ext,tau_ext)
-T_ext = F_ext.col_join(tau_ext)
-print(T_ext)
+# external force
+Trust = sy.Matrix([0, 0, K*(omega1**2 + omega2**2 + omega3**2 + omega4**2)])
+DragForce = sy.Matrix([Ax*vx, Ay*vy, Az*vz])
+NetForce = R_b2w*Trust - DragForce
 
-# T_ext = [F_ext; tau_ext];
+# external torque
+TrustTorque = sy.Matrix([
+    K*l/2*(omega4**2 - omega2**2), 
+    K*l/2*(omega3**2 - omega1**2),
+    b*(omega1**2 - omega2**2 + omega3**2 - omega4**2)
+])
 
+Q_j = NetForce.col_join(TrustTorque)
+# print(Q_j)
 
-# #3) Derive equations
+# 3) Derive equations
 q = sy.Matrix([x,y,z,phi,theta,psi])
-qdot = sy.Matrix([vx,vy,vz,phidot,thetadot,psidot])
-qddot = sy.Matrix([ax, ay, az, phiddot, thetaddot, psiddot])
+qdot = sy.Matrix([vx,vy,vz,phi_d,theta_d,psi_d])
+qddot = sy.Matrix([ax, ay, az, phi_dd, theta_dd, psi_dd])
 dLdqdot = []
 ddt_dLdqdot = []
 dLdq = []
@@ -99,41 +100,36 @@ for ii in range(0,mm):
         tmp += sy.diff(dLdqdot[ii],q[jj])*qdot[jj]+ sy.diff(dLdqdot[ii],qdot[jj])*qddot[jj]
     ddt_dLdqdot.append(tmp)
     dLdq.append(sy.diff(L,q[ii]));
-    EOM.append(ddt_dLdqdot[ii] - dLdq[ii]-T_ext[ii])
+    EOM.append(ddt_dLdqdot[ii] - dLdq[ii] - Q_j[ii])
 
-ndof = len(q)
 EOM = sy.Matrix([EOM[0],EOM[1],EOM[2],EOM[3],EOM[4],EOM[5]])
-# # print(len(EOM))
-# # print(type(qddot))
-# # print(type(EOM))
 
 A = EOM.jacobian(qddot)
+m, n = A.shape
+
+for i in range(m):
+    for j in range(n):
+        print('A[',i,',',j,']=',sy.simplify(A[i,j]))
+        
 B = []
-for ii in range(0,ndof):
-    B_temp = -EOM[ii].subs([ (ax,0), (ay,0), (az,0), (phiddot,0), (thetaddot,0), (psiddot,0)])
-    B.append(B_temp)
+for i in range(m):
+    temp = -EOM[i].subs(qddot[0],0).subs(qddot[1],0).subs(qddot[2],0).subs(qddot[3],0).subs(qddot[4],0).subs(qddot[5],0)
+    B.append(temp)
+    
+for i in range(len(B)):
+    print('B[',i,']=',sy.simplify(B[i]))
 
-[mm,nn]=np.shape(A)
-for ii in range(0,mm):
-    for jj in range(0,nn):
-        print('A[',ii,',',jj,']=',sy.simplify(A[ii,jj]))
+# world frame velocity
+angle_d = sy.Matrix([phi_d, theta_d, psi_d])
+R_w = w.jacobian(angle_d)
+R_wb = w_b.jacobian(angle_d)
 
-mm = len(B)
-for ii in range(0,mm):
-     print('B[',ii,']=',sy.simplify(B[ii]))
+m,n = R_w.shape
 
-#world frame velocity
-angdot = sy.Matrix([phidot, thetadot, psidot])
+for i in range(m):
+    for j in range(n):
+        print('R_w[',i,',',j,']=',sy.simplify(R_w[i,j]))
 
-om  = psidot*k  + R_z*(thetadot*j) + R_z*R_y*(phidot*i);
-R_we = om.jacobian(angdot)
-[mm,nn]=np.shape(R_we)
-for ii in range(0,mm):
-    for jj in range(0,nn):
-        print('R_we[',ii,',',jj,']=',sy.simplify(R_we[ii,jj]))
-
-R_be = om_b.jacobian(angdot)
-[mm,nn]=np.shape(R_be)
-for ii in range(0,mm):
-    for jj in range(0,nn):
-        print('R_be[',ii,',',jj,']=',sy.simplify(R_be[ii,jj]))
+for i in range(m):
+    for j in range(n):
+        print('R_wb[',i,',',j,']=',sy.simplify(R_wb[i,j]))
