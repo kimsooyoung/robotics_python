@@ -36,13 +36,6 @@ class Parameter:
         self.alpha6 = 0
         self.d6 = 0.4
         self.theta6 = 0.0 # user prefered length
-
-        self.alpha1 = -np.pi/2
-        self.alpha2 = np.pi/2
-        self.alpha3 = 0
-        self.alpha4 = -np.pi/2
-        self.alpha5 = np.pi/2
-        self.alpha6 = 0
         
         self.pause = 0.05
         self.fps = 30
@@ -81,7 +74,7 @@ def DH2Matrix(a, alpha, d, theta):
     
     return H
 
-def inverse_kinematics(initial_guess, X_des, params):
+def forward_kinematics(initial_guess, X_des, params):
     
     theta1, theta2, d3, theta4, theta5, theta6 = initial_guess
     
@@ -222,7 +215,7 @@ if __name__=="__main__":
     
     # Solve the inverse kinematics problem
     result = fsolve(
-        inverse_kinematics, 
+        forward_kinematics, 
         initial_guess, 
         args=(X_des, params),
         maxfev=500,
