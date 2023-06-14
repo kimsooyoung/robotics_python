@@ -98,14 +98,14 @@ if __name__=="__main__":
     
     params = Parameters()
     
-    a1, alpa1, d1, theta1 = params.a1, params.alpha1, params.d1, 0.0
-    a2, alpa2, d2, theta2 = params.a2, params.alpha2, 0.4, params.theta2
-    a3, alpa3, d3, theta3 = params.a3, params.alpha3, 0.25, params.theta3
+    # a1, alpa1, d1, theta1 = params.a1, params.alpha1, params.d1, 0.0
+    # a2, alpa2, d2, theta2 = params.a2, params.alpha2, 0.4, params.theta2
+    # a3, alpa3, d3, theta3 = params.a3, params.alpha3, 0.25, params.theta3
     
     # example
-    # a1, alpa1, d1, theta1 = params.a1, params.alpha1, params.d1, np.pi/4
-    # a2, alpa2, d2, theta2 = params.a2, params.alpha2, 0.1, params.theta2
-    # a3, alpa3, d3, theta3 = params.a3, params.alpha3, 0.6, params.theta3
+    a1, alpa1, d1, theta1 = params.a1, params.alpha1, params.d1, np.pi/4
+    a2, alpa2, d2, theta2 = params.a2, params.alpha2, 0.1, params.theta2
+    a3, alpa3, d3, theta3 = params.a3, params.alpha3, 0.6, params.theta3
     
     H_01 = DH2Matrix(a1, alpa1, d1, theta1)
     H_12 = DH2Matrix(a2, alpa2, d2, theta2)
