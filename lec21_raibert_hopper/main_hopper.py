@@ -13,8 +13,6 @@ class Params():
         self.l = 1
         self.m = 1
         self.k = 500
-        self.pause = 0.01
-        self.fps = 10
         
         self.Kp = 0.15
         
@@ -25,10 +23,12 @@ class Params():
         self.theta = 10 * (np.pi / 180)
         self.T = np.pi * np.sqrt(self.m/self.k)
         
-        # TODO: Adjust Kp 
-        self.vdes = [0.0, 0.0]
-        self.vdes = [0.0, 0.3, 0.1, 0.0, 0.0, 0.0]
+        # self.vdes = [0.0, 0.0]
+        # self.vdes = [0.0, 0.3, 0.1, 0.0, 0.0, 0.0]
         self.vdes = [0, 0.1, 0.1, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.3, 0.3, 0.3, 0.3, 0.3]
+
+        self.pause = 0.01
+        self.fps = 10
 
 def flight(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot = z
@@ -66,23 +66,24 @@ def apex(t, z, m, g, l0, k, theta):
     # apex event
     return y_dot - 0
 
+def raibert_controller(vx, vx_des, params):
+    
+    theta_c = vx * params.control_tp/(2*params.l)
+    speed_correction = params.Kp*(vx - vx_des)
+    theta = np.arcsin(theta_c)+speed_correction
+    
+    params.control_theta = theta
+    
 def one_step(z0, t0, params, i):
     
     dt = 1.0
     
-    vx_apex = z0[1]
-    # v_act = 
-    theta_c = vx_apex*params.control_tp/(2*params.l)
-    speed_correction = params.Kp*(vx_apex-params.vdes[i])
-    # TODO: check arcsin
-    params.control_theta = np.arcsin(theta_c)+speed_correction
+    vx_apex, vx_des = z0[1], params.vdes[i]
+    raibert_controller(vx_apex, vx_des, params)
     m, g, l0, k, theta = params.m, params.g, params.l, params.k, params.control_theta
     ground = params.ground
     
-    print("vx_apex: {}, theta_c: {}".format(vx_apex, theta_c))
-    # print("np.arcsin(theta_c): {}, speed_correction: {}".format(np.arcsin(theta_c), speed_correction))
-    # print(f"params.control_theta: {params.control_theta}")
-    # print()
+    print("vx_apex: {}, vx_des: {}, theta: {}".format(vx_apex, vx_des, theta))
     
     t_span = np.linspace(t0, t0+dt, 1001)
     
@@ -264,4 +265,4 @@ if __name__=="__main__":
     z0 = [0, x0dot, y0, 0]
     
     t, z = n_step(z0, params, step)
-    animate(z, t, params)
+    # animate(z, t, params)

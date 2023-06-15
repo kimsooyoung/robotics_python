@@ -5,15 +5,12 @@ from scipy import interpolate
 from scipy.optimize import fsolve
 from scipy.integrate import solve_ivp
 
-# TODO:
 # 1. flight eom
 #    - contact event
 #    - apex event
 # 2. stance eom
 #    - release event
-#
 # 3. one bounce
-#
 # 4. animation
 
 class Params:
@@ -25,36 +22,37 @@ class Params:
         
         # sprint stiffness
         self.k = 200
+        
         # fixed angle
         self.theta = 5 * (np.pi / 180)
         
-        self.pause = 0.1
+        self.pause = 0.001
         self.fps = 10
-
-def flight(t, z, m, g, l0, k, theta):
-    x, x_dot, y, y_dot = z
-    
-    return [x_dot, 0, y_dot, -g]
 
 def contact(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot = z
     # contact event
     return y - l0 * np.cos(theta)
-# contact.direction = -1
-# contact.terminal = True
+
+def release(t, z, m, g, l0, k, theta):
+    x, x_dot, y, y_dot = z
+    l = np.sqrt(x**2 + y**2)
+    return l - l0
 
 def apex(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot = z
+    # apex event
     return y_dot
-# apex.direction = 0
-# apex.terminal = True
+
+def flight(t, z, m, g, l0, k, theta):
+    x, x_dot, y, y_dot = z
+    return [x_dot, 0, y_dot, -g]
 
 def stance(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot = z
     
     l = np.sqrt(x**2 + y**2)
     F_spring = k * (l0 - l)
-    # F_spring = k * (l - l0)
     Fx_spring = F_spring * (x / l)
     Fy_spring = F_spring * (y / l)
     Fy_gravity = m*g
@@ -64,13 +62,10 @@ def stance(t, z, m, g, l0, k, theta):
     
     return [x_dot, x_dd, y_dot, y_dd]
 
-def release(t, z, m, g, l0, k, theta):
-    x, x_dot, y, y_dot = z
-    l = np.sqrt(x**2 + y**2)
-    
-    return l - l0
-# release.direction = +1
-# release.terminal = True
+### brief one step logic 
+# 1. flight until contact
+# 2. stance until release
+# 3. flight until apex
 
 def onestep(z0, t0, params):
     
@@ -81,6 +76,7 @@ def onestep(z0, t0, params):
     
     t_output = np.zeros(1)
     t_output[0] = t0
+    
     # z_output = [x, x_dot, y, y_dot, x_foot, y_foot]
     z_output = np.zeros((1,6))
     z_output[0] = [*z0, x+l0*np.sin(theta), y-l0*np.cos(theta)]
@@ -93,7 +89,7 @@ def onestep(z0, t0, params):
     
     ts = np.linspace(t0, t0+dt, 1001)
 
-    # def contact(t, z, l0, theta):
+    # flight until contact
     contact_sol = solve_ivp(
         flight, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
         dense_output=True, events=contact, atol = 1e-13, rtol = 1e-12, 
@@ -121,6 +117,7 @@ def onestep(z0, t0, params):
     t0, z0 = t_contact[-1], z_contact[-1]
     # save the x position for future
     x_com = z0[0]
+    
     # relative distance wrt contact point because of 
     # non-holonomic nature of the system
     z0[0] = -l0*np.sin(theta)
@@ -134,7 +131,8 @@ def onestep(z0, t0, params):
     release.terminal = True
 
     ts = np.linspace(t0, t0+dt, 1001)
-    # def stance(t, z, m, g, l0, k, theta)
+    
+    # stance until release
     release_sol = solve_ivp(
         stance, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
         dense_output=True, events=release, atol = 1e-13, rtol = 1e-13, 
@@ -167,7 +165,8 @@ def onestep(z0, t0, params):
     apex.terminal = True
 
     ts = np.linspace(t0, t0+dt, 1001)
-    # def stance(t, z, m, g, l0, k, theta)
+    
+    # flight until apex
     apex_sol = solve_ivp(
         flight, [t0, t0+dt], z0, method='RK45', t_eval=np.linspace(t0, t0+dt, 1001),
         dense_output=True, events=apex, atol = 1e-13, rtol = 1e-13, 
@@ -190,9 +189,6 @@ def onestep(z0, t0, params):
     return z_output, t_output
 
 def n_step(zstar,params,steps):
-    
-    # x0 = 0; x0dot = z0(1);  
-    # y0 = z0(2); y0dot = 0;
     
     z0 = zstar
     t0 = 0
@@ -236,7 +232,6 @@ def animate(z, t, parms):
     window_xmin = -1*l; window_xmax = 1*l;
     window_ymin = -0.1; window_ymax = 1.9*l;
 
-    #plot
     for i in range(0,len(t_interp)):
 
         x, y = z_interp[i,0], z_interp[i,2]
@@ -254,8 +249,6 @@ def animate(z, t, parms):
         plt.pause(parms.pause)
         hip.remove()
         leg.remove()
-
-    # plt.close()
 
 def partialder(z0, parms):
 
@@ -285,7 +278,7 @@ def fixedpt(z0, parms):
 
     # print(f"z1[N] : {z1[N]}")
     # print(f"z0 : {z0}")
-    #F(x0) - x0 = 0
+    # F(x0) - x0 = 0
     return z1[N,0]-z0[0], z1[N,1]-z0[1],z1[N,2]-z0[2],z1[N,3]-z0[3]
 
 if __name__=="__main__":

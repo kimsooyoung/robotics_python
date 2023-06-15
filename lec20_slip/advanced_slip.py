@@ -5,15 +5,12 @@ from scipy import interpolate
 from scipy.optimize import fsolve
 from scipy.integrate import solve_ivp
 
-# TODO:
 # 1. flight eom
 #    - contact event
 #    - apex event
 # 2. stance eom
 #    - release event
-#
 # 3. one bounce
-#
 # 4. animation
 
 class Params:
@@ -28,32 +25,33 @@ class Params:
         # fixed angle
         self.theta = 5 * (np.pi / 180)
         
-        self.pause = 0.1
-        self.fps = 10
-        
         # theta control
         self.I = 0.75
         self.phi_des = np.pi / 15
         self.Kp = 0.5
         self.Kd = 5.0
-
-def flight(t, z, m, g, l0, k, theta):
-    x, x_dot, y, y_dot, phi, phi_d = z
-    
-    return [x_dot, 0, y_dot, -g, phi_d, 0]
+        
+        self.pause = 0.001
+        self.fps = 10
 
 def contact(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot, phi, phi_d = z
     # contact event
     return y - l0 * np.cos(phi)
-# contact.direction = -1
-# contact.terminal = True
+
+def release(t, z, m, g, l0, k, I, phi_des, Kp, Kd):
+    x, x_dot, y, y_dot, phi, phi_d = z
+    l = np.sqrt(x**2 + y**2)
+    
+    return l - l0
 
 def apex(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot, phi, phi_d = z
     return y_dot
-# apex.direction = 0
-# apex.terminal = True
+
+def flight(t, z, m, g, l0, k, theta):
+    x, x_dot, y, y_dot, phi, phi_d = z
+    return [x_dot, 0, y_dot, -g, phi_d, 0]
 
 def controller(Kp, Kd, phi, phi_d, phi_des):
     return -(-Kp*(phi - phi_des) -Kd*phi_d)
@@ -64,7 +62,6 @@ def stance(t, z, m, g, l0, k, I, phi_des, Kp, Kd):
     l = np.sqrt(x**2 + y**2)
 
     # F_spring = k * (l0 - l)
-    # # F_spring = k * (l - l0)
     # Fx_spring = F_spring * (x / l)
     # Fy_spring = F_spring * (y / l)
     # Fy_gravity = m*g
@@ -80,10 +77,12 @@ def stance(t, z, m, g, l0, k, I, phi_des, Kp, Kd):
         [0, 0, I]
     ])
     
-    G1 = k*(l0 - l) * (x / l)
-    G2 = k*(l0 - l) * (y / l) - m*g
+    F_spring = k * (l0 - l)
+    G1 = F_spring * (x / l)
+    G2 = F_spring * (y / l) - m*g
     G3 = 0
     
+    # spring thrust & friection ignored
     tau1 = -(Tphi*y)/(l*l)
     tau2 = (Tphi*x)/(l*l)
     tau3 = -Tphi
@@ -98,11 +97,6 @@ def stance(t, z, m, g, l0, k, I, phi_des, Kp, Kd):
     
     return [x_dot, x[0], y_dot, x[1], phi_d, x[2]]
 
-def release(t, z, m, g, l0, k, I, phi_des, Kp, Kd):
-    x, x_dot, y, y_dot, phi, phi_d = z
-    l = np.sqrt(x**2 + y**2)
-    
-    return l - l0
 
 def onestep(z0, t0, params):
     

@@ -36,7 +36,7 @@ for i in range(len(q)):
     
     dt_dL_dq_d.append(temp)
     dL_dq.append(sy.diff(L, q[i]))
-    # 현재 외력이 0이므로 이 두개 항만 있다.
+
     EOM.append(dt_dL_dq_d[i] - dL_dq[i])
     
 EOM = sy.Matrix([EOM[0],EOM[1]])

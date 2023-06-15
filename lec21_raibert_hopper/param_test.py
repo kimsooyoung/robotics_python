@@ -31,3 +31,6 @@ param = Params()
 print(param.g)
 param.g = 1000 
 print(param.g)
+
+angle1 = 1.3
+print(np.arcsin(np.sin(angle1)))

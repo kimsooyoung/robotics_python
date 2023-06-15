@@ -25,8 +25,8 @@ if __name__=="__main__":
     B = np.array([[2],[2]])
     D = A.dot(B)
     D_ = A @ B
-    print(f"D dot B = \n{D}\n")
-    print(f"D @ B = \n{D_}\n")
+    print(f"A dot B = \n{D}\n")
+    print(f"A @ B = \n{D_}\n")
 
     # Transpose
     A_T = A.transpose()
@@ -37,6 +37,10 @@ if __name__=="__main__":
     # inverse
     inv_a = np.linalg.inv(A)
     print(f"inv_a = \n{inv_a}\n")
+    
+    # # err case
+    # err_case = np.array([[1,0],[0,0]])
+    # inv_a = np.linalg.inv(err_case)
 
     # Element-wise mult & Matrix mult
     print("inv_a * A =\n", inv_a * A)
@@ -53,4 +57,4 @@ if __name__=="__main__":
     # identity matrix
     print()
     print(np.identity(3))
-    print(np.zeros((3,3)))
+    print(np.zeros((2,4)))
