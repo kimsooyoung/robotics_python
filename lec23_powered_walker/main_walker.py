@@ -177,11 +177,16 @@ def one_step(z0, t0, params):
     z = np.zeros((n, m))
     z = sol.y.T
 
+    # for gait optimization 
+    print(f"z bf strike : {z[-1]}")
+    print(f"t bf strike : {sol.t_events[-1][0]}")
+
     ######### 여기까지 single stance #########
 
     # foot strike는 z_minus와 t_minus를 준비해서 footstrike 함수에 넣어준다.
     z_minus = np.array(sol.y_events[-1][0,:])
     t_minus = sol.t_events[-1][0]
+    
 
     z_plus = footstrike(t_minus, z_minus, params)
 
@@ -233,7 +238,7 @@ def n_steps(z0, t0, step_size, params):
 
         # debug : only one step without strike
         # break
-
+        
     return z, t
 
 def animate(t,z,parms):
@@ -367,35 +372,46 @@ if __name__=="__main__":
     ######## initial state ##############
     #####################################
 
-    # case 1
-    theta1, omega1, theta2, omega2 = 0.2, -0.25, -0.4, 0.2
-    theta1, omega1, theta2, omega2 = 0.2, -0.25, -0.4, 0.3
-    # theta1, omega1, theta2, omega2 = 0.2, -0.3, -0.4, 0.3
-
-    # case 2
-    # theta1 = 0.162597833780035
-    # omega1 = -0.231869638058927
-    # theta2 = -0.325195667560070
-
+    is_opt = True
+    
+    if is_opt:
+        # opt value from slsqp
+        theta1, omega1, theta2, omega2 = 0.18350086073489663, -0.2733360512367049, -0.36700172146979326, 0.0313830307272163
+    else:
+        theta1, omega1, theta2, omega2 = 0.2, -0.25, -0.4, 0.2
+    
     t0 = 0
-    step_size = 5
+    
+    if is_opt:
+        step_size = 1
+    else:
+        step_size = 5
+
     z0 = np.array([theta1, omega1, theta2, omega2])
 
     ##########################################
     ### 실패하지 않는 초기 조건을 찾아보자. ####
     ##########################################
-    z_star = fsolve(fixedpt, z0, params)
-
-    # 해당 초기 조건에 대한 stability를 확인해보자.
-    # Jacobian의 determinant를 통해 구해야 하는데, 
-    # Jacobian을 대수적으로 구할 수 없으므로 수치적으로 구해볼 것이다.
-    J_star = partial_jacobian(z_star, params)
-    eig_val, eig_vec = np.linalg.eig(J_star)
-    print(f"eigVal {eig_val}")
-    print(f"eigVec {eig_vec}")
-    print(f"max(abs(eigVal)) : {max(np.abs(eig_val))}")
-    
-    # # z, t = n_steps(z0, t0, step_size, params)
+    if is_opt:
+        z_star = z0
+    else:
+        z_star = fsolve(fixedpt, z0, params)
+        print(f"z_star : {z_star}")
+        # 해당 초기 조건에 대한 stability를 확인해보자.
+        # Jacobian의 determinant를 통해 구해야 하는데, 
+        # Jacobian을 대수적으로 구할 수 없으므로 수치적으로 구해볼 것이다.
+        J_star = partial_jacobian(z_star, params)
+        eig_val, eig_vec = np.linalg.eig(J_star)
+        print(f"eigVal {eig_val}")
+        print(f"eigVec {eig_vec}")
+        print(f"max(abs(eigVal)) : {max(np.abs(eig_val))}")
+        
     z, t = n_steps(z_star, t0, step_size, params)
-    animate(t, z, params)
-    plot(t, z)
+    
+    if is_opt:
+        print(f"\n====== Check if those two vals are same ======")
+        print(f"z_star : {z_star}")
+        print(f"z_end : {z[-1][:-2]}")
+    else:
+        animate(t, z, params)
+        plot(t, z)
