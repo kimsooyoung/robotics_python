@@ -62,11 +62,12 @@ H_og = sy.Matrix([
 ])
 R_H = H_og * H
 
+# swing leg dynamics are neglected so that
+# the foot placement angle can be set instantaneously fast.
 T = 0.5 * M * v_H.dot(v_H) + \
     0.5 * I * omega1**2
 V = sy.simplify(M * g * R_H[1])
 L = T - V
-
 
 dL_dq_d = []
 dt_dL_dq_d = []
@@ -114,8 +115,7 @@ J_C2 = C2_xy.jacobian(q)
 A_n_hs = A_ss.subs([ (theta1, theta1_n)])
 J_n_sw = J_C2.subs([ (theta1, theta1_n)])
 
-
-#hs equations
+# hs equations
 print('J11 = ', sy.simplify(J_n_sw[0,0]))
 print('J12 = ', sy.simplify(J_n_sw[0,1]))
 print('J13 = ', sy.simplify(J_n_sw[0,2]))

@@ -265,4 +265,4 @@ if __name__=="__main__":
     z0 = [0, x0dot, y0, 0]
     
     t, z = n_step(z0, params, step)
-    # animate(z, t, params)
+    animate(z, t, params)

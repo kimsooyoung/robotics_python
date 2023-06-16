@@ -18,10 +18,10 @@ class Parameters:
         self.g = 9.81
         self.gam = 0.1
         
+        self.Kp = 5
+        
         self.pause = 0.05
         self.fps = 30
-        
-        self.Kp = 5
 
 def controller(z0, theta_dot_desire, params):
     theta1, theta1_dot = z0
