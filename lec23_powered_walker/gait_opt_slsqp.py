@@ -62,8 +62,8 @@ def walker_constraint(x):
     strike_state_diff = z_bfs - z_ssT
     
     # debugging
-    # print(f"swing_state_diff: {swing_state_diff}")
-    # print(f"strike_state_diff: {strike_state_diff}")
+    print(f"swing_state_diff: {swing_state_diff}")
+    print(f"strike_state_diff: {strike_state_diff}")
     opt_funcs = [ *swing_state_diff, *strike_state_diff, collision_condition ]
     
     return opt_funcs 
@@ -76,14 +76,15 @@ if __name__=="__main__":
     #####################################################
     
     # optimal case
-    t_bf_strike = 2.4495703707513576
-    z_ini = [0.18350082, -0.27333599, -0.36700164, 0.03138302]
-    z_bf_strike = [-0.18307195, -0.27285737, 0.36695179, 0.03209671]
+    # t_bf_strike = 2.4495703707513576
+    # z_ini = [0.18350082, -0.27333599, -0.36700164, 0.03138302]
+    # z_bf_strike = [-0.18307195, -0.27285737, 0.36695179, 0.03209671]
     
     # random guess
     # t_bf_strike = np.random.uniform(1, 3)
-    # z_ini = [0.15, -0.2, -0.3, 0]
-    # z_bf_strike = [-0.15, -0.2, 0.3, 0]
+    t_bf_strike = 3
+    z_ini = [0.15, -0.2, -0.3, 0]
+    z_bf_strike = [-0.15, -0.2, 0.3, 0]
     
     x0 = [ t_bf_strike, *z_ini, *z_bf_strike ]
     
