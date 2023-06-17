@@ -48,6 +48,7 @@ def collision(t, z, M, m, I, l, c, g, gam):
 
     return output
 
+# zero torque stance
 def single_stance(t, z, M, m, I, l, c, g, gam):
 
     theta1, omega1, theta2, omega2 = z
@@ -62,8 +63,48 @@ def single_stance(t, z, M, m, I, l, c, g, gam):
     A[1,1] = 1.0*I + c**2*m
 
     b[0] = -M*g*l*sin(gam - theta1) + c*g*m*sin(gam - theta1) - c*g*m*sin(-gam + theta1 + theta2) - 2*c*l*m*omega1*omega2*sin(theta2) - c*l*m*omega2**2*sin(theta2) - 2*g*l*m*sin(gam - theta1)
-    # b[1] = 1.0*Th - 1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
     b[1] = - 1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
+
+    alpha1, alpha2 = np.linalg.inv(A).dot(b)
+    
+    return [ omega1, alpha1, omega2, alpha2 ]
+
+# powered stance 
+# solve_ivp => t, z
+# odeint => z, t
+#
+# sol = solve_ivp(
+#     single_stance, [t_start, t_end], z0, method='RK45', t_eval=t,
+#     dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
+#     args=(params.M,params.m,params.I,params.l,params.c,params.g,params.gam)
+# )
+# data_pts = 1/parms.fps
+# t_interp = np.arange(t[0],t[len(t)-1],data_pts)
+
+# [m,n] = np.shape(z)
+# z_interp = np.zeros((len(t_interp),n))
+
+# for i in range(0,n):
+#     f = interpolate.interp1d(t, z[:,i])
+#     z_interp[:,i] = f(t_interp)
+
+def single_stance2(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
+    
+    theta1, omega1, theta2, omega2 = z
+    
+    f = interpolate.interp1d(t_opt, u_opt)
+    Th = f(t)
+
+    A = np.zeros((2,2))
+    b = np.zeros((2,1))
+
+    A[0,0] = 2.0*I + M*l**2 + m*(c - l)**2 + m*(c**2 - 2*c*l*cos(theta2) + l**2)
+    A[0,1] = 1.0*I + c*m*(c - l*cos(theta2))
+    A[1,0] = 1.0*I + c*m*(c - l*cos(theta2))
+    A[1,1] = 1.0*I + c**2*m
+
+    b[0] = -M*g*l*sin(gam - theta1) + c*g*m*sin(gam - theta1) - c*g*m*sin(-gam + theta1 + theta2) - 2*c*l*m*omega1*omega2*sin(theta2) - c*l*m*omega2**2*sin(theta2) - 2*g*l*m*sin(gam - theta1)
+    b[1] = 1.0*Th - 1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
 
     alpha1, alpha2 = np.linalg.inv(A).dot(b)
     

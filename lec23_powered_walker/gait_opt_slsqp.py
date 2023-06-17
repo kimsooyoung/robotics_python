@@ -71,6 +71,9 @@ def walker_constraint(x):
 if __name__=="__main__":
     
     # theta1, omega1, theta2, omega2
+    #####################################################
+    ######## example1. passive walker optimize ##########
+    #####################################################
     
     # optimal case
     t_bf_strike = 2.4495703707513576
