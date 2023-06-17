@@ -20,17 +20,15 @@ class OptParams:
         self.N = 4
 
 def cost(x, args):
-    return 0
-    # return x[0]
-    # N = OptParams().N;
     
-    # time = x[0]
-    # dt = time / N
-    # u_opt = x[9:9+N+1]
+    N = OptParams().N;
+    
+    time = x[0]
+    dt = time / N
+    u_opt = x[9:9+N+1]
 
-    # # add torque^2 dt
-    # F = sum([ x*y for x,y in zip(u_opt, u_opt)] )
-    # return time
+    F = sum([ x*y for x,y in zip(u_opt, u_opt)] ) * dt
+    return F
 
 def simulator(x):
     
@@ -45,18 +43,11 @@ def simulator(x):
     t_span = np.linspace(t_start, t_end, 100)
     t_opt = np.linspace(t_start, t_end, N+1)
     
-    # single_stance2에서 문제가 있는 상황이다.
     sol = solve_ivp(
         single_stance2, [t_start, t_end], z_ss0, method='RK45', t_eval=t_span,
         dense_output=True, atol = 1e-13, rtol = 1e-13, 
         args=(params.M,params.m,params.I,params.l,params.c,params.g,params.gam, t_opt, u_opt)
     )
-    
-    # sol = solve_ivp(
-    #     single_stance, [t_start, t_end], z_ss0, method='RK45', t_eval=t_span,
-    #     dense_output=True, atol = 1e-13, rtol = 1e-13, 
-    #     args=(params.M,params.m,params.I,params.l,params.c,params.g,params.gam)
-    # )
     
     t = sol.t
     # m : 4 / n : 100
@@ -78,7 +69,7 @@ def simulator(x):
 
     return z_ssT, z_afs, t, z_output
 
-def simulator2(x):
+def simulator_odeint(x):
 
     N = OptParams().N
 
@@ -86,7 +77,6 @@ def simulator2(x):
     z_ss0 = x[1:5]
     z_bfs = x[5:9]
     u_opt = x[9:9+N+1]
-    # print(x, u_opt)
     
     params = WalkerParameters()
     params.P = 0.1
@@ -104,31 +94,7 @@ def simulator2(x):
             args, atol = 1e-13, rtol = 1e-13
         )
         z[i+1] = z_temp[-1]
-    
-    # z0 = z_ss0
-    
-    # z = np.zeros((1, 4))
-    # t = np.zeros(1)
-    # z[0] = z0
-    # t[0] = 0
-    
-    # for i in range(N):
-    #     t_span = np.linspace(t_opt[i], t_opt[i+1], 2)
-    #     sol = solve_ivp(
-    #         single_stance2, [t_opt[i], t_opt[i+1]], z0, method='RK45', t_eval=t_span,
-    #         dense_output=True, atol = 1e-13, rtol = 1e-13, 
-    #         args=(params.M,params.m,params.I,params.l,params.c,params.g,params.gam, t_opt, u_opt)
-    #     )
         
-    #     t_temp = sol.t
-    #     m, n = np.shape(sol.y)
-    #     z_temp = np.zeros((n, m))
-    #     z_temp = sol.y.T
-        
-    #     z0 = z_temp[-1]
-    #     z = np.concatenate((z, np.expand_dims(np.array(z0), axis=0)), axis=0)        
-    #     t = np.concatenate((t, np.expand_dims(np.array(t_temp[-1]), axis=0)), axis=0)    
-    
     z_ssT = z[-1]
     z_afs = footstrike( 0, z_bfs, params);
     
@@ -154,8 +120,10 @@ def walker_constraint(x):
     theta2_bfs = z_bfs[2]
     collision_condition = theta2_bfs + 2*theta1_bfs
     
-    z_ssT, z_afs, _, _ = simulator(x)
-    # z_ssT, z_afs, _, _ = simulator2(x)
+    # z_ssT, z_afs, _, _ = simulator(x)
+    
+    # odeint is more Faster than solve_ivp
+    z_ssT, z_afs, _, _ = simulator_odeint(x)
 
     swing_state_diff = z_ss0 - z_afs
     strike_state_diff = z_bfs - z_ssT
@@ -175,7 +143,7 @@ def torque_plot(opt_result):
     
     plt.figure(1)
 
-    plt.plot(opt_result,'r--')
+    plt.plot(opt_result[9:],'r--')
     plt.ylabel('torque')
 
     plt.show(block=False)
@@ -203,8 +171,12 @@ if __name__=="__main__":
     t_bf_strike = 3
     z_ini = [0.15, -0.2, -0.3, 0]
     z_bf_strike = [-0.15, -0.2, 0.3, 0]
+    
+    # use optimal states for faster solve_ivp optim
+    # t_bf_strike = 2.4495703185056152
+    # z_ini = [ 0.18350086, -0.27333605, -0.36700172, 0.03138303]
+    # z_bf_strike = [ -0.18350086, -0.27333605, 0.36700172, 0.03138303]
     u_opt = (u_min + (u_max-u_min) * np.random.rand(1, N+1)).flatten()
-    print(u_opt)
     
     # example a. powered walker optimize
     u_lb = (u_min * np.ones((1,N+1))).flatten()
@@ -227,17 +199,24 @@ if __name__=="__main__":
         bounds=limits
     )
     opt_state = result.x
-    
-    print(f"total torque : {opt_state[8:]}")
-    
+        
     for i in range(9):
         print(opt_state[i])
     
     print('Copy paste in main_walker.py')
+    
+    print(f"t_opt = {np.linspace(0, opt_state[0], N+1)}")
+    
+    print("initial state")
     print(f"theta1, omega1, theta2, omega2 = {opt_state[1]}, {opt_state[2]}, {opt_state[3]}, {opt_state[4]}")
     
-    z_ssT, z_afs, t, z_output = simulator(x0)
-    # z_ssT, z_afs, t, z_output = simulator2(x0)
+    print("befor strike")
+    print(f"theta1, omega1, theta2, omega2 = {opt_state[5]}, {opt_state[6]}, {opt_state[7]}, {opt_state[8]}")
+    
+    print(f"u_opt = {opt_state[9:]}")
+    
+    # z_ssT, z_afs, t, z_output = simulator(opt_state)
+    z_ssT, z_afs, t, z_output = simulator_odeint(opt_state)
     walker_param = WalkerParameters()
-    # animate(t, z_output, walker_param)
-    # torque_plot(opt_state)
+    animate(t, z_output, walker_param)
+    torque_plot(opt_state)

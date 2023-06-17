@@ -30,13 +30,16 @@ class Parameters:
         self.g = 1.0
         self.gam = 0*0.01
         
+        self.t_opt = [0.         , 0.7371323,   1.4742646,  2.21139689,  2.94852919]
+        self.u_opt = [-0.00499502, 0.08503184, -0.31451398, 0.4448132,  -0.48430612]
+        
         self.P = 0.1
         
         self.pause = 0.01
         self.fps = 10
 
 # output이 0이면 충돌이 일어났다는 뜻
-def collision(t, z, M, m, I, l, c, g, gam):
+def collision(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
 
     output = 1
     theta1, omega1, theta2, omega2 = z
@@ -48,57 +51,13 @@ def collision(t, z, M, m, I, l, c, g, gam):
 
     return output
 
-# zero torque stance
-def single_stance(t, z, M, m, I, l, c, g, gam):
-
-    theta1, omega1, theta2, omega2 = z
-    Th = 0
-
-    A = np.zeros((2,2))
-    b = np.zeros((2,1))
-
-    A[0,0] = 2.0*I + M*l**2 + m*(c - l)**2 + m*(c**2 - 2*c*l*cos(theta2) + l**2)
-    A[0,1] = 1.0*I + c*m*(c - l*cos(theta2))
-    A[1,0] = 1.0*I + c*m*(c - l*cos(theta2))
-    A[1,1] = 1.0*I + c**2*m
-
-    b[0] = -M*g*l*sin(gam - theta1) + c*g*m*sin(gam - theta1) - c*g*m*sin(-gam + theta1 + theta2) - 2*c*l*m*omega1*omega2*sin(theta2) - c*l*m*omega2**2*sin(theta2) - 2*g*l*m*sin(gam - theta1)
-    b[1] = Th - 1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
-
-    alpha1, alpha2 = np.linalg.inv(A).dot(b)
-    
-    return [ omega1, alpha1, omega2, alpha2 ]
-
-def single_stance2(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
+# torque powered 
+def single_stance(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
     
     theta1, omega1, theta2, omega2 = z
     
     f = interpolate.interp1d(t_opt, u_opt)
     Th = f(t)
-    
-    A = np.zeros((2,2))
-    b = np.zeros((2,1))
-
-    A[0,0] = 2.0*I + M*l**2 + m*(c - l)**2 + m*(c**2 - 2*c*l*cos(theta2) + l**2)
-    A[0,1] = 1.0*I + c*m*(c - l*cos(theta2))
-    A[1,0] = 1.0*I + c*m*(c - l*cos(theta2))
-    A[1,1] = 1.0*I + c**2*m
-
-    b[0] = -M*g*l*sin(gam - theta1) + c*g*m*sin(gam - theta1) - c*g*m*sin(-gam + theta1 + theta2) - 2*c*l*m*omega1*omega2*sin(theta2) - c*l*m*omega2**2*sin(theta2) - 2*g*l*m*sin(gam - theta1)
-    b[1] = 1.0*Th - 1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
-
-    alpha1, alpha2 = np.linalg.inv(A).dot(b)
-    
-    return [ omega1, alpha1, omega2, alpha2 ]
-
-def single_stance_ode_int(z, t, M, m, I, l, c, g, gam, t1, t2, u1, u2):
-    
-    theta1, omega1, theta2, omega2 = z
-    
-    # f = interpolate.interp1d(t_opt, u_opt)
-    # Th = f(t)
-    Th = u1 + (u2-u1)/(t2-t1)*(t-t1)
-    # print(Th)
     
     A = np.zeros((2,2))
     b = np.zeros((2,1))
@@ -214,7 +173,11 @@ def one_step(z0, t0, params):
     sol = solve_ivp(
         single_stance, [t_start, t_end], z0, method='RK45', t_eval=t,
         dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
-        args=(params.M,params.m,params.I,params.l,params.c,params.g,params.gam)
+        args=(
+            params.M,params.m,params.I,
+            params.l,params.c,params.g,params.gam,
+            params.t_opt, params.u_opt
+        )
     )
 
     t = sol.t
@@ -241,14 +204,6 @@ def one_step(z0, t0, params):
 
     return z, t
 
-# input 
-# z0 : initlal state vector [theta1, omega1, theta2, omega2]
-# t0 : initial time
-# params : parameters params
-#
-# output
-# z : list of state vector 
-# t : list of time
 def n_steps(z0, t0, step_size, params):
 
     # xh_start, yh_start : hip position
@@ -279,7 +234,7 @@ def n_steps(z0, t0, step_size, params):
         z0 = np.array([theta1, omega1, theta2, omega2])
         t0 = t_temp[-1]
 
-        # one_step에서 zz_temp[-1] 스위칭이 일어나기 때문에 [-2] 사용
+        # one step에서 zz_temp[-1] 스위칭이 일어나기 때문에 [-2] 사용
         xh_start = zz_temp[-2,4]
 
         # debug : only one step without strike
@@ -422,7 +377,7 @@ if __name__=="__main__":
     
     if is_opt:
         # opt value from slsqp
-        theta1, omega1, theta2, omega2 = 0.18350086073489663, -0.2733360512367049, -0.36700172146979326, 0.0313830307272163
+        theta1, omega1, theta2, omega2 = 0.1599530055773023, -0.22642182104431677, -0.3199060111546046, 0.012052212304875291
     else:
         theta1, omega1, theta2, omega2 = 0.2, -0.25, -0.4, 0.2
     
