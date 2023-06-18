@@ -69,6 +69,7 @@ def single_stance(t, z, M, m, I, l, c, g, gam):
     
     return [ omega1, alpha1, omega2, alpha2 ]
 
+# powered stance
 def single_stance2(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
     
     theta1, omega1, theta2, omega2 = z
@@ -95,10 +96,7 @@ def single_stance_ode_int(z, t, M, m, I, l, c, g, gam, t1, t2, u1, u2):
     
     theta1, omega1, theta2, omega2 = z
     
-    # f = interpolate.interp1d(t_opt, u_opt)
-    # Th = f(t)
     Th = u1 + (u2-u1)/(t2-t1)*(t-t1)
-    # print(Th)
     
     A = np.zeros((2,2))
     b = np.zeros((2,1))
