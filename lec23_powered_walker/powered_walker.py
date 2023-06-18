@@ -191,13 +191,24 @@ def one_step(z0, t0, params):
     t_start = t0
     t_end   = t_start + params.t_opt[-1]
     print(params.t_opt[-1])
-    t = np.linspace(t_start, t_end, 1001)
-    collision.terminal = True
-    collision.direction = -1
+    t = np.linspace(t_start, t_end, 100)
+    print(z0)
+    
+    # collision.terminal = True
+    # collision.direction = -1
+    # sol = solve_ivp(
+    #     single_stance, [t_start, t_end], z0, method='RK45', t_eval=t,
+    #     dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
+    #     args=(
+    #         params.M,params.m,params.I,
+    #         params.l,params.c,params.g,params.gam,
+    #         params.t_opt, params.u_opt
+    #     )
+    # )
 
     sol = solve_ivp(
         single_stance, [t_start, t_end], z0, method='RK45', t_eval=t,
-        dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
+        dense_output=True, atol = 1e-13, rtol = 1e-13, 
         args=(
             params.M,params.m,params.I,
             params.l,params.c,params.g,params.gam,
@@ -213,17 +224,18 @@ def one_step(z0, t0, params):
 
     # for gait optimization 
     print(f"z bf strike : {z[-1]}")
-    print(f"t bf strike : {sol.t_events[-1][0]}")
+    # print(f"t bf strike : {sol.t_events[-1][0]}")
 
     ######### 여기까지 single stance #########
 
     # foot strike는 z_minus와 t_minus를 준비해서 footstrike 함수에 넣어준다.
-    z_minus = np.array(sol.y_events[-1][0,:])
-    t_minus = sol.t_events[-1][0]
+    # z_minus = np.array(sol.y_events[-1][0,:])
+    z_minus = z[-1]
+    # t_minus = sol.t_events[-1][0]
     
-    z_plus = footstrike(t_minus, z_minus, params)
+    z_plus = footstrike(0, z_minus, params)
 
-    t[-1] = t_minus
+    # t[-1] = t_minus
     z[-1] = z_plus
 
     return z, t
@@ -401,9 +413,15 @@ if __name__=="__main__":
     
     if is_opt:
         # opt value from slsqp
-        theta1, omega1, theta2, omega2 = 0.1712403875292027, -0.26673610019450705, -0.3424807750584054, 0.01586738697996707
-        params.t_opt = [0.         , 0.55854383, 1.11708767, 1.6756315, 2.23417533]
-        params.u_opt = [-2.90775533e-06, -1.42640365e-06, -3.82031545e-06,  1.31679145e-06, -7.39627578e-07]
+        # theta1, omega1, theta2, omega2 = 0.17968459261613756, -0.2710492924103855, -0.3593691852322751, 0.026444172032221862
+        # params.t_opt = [0.         ,0.59653683, 1.19307366 ,1.78961048 ,2.38614731]
+        # params.u_opt = [-5.58706476e-05, -4.18215580e-04, -6.02068358e-04, -4.05763968e-04, -1.05010935e-04]
+        
+        # ex b
+        theta1, omega1, theta2, omega2 = 0.25268025514416304, -1.1561444475441687, -0.5053605102883261, 0.11848173806190909
+        params.t_opt = [0.,    0.125, 0.25,  0.375, 0.5  ]
+        params.u_opt = [0.89897521, 1.47418862, 1.0134691, 0.56638579, 0.13636414]
+        params.P = 0.3139217651577935
     else:
         theta1, omega1, theta2, omega2 = 0.2, -0.25, -0.4, 0.2
     
