@@ -192,19 +192,6 @@ def one_step(z0, t0, params):
     t_end   = t_start + params.t_opt[-1]
     print(params.t_opt[-1])
     t = np.linspace(t_start, t_end, 100)
-    print(z0)
-    
-    # collision.terminal = True
-    # collision.direction = -1
-    # sol = solve_ivp(
-    #     single_stance, [t_start, t_end], z0, method='RK45', t_eval=t,
-    #     dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
-    #     args=(
-    #         params.M,params.m,params.I,
-    #         params.l,params.c,params.g,params.gam,
-    #         params.t_opt, params.u_opt
-    #     )
-    # )
 
     sol = solve_ivp(
         single_stance, [t_start, t_end], z0, method='RK45', t_eval=t,
@@ -224,18 +211,10 @@ def one_step(z0, t0, params):
 
     # for gait optimization 
     print(f"z bf strike : {z[-1]}")
-    # print(f"t bf strike : {sol.t_events[-1][0]}")
-
-    ######### 여기까지 single stance #########
-
-    # foot strike는 z_minus와 t_minus를 준비해서 footstrike 함수에 넣어준다.
-    # z_minus = np.array(sol.y_events[-1][0,:])
-    z_minus = z[-1]
-    # t_minus = sol.t_events[-1][0]
     
+    ######### 여기까지 single stance #########
+    z_minus = z[-1]
     z_plus = footstrike(0, z_minus, params)
-
-    # t[-1] = t_minus
     z[-1] = z_plus
 
     return z, t
