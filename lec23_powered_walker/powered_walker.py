@@ -29,9 +29,9 @@ class Parameters:
         self.c = 0.5
         self.g = 1.0
         self.gam = 0*0.01
-        
-        self.t_opt = [0.         , 0.7371323,   1.4742646,  2.21139689,  2.94852919]
-        self.u_opt = [-0.00499502, 0.08503184, -0.31451398, 0.4448132,  -0.48430612]
+
+        self.t_opt = [0.,         0.61236711, 1.22473421, 1.83710132, 2.44946843]
+        self.u_opt = [ 1.30154083e-06, 1.02086218e-06, -7.97604653e-07, -2.76868629e-06, -1.27223475e-06]
         
         self.P = 0.1
         
@@ -49,6 +49,8 @@ def collision(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
     else:
         output = 2 * theta1 + theta2
 
+    print(output, theta1, theta2)
+
     return output
 
 # torque powered 
@@ -58,6 +60,27 @@ def single_stance(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
     
     f = interpolate.interp1d(t_opt, u_opt)
     Th = f(t)
+    
+    A = np.zeros((2,2))
+    b = np.zeros((2,1))
+
+    A[0,0] = 2.0*I + M*l**2 + m*(c - l)**2 + m*(c**2 - 2*c*l*cos(theta2) + l**2)
+    A[0,1] = 1.0*I + c*m*(c - l*cos(theta2))
+    A[1,0] = 1.0*I + c*m*(c - l*cos(theta2))
+    A[1,1] = 1.0*I + c**2*m
+
+    b[0] = -M*g*l*sin(gam - theta1) + c*g*m*sin(gam - theta1) - c*g*m*sin(-gam + theta1 + theta2) - 2*c*l*m*omega1*omega2*sin(theta2) - c*l*m*omega2**2*sin(theta2) - 2*g*l*m*sin(gam - theta1)
+    b[1] = 1.0*Th - 1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
+
+    alpha1, alpha2 = np.linalg.inv(A).dot(b)
+    
+    return [ omega1, alpha1, omega2, alpha2 ]
+
+def single_stance_ode_int(z, t, M, m, I, l, c, g, gam, t1, t2, u1, u2):
+    
+    theta1, omega1, theta2, omega2 = z
+    
+    Th = u1 + (u2-u1)/(t2-t1)*(t-t1)
     
     A = np.zeros((2,2))
     b = np.zeros((2,1))
@@ -166,9 +189,11 @@ def footstrike(t_minus, z_minus, params):
 def one_step(z0, t0, params):
 
     t_start = t0
-    t_end   = t_start + 4
+    t_end   = t_start + params.t_opt[-1]
+    print(params.t_opt[-1])
     t = np.linspace(t_start, t_end, 1001)
     collision.terminal = True
+    collision.direction = -1
 
     sol = solve_ivp(
         single_stance, [t_start, t_end], z0, method='RK45', t_eval=t,
@@ -196,7 +221,6 @@ def one_step(z0, t0, params):
     z_minus = np.array(sol.y_events[-1][0,:])
     t_minus = sol.t_events[-1][0]
     
-
     z_plus = footstrike(t_minus, z_minus, params)
 
     t[-1] = t_minus
@@ -377,7 +401,9 @@ if __name__=="__main__":
     
     if is_opt:
         # opt value from slsqp
-        theta1, omega1, theta2, omega2 = 0.1599530055773023, -0.22642182104431677, -0.3199060111546046, 0.012052212304875291
+        theta1, omega1, theta2, omega2 = 0.1712403875292027, -0.26673610019450705, -0.3424807750584054, 0.01586738697996707
+        params.t_opt = [0.         , 0.55854383, 1.11708767, 1.6756315, 2.23417533]
+        params.u_opt = [-2.90775533e-06, -1.42640365e-06, -3.82031545e-06,  1.31679145e-06, -7.39627578e-07]
     else:
         theta1, omega1, theta2, omega2 = 0.2, -0.25, -0.4, 0.2
     
