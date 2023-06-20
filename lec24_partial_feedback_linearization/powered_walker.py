@@ -6,6 +6,9 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
 from copy import deepcopy
 
+# one_step => controller로부터 traj 받기
+
+
 def cos(x):
     return np.cos(x)
 
@@ -22,18 +25,36 @@ class Parameters:
         # P : push force from walker foot
         # pause, fps : var for animation
         
-        self.M = 1.0
-        self.m = 0.5
-        self.I = 0.02
+        self.M = 0.0
+        self.m = 1.0
+        self.I = 0.05
         self.l = 1.0
         self.c = 0.5
         self.g = 1.0
-        self.gam = 0*0.01
+        self.gam = 0.02
+        
+        self.t_start = 0
+        self.tf = 0
+        self.theta20 = 0
+        self.theta2f = 0
+        self.theta20dot = 0
+        
+        self.Kp = 0
+        
+        # self.M = 1.0
+        # self.m = 0.5
+        # self.I = 0.02
+        # self.l = 1.0
+        # self.c = 0.5
+        # self.g = 1.0
+        # self.gam = 0*0.01
 
         self.t_opt = [0.,         0.61236711, 1.22473421, 1.83710132, 2.44946843]
         self.u_opt = [ 1.30154083e-06, 1.02086218e-06, -7.97604653e-07, -2.76868629e-06, -1.27223475e-06]
         
         self.P = 0.1
+        
+        self.control_on = False
         
         self.pause = 0.01
         self.fps = 10
@@ -51,16 +72,43 @@ def collision(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
 
     return output
 
-# torque powered 
-def single_stance(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
+def controller(t, z, M, m, I, l, c, g, gam, t_start, tf, theta20, theta2f, theta20dot, Kp):
     
     theta1, omega1, theta2, omega2 = z
     
-    f = interpolate.interp1d(t_opt, u_opt)
-    Th = f(t)
+    tt = t - t_start
+    
+    # fifth order polynomial
+    t0 = 0; tf = tf
+    q0 = theta20; qf = theta2f
+    q0dot = theta20dot; qfdot = 0
+
+    # θ2(0) = q0, θ2(tf) = qf
+    # θ2dot(0) = q0dot, θ2dot(tf) = qfdot
+    # θ2ddot(0) = 0, θ2ddot(tf) = 0
+    AA = np.array([
+        [1, t0, t0**2,   t0**3,    t0**4,    t0**5],
+        [1, tf, tf**2,   tf**3,    tf**4,    tf**5],
+        [0,  1, 2*t0,  3*t0**2,  4*t0**3,  5*t0**4],
+        [0,  1, 2*tf,  3*tf**2,  4*tf**3,  5*tf**4],
+        [0,  0,    2,     6*t0, 12*t0**2, 20*t0**3],
+        [0,  0,    2,     6*tf, 12*tf**2, 20*tf**3],
+    ])
+    bb = np.array([
+        q0, qf, q0dot, qfdot, 0, 0
+    ])
+    xx = np.linalg.solve(AA, bb)
+    a0, a1, a2, a3, a4, a5 = xx
+    if tt > tf:
+        tt = tf
+
+    theta2_ref     = a5*tt**5 + a4*tt**4 + a3*tt**3 + a2*tt**2 + a1*tt + a0
+    theta2dot_ref  = 5*a5*tt**4 + 4*a4*tt**3 + 3*a3*tt**2 + 2*a2*tt + a1
+    theta2ddot_ref =   20*a5*tt**3 + 12*a4*tt**2 + 6*a3*tt + 2*a2
     
     A = np.zeros((2,2))
     b = np.zeros((2,1))
+    B = np.zeros((2,1))
 
     A[0,0] = 2.0*I + M*l**2 + m*(c - l)**2 + m*(c**2 - 2*c*l*cos(theta2) + l**2)
     A[0,1] = 1.0*I + c*m*(c - l*cos(theta2))
@@ -68,9 +116,46 @@ def single_stance(t, z, M, m, I, l, c, g, gam, t_opt, u_opt):
     A[1,1] = 1.0*I + c**2*m
 
     b[0] = -M*g*l*sin(gam - theta1) + c*g*m*sin(gam - theta1) - c*g*m*sin(-gam + theta1 + theta2) - 2*c*l*m*omega1*omega2*sin(theta2) - c*l*m*omega2**2*sin(theta2) - 2*g*l*m*sin(gam - theta1)
-    b[1] = 1.0*Th - 1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
+    b[1] = -1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
 
-    alpha1, alpha2 = np.linalg.inv(A).dot(b)
+    B[0] = 0; B[1] = 1
+    
+    Kd = 2 * np.sqrt(Kp)
+    e = theta2 - theta2_ref
+    edot = omega2 - theta2dot_ref
+    v = theta2ddot_ref - Kp * e - Kd * edot
+    Ainv = np.linalg.inv(A)
+    
+    u = np.linalg.inv(B.T @ Ainv @ B ) @ (v + B.T @ Ainv @ b) 
+
+    return u, theta2_ref, theta2dot_ref, theta2ddot_ref
+
+# torque powered 
+def single_stance(t, z, M, m, I, l, c, g, gam, control_on, traj_val):
+    
+    theta1, omega1, theta2, omega2 = z
+    t_start, tf, theta20, theta2f, theta20dot, Kp = traj_val
+    
+    if control_on == True:
+        u, _, _, _ = controller(t, z, M, m, I, l, c, g, gam, t_start, tf, theta20, theta2f, theta20dot, Kp)
+    else:
+        u = 0
+    
+    A = np.zeros((2,2))
+    b = np.zeros((2,1))
+    B = np.zeros((2,1))
+
+    A[0,0] = 2.0*I + M*l**2 + m*(c - l)**2 + m*(c**2 - 2*c*l*cos(theta2) + l**2)
+    A[0,1] = 1.0*I + c*m*(c - l*cos(theta2))
+    A[1,0] = 1.0*I + c*m*(c - l*cos(theta2))
+    A[1,1] = 1.0*I + c**2*m
+
+    b[0] = -M*g*l*sin(gam - theta1) + c*g*m*sin(gam - theta1) - c*g*m*sin(-gam + theta1 + theta2) - 2*c*l*m*omega1*omega2*sin(theta2) - c*l*m*omega2**2*sin(theta2) - 2*g*l*m*sin(gam - theta1)
+    b[1] = -1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
+
+    B[0] = 0; B[1] = 1
+
+    alpha1, alpha2 = np.linalg.inv(A).dot(b + B*u)
     
     return [ omega1, alpha1, omega2, alpha2 ]
 
@@ -104,17 +189,11 @@ def footstrike(t_minus, z_minus, params):
     I = params.I
     l = params.l
     c = params.c
-    g = params.g
-    gam = params.gam
-    P = params.P
 
     theta1_plus = theta1_n + theta2_n
     theta2_plus = -theta2_n
 
     J_n_sw = np.zeros((2,4))
-    J_n_st = np.zeros((2,4))
-    P_st = np.zeros((2,1))
-    
     A_n_hs = np.zeros((4,4))
     b_hs = np.zeros((6,1))
 
@@ -128,20 +207,6 @@ def footstrike(t_minus, z_minus, params):
     J24 =  l*sin(theta1_n + theta2_n)
     J_n_sw = np.array([[J11, J12, J13, J14], [J21,J22,J23,J24]])
     
-    J11 =  1
-    J12 =  0
-    J13 =  0
-    J14 =  0
-    J21 =  0
-    J22 =  1
-    J23 =  0
-    J24 =  0 
-    J_n_st = np.array([[J11, J12, J13, J14], [J21,J22,J23,J24]]) 
-
-    # strike시 고정된 발끝에서 impluse 추가 
-    P_st[0] = -P*sin(theta1_n)
-    P_st[1] = P*cos(theta1_n)
-
     A11 =  1.0*M + 2.0*m
     A12 =  0
     A13 =  -1.0*M*l*cos(theta1_n) + m*(c - l)*cos(theta1_n) + 1.0*m*(c*cos(theta1_n + theta2_n) - l*cos(theta1_n))
@@ -170,7 +235,7 @@ def footstrike(t_minus, z_minus, params):
     X_n_hs[2,0] = omega1_n; X_n_hs[3,0] = omega2_n
     
     b_hs = np.block([
-        [ A_n_hs@X_n_hs + J_n_st.T@P_st ],
+        [ A_n_hs@X_n_hs   ],
         [ np.zeros((2,1)) ]
     ])
 
@@ -180,24 +245,29 @@ def footstrike(t_minus, z_minus, params):
     omega1_plus = x_hs[2,0] + x_hs[3,0]
     omega2_plus = -x_hs[3,0]
     
-    # print(omega1_plus, omega2_plus)
-    
     return [theta1_plus, omega1_plus, theta2_plus, omega2_plus]
 
-def one_step(z0, t0, params):
+def one_step(z0, t0, params, verbose=False):
 
     t_start = t0
-    t_end   = t_start + params.t_opt[-1]
-    print(params.t_opt[-1])
+    t_end   = t_start + 4
     t = np.linspace(t_start, t_end, 100)
+    
+    if params.control_on == True:
+        params.t0 = t0
+        params.theta20 = z0[2]
+        params.theta20dot = z0[3]
+    
+    traj_val = (params.t_start, params.tf, params.theta20, params.theta2f, params.theta20dot, params.Kp)
 
+    collision.terminal = True
     sol = solve_ivp(
         single_stance, [t_start, t_end], z0, method='RK45', t_eval=t,
-        dense_output=True, atol = 1e-13, rtol = 1e-13, 
+        dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
         args=(
             params.M,params.m,params.I,
             params.l,params.c,params.g,params.gam,
-            params.t_opt, params.u_opt
+            params.control_on, traj_val
         )
     )
 
@@ -207,10 +277,21 @@ def one_step(z0, t0, params):
     z = np.zeros((n, m))
     z = sol.y.T
 
-    # for gait optimization 
-    print(f"z bf strike : {z[-1]}")
-    
+    # if (walker.control.on==1)
+    #     for j=1:length(t_temp)
+    #         [u,theta2_ref(j),theta2dot_ref(j),theta2ddot_ref(j)] = controller(t_temp(j),z_temp(j,1:4),walker);
+    #     end
+    # end
+
+    if verbose:
+        print(f"#################################")
+        print(f"step time : {t[-1]-t[0]}")
+        print(f"stance speed single stance take-off : {z0[1]}")
+        print(f"hip angle at touchdown : {z[-1,2]}")
+        print(f"hip speed at touchdown : {z[-1,3]}")
+        print(f"#################################")
     ######### 여기까지 single stance #########
+    
     z_minus = z[-1]
     z_plus = footstrike(0, z_minus, params)
     z[-1] = z_plus
@@ -227,7 +308,7 @@ def n_steps(z0, t0, step_size, params):
     z[0] = np.append(z0, np.array([xh_start, yh_start]))
 
     for i in range(step_size):
-        z_temp, t_temp = one_step(z0, t0, params)
+        z_temp, t_temp = one_step(z0, t0, params, True)
         
         zz_temp = np.zeros((len(t_temp), 6))
 
@@ -322,7 +403,7 @@ def animate(t,z,parms):
 
 def fixedpt(z0, params):
 
-    z, t = one_step(z0, 0, params)
+    z, t = one_step(z0, 0, params, False)
 
     return z[-1,0]-z0[0], z[-1,1]-z0[1], z[-1,2]-z0[2], z[-1,3]-z0[3]
 
@@ -341,8 +422,8 @@ def partial_jacobian(z, params):
         z_minus[i] = z[i] - epsilon
         z_plus[i]  = z[i] + epsilon
 
-        z_minus_result, _ = one_step(z_minus, 0, params)
-        z_plus_result, _  = one_step(z_plus, 0, params)
+        z_minus_result, _ = one_step(z_minus, 0, params, False)
+        z_plus_result, _  = one_step(z_plus, 0, params, False)
 
         for j in range(m):
             J[i,j] = (z_plus_result[-1,j] - z_minus_result[-1,j]) / (2 * epsilon)
@@ -382,59 +463,54 @@ if __name__=="__main__":
     
     params = Parameters()
 
-    #####################################
-    ######## initial state ##############
-    #####################################
+    ##############################################
+    ########### step1. passive walking ###########
+    ##############################################
+    
+    params.control_on = False
+    
+    # initial state
+    q1 = 0.2; u1 = -0.4;
+    q2 = -2*q1; u2 = 0.1;
 
-    is_opt = True
+    z0 = np.array([q1, u1, q2, u2])
     
-    if is_opt:
-        # opt value from slsqp
-        # theta1, omega1, theta2, omega2 = 0.17968459261613756, -0.2710492924103855, -0.3593691852322751, 0.026444172032221862
-        # params.t_opt = [0.         ,0.59653683, 1.19307366 ,1.78961048 ,2.38614731]
-        # params.u_opt = [-5.58706476e-05, -4.18215580e-04, -6.02068358e-04, -4.05763968e-04, -1.05010935e-04]
-        
-        # ex b
-        theta1, omega1, theta2, omega2 = 0.25268025514416304, -1.1561444475441687, -0.5053605102883261, 0.11848173806190909
-        params.t_opt = [0.,    0.125, 0.25,  0.375, 0.5  ]
-        params.u_opt = [0.89897521, 1.47418862, 1.0134691, 0.56638579, 0.13636414]
-        params.P = 0.3139217651577935
-    else:
-        theta1, omega1, theta2, omega2 = 0.2, -0.25, -0.4, 0.2
-    
-    t0 = 0
-    
-    if is_opt:
-        step_size = 1
-    else:
-        step_size = 5
+    # Root finding, Period one gait 
+    print("====== Root finding, Period one gait ======")
+    z_star = fsolve(fixedpt, z0, params)
+    print(f"Fixed point z_star : \n{z_star}")
+    J_star = partial_jacobian(z_star, params)
+    eig_val, eig_vec = np.linalg.eig(J_star)
+    print(f"EigenValues for linearized map \n{eig_val}")
+    print(f"EigenVectors for linearized map \n{eig_vec}")
+    print(f"max(abs(eigVal)) : {max(np.abs(eig_val))}")
+    print("Note that one eigenvalue is zero")
 
-    z0 = np.array([theta1, omega1, theta2, omega2])
+    ########################################################
+    ########### step2. Fixed point and           ###########
+    ########### eigenvalues of controlled system ###########
+    ########################################################
 
-    ##########################################
-    ### 실패하지 않는 초기 조건을 찾아보자. ####
-    ##########################################
-    if is_opt:
-        z_star = z0
-    else:
-        z_star = fsolve(fixedpt, z0, params)
-        print(f"z_star : {z_star}")
-        # 해당 초기 조건에 대한 stability를 확인해보자.
-        # Jacobian의 determinant를 통해 구해야 하는데, 
-        # Jacobian을 대수적으로 구할 수 없으므로 수치적으로 구해볼 것이다.
-        J_star = partial_jacobian(z_star, params)
-        eig_val, eig_vec = np.linalg.eig(J_star)
-        print(f"eigVal {eig_val}")
-        print(f"eigVec {eig_vec}")
-        print(f"max(abs(eigVal)) : {max(np.abs(eig_val))}")
-        
-    z, t = n_steps(z_star, t0, step_size, params)
+    params.control_on = 1;
+    params.tf = 1.9; 
+    params.Kp = 100;
+    params.theta2f = 0.28564;
     
-    if is_opt:
-        print(f"\n====== Check if those two vals are same ======")
-        print(f"z_star : {z_star}")
-        print(f"z_end : {z[-1][:-2]}")
-        animate(t, z, params)
-    else:
-        animate(t, z, params)
-        plot(t, z)
+    print("\n====== Root finding, Controlled system ======")
+    z_star2 = fsolve(fixedpt, z_star, params)
+    print(f"Fixed point z_star2 : \n{z_star2}")
+    J_star2 = partial_jacobian(z_star2, params)
+    eig_val2, eig_vec2 = np.linalg.eig(J_star2)
+    print(f"EigenValues for linearized map \n{eig_val2}")
+    print(f"EigenVectors for linearized map \n{eig_vec2}")
+    print(f"max(abs(eigVal)) : {max(np.abs(eig_val2))}")
+    print("Node that one eigenvalue is nonzero, we have achieved dimensionality reduction")
+    print("Also note that the largest eigenvalue is small than the one found previously")
+
+    ########################################################
+    ########### step3 : Put a perturbation       ###########
+    ########################################################
+    z_pert = z_star2 + np.array([0, 0.05, -0.1, 0.2])
+    z, t = n_steps(z_pert, 0, 5, params)
+    animate(t, z, params)
+    
