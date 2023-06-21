@@ -353,14 +353,16 @@ def plot(t, z):
     plt.figure(1)
     plt.subplot(2,1,1)
 
-    plt.plot(t,z[:,0],'r--')
-    plt.plot(t,z[:,2],'b')
-    plt.ylabel('theta')
+    plt.plot(t,z[:,0],'r--', label=r'$\theta_1$')
+    plt.plot(t,z[:,2],'b', label=r'$\theta_2$')
+    plt.ylabel("position")
+    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
     
     plt.subplot(2,1,2)
-    plt.plot(t,z[:,1],'r--')
-    plt.plot(t,z[:,3],'b')
-    plt.ylabel('thetadot')
+    plt.plot(t,z[:,1],'r--', label=r'$\dot{\theta_1}$')
+    plt.plot(t,z[:,3],'b', label=r'$\dot{\theta_2}$')
+    plt.ylabel("velocity")
+    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
     plt.xlabel('time')
 
     plt.figure(2)
@@ -373,6 +375,32 @@ def plot(t, z):
     plt.ylabel('yh')
     plt.xlabel('time')
 
+    plt.figure(3)
+    plt.subplot(2,1,1)
+    plt.plot(z[:,0],z[:,1],'r', linewidth=3)
+    plt.plot(z[0,0],z[0,1],'ko', markersize=10, markerfacecolor='k')
+    plt.ylabel(r'$\dot{\theta_1}$')
+    plt.xlabel(r'$\theta_1$')
+    
+    plt.subplot(2,1,2)
+    plt.plot(z[:,0]+z[:,2], z[:,1]+z[:,3],'b', linewidth=2)
+    plt.plot(z[0,0]+z[0,2],z[0,1]+z[0,3],'ko', markersize=10, markerfacecolor='k')
+    plt.ylabel('yh')
+    plt.ylabel(r'$\dot{\theta_1} + \dot{\theta_2}$')
+    plt.xlabel(r'$\theta_1 + \theta_2$')
+
+    # # trajectory log
+    # plt.figure(4)
+    # plt.subplot(2,1,1)
+    # plt.plot(t, z_ref[:,0],'k-', linewidth=2, label="reference")
+    # plt.plot(t, z[0,2], 'r', label="actual")
+    # plt.ylabel(r'$\theta_2$')
+    
+    # plt.subplot(2,1,2)
+    # plt.plot(t, z_ref[:,1],'k-', linewidth=2, label="reference")
+    # plt.plot(t, z[0,3], 'r', label="actual")
+    # plt.ylabel(r'$ \dot{\theta_2} $')
+    
     # plt.show()
     plt.show(block=False)
     plt.pause(3)
@@ -434,7 +462,6 @@ if __name__=="__main__":
         print(f"\n====== Check if those two vals are same ======")
         print(f"z_star : {z_star}")
         print(f"z_end : {z[-1][:-2]}")
-        animate(t, z, params)
-    else:
-        animate(t, z, params)
-        plot(t, z)
+        
+    # animate(t, z, params)
+    plot(t, z)
