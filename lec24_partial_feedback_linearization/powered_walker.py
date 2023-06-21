@@ -6,8 +6,8 @@ from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
 from copy import deepcopy
 
-# one_step => controller로부터 traj 받기
-
+# [] one_step => controller로부터 traj 받기
+# [] ode int  => for faster code
 
 def cos(x):
     return np.cos(x)
@@ -118,15 +118,16 @@ def controller(t, z, M, m, I, l, c, g, gam, t_start, tf, theta20, theta2f, theta
     b[0] = -M*g*l*sin(gam - theta1) + c*g*m*sin(gam - theta1) - c*g*m*sin(-gam + theta1 + theta2) - 2*c*l*m*omega1*omega2*sin(theta2) - c*l*m*omega2**2*sin(theta2) - 2*g*l*m*sin(gam - theta1)
     b[1] = -1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
 
-    B[0] = 0; B[1] = 1
-    
     Kd = 2 * np.sqrt(Kp)
+    B[0] = 0; B[1] = 1
+    Sc = B.T
     e = theta2 - theta2_ref
     edot = omega2 - theta2dot_ref
     v = theta2ddot_ref - Kp * e - Kd * edot
     Ainv = np.linalg.inv(A)
     
-    u = np.linalg.inv(B.T @ Ainv @ B ) @ (v + B.T @ Ainv @ b) 
+    u = np.linalg.inv(Sc @ Ainv @ B ) @ (v + Sc @ Ainv @ -b) 
+    # print(u)
 
     return u, theta2_ref, theta2dot_ref, theta2ddot_ref
 
@@ -154,19 +155,26 @@ def single_stance(t, z, M, m, I, l, c, g, gam, control_on, traj_val):
     b[1] = -1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
 
     B[0] = 0; B[1] = 1
-
-    alpha1, alpha2 = np.linalg.inv(A).dot(b + B*u)
+    
+    # print(u, B*u)
+    alpha1, alpha2 = np.linalg.solve(A, b + B*u)
+    # alpha1, alpha2 = np.linalg.inv(A).dot(b + B*u)
     
     return [ omega1, alpha1, omega2, alpha2 ]
 
-def single_stance_ode_int(z, t, M, m, I, l, c, g, gam, t1, t2, u1, u2):
+def single_stance_ode_int(z, t, M, m, I, l, c, g, gam, control_on, traj_val):
     
     theta1, omega1, theta2, omega2 = z
+    t_start, tf, theta20, theta2f, theta20dot, Kp = traj_val
     
-    Th = u1 + (u2-u1)/(t2-t1)*(t-t1)
+    if control_on == True:
+        u, _, _, _ = controller(t, z, M, m, I, l, c, g, gam, t_start, tf, theta20, theta2f, theta20dot, Kp)
+    else:
+        u = 0
     
     A = np.zeros((2,2))
     b = np.zeros((2,1))
+    B = np.zeros((2,1))
 
     A[0,0] = 2.0*I + M*l**2 + m*(c - l)**2 + m*(c**2 - 2*c*l*cos(theta2) + l**2)
     A[0,1] = 1.0*I + c*m*(c - l*cos(theta2))
@@ -174,9 +182,10 @@ def single_stance_ode_int(z, t, M, m, I, l, c, g, gam, t1, t2, u1, u2):
     A[1,1] = 1.0*I + c**2*m
 
     b[0] = -M*g*l*sin(gam - theta1) + c*g*m*sin(gam - theta1) - c*g*m*sin(-gam + theta1 + theta2) - 2*c*l*m*omega1*omega2*sin(theta2) - c*l*m*omega2**2*sin(theta2) - 2*g*l*m*sin(gam - theta1)
-    b[1] = 1.0*Th - 1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
-
-    alpha1, alpha2 = np.linalg.inv(A).dot(b)
+    b[1] = -1.0*c*g*m*sin(-gam + theta1 + theta2) + 1.0*c*l*m*omega1**2*sin(theta2)
+    B[0] = 0; B[1] = 1
+    
+    alpha1, alpha2 = np.linalg.solve(A, b + B*u)
     
     return [ omega1, alpha1, omega2, alpha2 ]
 
@@ -277,12 +286,6 @@ def one_step(z0, t0, params, verbose=False):
     z = np.zeros((n, m))
     z = sol.y.T
 
-    # if (walker.control.on==1)
-    #     for j=1:length(t_temp)
-    #         [u,theta2_ref(j),theta2dot_ref(j),theta2ddot_ref(j)] = controller(t_temp(j),z_temp(j,1:4),walker);
-    #     end
-    # end
-
     if verbose:
         print(f"#################################")
         print(f"step time : {t[-1]-t[0]}")
@@ -305,13 +308,15 @@ def n_steps(z0, t0, step_size, params):
 
     t = np.array([t0])
     z = np.zeros((1, 6))
+    z_ref = np.zeros((1, 3))
     z[0] = np.append(z0, np.array([xh_start, yh_start]))
+    z_ref[0] = [z0[2], z0[3], 0]
 
     for i in range(step_size):
         z_temp, t_temp = one_step(z0, t0, params, True)
-        
         zz_temp = np.zeros((len(t_temp), 6))
-
+        z_ref_temp = np.zeros((len(t_temp),3))
+        
         # append xh, yh - hip position
         for j in range(len(t_temp)):
             xh = xh_start + params.l * sin(z_temp[0,0]) - params.l * sin(z_temp[j,0])
@@ -321,20 +326,26 @@ def n_steps(z0, t0, step_size, params):
             # ValueError: could not broadcast input array from shape (6,) into shape (4,)
             zz_temp[j,:] = np.append(z_temp[j,:], np.array([xh, yh]))
 
+            if params.control_on == True:
+                u, theta2_ref, theta2dot_ref, theta2ddot_ref = controller(
+                    t_temp[j], z_temp[j], params.M, params.m, params.I, params.l, params.c, params.g, params.gam,
+                    params.t_start, params.tf, params.theta20, params.theta2f, params.theta20dot, params.Kp
+                );
+                z_ref_temp[j] = [theta2_ref, theta2dot_ref, theta2ddot_ref]
+
+        z_ref = np.concatenate((z_ref, z_ref_temp), axis=0)
         z = np.concatenate((z, zz_temp), axis=0)
         t = np.concatenate((t, t_temp), axis=0)
 
-        theta1, omega1, theta2, omega2 = z_temp[-1,0:4]
-        z0 = np.array([theta1, omega1, theta2, omega2])
+        # theta1, omega1, theta2, omega2 = z_temp[-1,0:4]
+        # z0 = np.array([theta1, omega1, theta2, omega2])
+        z0 = z_temp[-1]
         t0 = t_temp[-1]
 
         # one step에서 zz_temp[-1] 스위칭이 일어나기 때문에 [-2] 사용
         xh_start = zz_temp[-2,4]
-
-        # debug : only one step without strike
-        # break
         
-    return z, t
+    return z, z_ref, t
 
 def animate(t,z,parms):
     #interpolation
@@ -430,34 +441,54 @@ def partial_jacobian(z, params):
 
     return J
 
-def plot(t, z):
+def plot(t, z, z_ref):
     plt.figure(1)
     plt.subplot(2,1,1)
 
-    plt.plot(t,z[:,0],'r--')
-    plt.plot(t,z[:,2],'b')
-    plt.ylabel('theta')
+    plt.plot(t,z[:,0],'r--', label=r'$\theta_1$')
+    plt.plot(t,z[:,2],'b', label=r'$\theta_2$')
+    plt.ylabel("position")
+    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
     
     plt.subplot(2,1,2)
-    plt.plot(t,z[:,1],'r--')
-    plt.plot(t,z[:,3],'b')
-    plt.ylabel('thetadot')
+    plt.plot(t,z[:,1],'r--', label=r'$\dot{\theta_1}$')
+    plt.plot(t,z[:,3],'b', label=r'$\dot{\theta_2}$')
+    plt.ylabel("velocity")
+    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
     plt.xlabel('time')
 
     plt.figure(2)
     plt.subplot(2,1,1)
-    plt.plot(t,z[:,4],'b')
-    plt.ylabel('xh')
+    plt.plot(z[:,0],z[:,1],'r', linewidth=3)
+    plt.plot(z[0,0],z[0,1],'ko', markersize=10, markerfacecolor='k')
+    plt.ylabel(r'$\dot{\theta_1}$')
+    plt.xlabel(r'$\theta_1$')
     
     plt.subplot(2,1,2)
-    plt.plot(t,z[:,5],'b')
+    plt.plot(z[:,0]+z[:,2], z[:,1]+z[:,3],'b', linewidth=2)
+    plt.plot(z[0,0]+z[0,2],z[0,1]+z[0,3],'ko', markersize=10, markerfacecolor='k')
     plt.ylabel('yh')
-    plt.xlabel('time')
+    plt.ylabel(r'$\dot{\theta_1} + \dot{\theta_2}$')
+    plt.xlabel(r'$\theta_1 + \theta_2$')
 
+    # trajectory log
+    plt.figure(3)
+    plt.subplot(2,1,1)
+    plt.plot(t, z_ref[:,0],'k-', linewidth=2, label="reference")
+    plt.plot(t, z[:,2], 'r', label="actual")
+    plt.ylabel(r'$\theta_2$')
+    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
+    
+    plt.subplot(2,1,2)
+    plt.plot(t, z_ref[:,1],'k-', linewidth=2, label="reference")
+    plt.plot(t, z[:,3], 'r', label="actual")
+    plt.ylabel(r'$ \dot{\theta_2} $')
+    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
+    
     # plt.show()
     plt.show(block=False)
-    plt.pause(3)
-    plt.close()
+    # plt.pause(3)
+    # plt.close()
 
 if __name__=="__main__":
     
@@ -477,7 +508,7 @@ if __name__=="__main__":
     
     # Root finding, Period one gait 
     print("====== Root finding, Period one gait ======")
-    z_star = fsolve(fixedpt, z0, params)
+    z_star = fsolve(fixedpt, z0, params, xtol=1e-12)
     print(f"Fixed point z_star : \n{z_star}")
     J_star = partial_jacobian(z_star, params)
     eig_val, eig_vec = np.linalg.eig(J_star)
@@ -491,7 +522,7 @@ if __name__=="__main__":
     ########### eigenvalues of controlled system ###########
     ########################################################
 
-    params.control_on = 1;
+    params.control_on = True;
     params.tf = 1.9; 
     params.Kp = 100;
     params.theta2f = 0.28564;
@@ -505,12 +536,16 @@ if __name__=="__main__":
     print(f"EigenVectors for linearized map \n{eig_vec2}")
     print(f"max(abs(eigVal)) : {max(np.abs(eig_val2))}")
     print("Node that one eigenvalue is nonzero, we have achieved dimensionality reduction")
-    print("Also note that the largest eigenvalue is small than the one found previously")
+    # TODO eigenvalue가 작아져야 하는데 커진다.
+    # print("Also note that the largest eigenvalue is small than the one found previously")
 
-    ########################################################
-    ########### step3 : Put a perturbation       ###########
-    ########################################################
+    # z, z_ref, t = n_steps(z_star2, 0, 5, params)
+
+    # ########################################################
+    # ########### step3 : Put a perturbation       ###########
+    # ########################################################
     z_pert = z_star2 + np.array([0, 0.05, -0.1, 0.2])
-    z, t = n_steps(z_pert, 0, 5, params)
-    animate(t, z, params)
+    z, z_ref, t = n_steps(z_pert, 0, 5, params)
+    # animate(t, z, params)
+    plot(t, z, z_ref)
     
