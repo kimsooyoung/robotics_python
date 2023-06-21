@@ -104,7 +104,7 @@ def controller(t, z, M, m, I, l, c, g, gam, t_start, tf, theta20, theta2f, theta
 
     theta2_ref     = a5*tt**5 + a4*tt**4 + a3*tt**3 + a2*tt**2 + a1*tt + a0
     theta2dot_ref  = 5*a5*tt**4 + 4*a4*tt**3 + 3*a3*tt**2 + 2*a2*tt + a1
-    theta2ddot_ref =   20*a5*tt**3 + 12*a4*tt**2 + 6*a3*tt + 2*a2
+    theta2ddot_ref = 20*a5*tt**3 + 12*a4*tt**2 + 6*a3*tt + 2*a2
     
     A = np.zeros((2,2))
     b = np.zeros((2,1))
@@ -313,6 +313,12 @@ def n_steps(z0, t0, step_size, params):
     z_ref[0] = [z0[2], z0[3], 0]
 
     for i in range(step_size):
+        
+        if params.control_on == True:
+            params.t_start = t0
+            params.theta20 = z0[2]
+            params.theta20dot = z0[3]
+        
         z_temp, t_temp = one_step(z0, t0, params, True)
         zz_temp = np.zeros((len(t_temp), 6))
         z_ref_temp = np.zeros((len(t_temp),3))
@@ -437,7 +443,7 @@ def partial_jacobian(z, params):
         z_plus_result, _  = one_step(z_plus, 0, params, False)
 
         for j in range(m):
-            J[i,j] = (z_plus_result[-1,j] - z_minus_result[-1,j]) / (2 * epsilon)
+            J[j, i] = (z_plus_result[-1,j] - z_minus_result[-1,j]) / (2 * epsilon)
 
     return J
 
@@ -485,10 +491,7 @@ def plot(t, z, z_ref):
     plt.ylabel(r'$ \dot{\theta_2} $')
     plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
     
-    # plt.show()
-    plt.show(block=False)
-    # plt.pause(3)
-    # plt.close()
+    plt.show()
 
 if __name__=="__main__":
     
@@ -536,16 +539,12 @@ if __name__=="__main__":
     print(f"EigenVectors for linearized map \n{eig_vec2}")
     print(f"max(abs(eigVal)) : {max(np.abs(eig_val2))}")
     print("Node that one eigenvalue is nonzero, we have achieved dimensionality reduction")
-    # TODO eigenvalue가 작아져야 하는데 커진다.
-    # print("Also note that the largest eigenvalue is small than the one found previously")
-
-    # z, z_ref, t = n_steps(z_star2, 0, 5, params)
 
     # ########################################################
     # ########### step3 : Put a perturbation       ###########
     # ########################################################
     z_pert = z_star2 + np.array([0, 0.05, -0.1, 0.2])
     z, z_ref, t = n_steps(z_pert, 0, 5, params)
-    # animate(t, z, params)
+    animate(t, z, params)
     plot(t, z, z_ref)
     
