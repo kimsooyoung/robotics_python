@@ -62,6 +62,16 @@ def animate(t_interp, z_interp, params):
         h4, = plt.plot([P3[0], P4[0]],[P3[1], P4[1]],linewidth=5, color='cyan')
         h5, = plt.plot([P4[0], P5[0]],[P4[1], P5[1]],linewidth=5, color='magenta')
         
+        # pend1, = plt.plot([O[0], P[0]],[O[1], P[1]],linewidth=5, color='red')
+        # pend2, = plt.plot([P[0], Q[0]],[P[1], Q[1]],linewidth=5, color='blue')
+        
+        # # COM Point
+        # G1 = np.array([c1*sin(theta1), -c1*cos(theta1)])
+        # G2 = P + np.array([c2*sin(theta1+theta2),-c2*cos(theta1+theta2)])
+
+        # com1, = plt.plot(G1[0],G1[1],color='black',marker='o',markersize=10)
+        # com2, = plt.plot(G2[0],G2[1],color='black',marker='o',markersize=10)
+
         plt.xlim(-ll, ll)
         plt.ylim(-ll ,ll)
         plt.gca().set_aspect('equal')
@@ -74,6 +84,8 @@ def animate(t_interp, z_interp, params):
             h3.remove()
             h4.remove()
             h5.remove()
+            # com1.remove()
+            # com2.remove()
 
     #plt.show()
     plt.show(block=False)
@@ -104,32 +116,33 @@ def animate(t_interp, z_interp, params):
     plt.show()
 
 
+def test(z0, t, params):
+
+    q1, u1, q2, u2, q3, u3, q4, u4, q5, u5 = z0
+
+    return np.array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
 if __name__=="__main__":
 
     params = parameters()
 
     z = None
     total_time = 2
-    t = np.linspace(0, total_time, 100*total_time)
+    t = np.linspace(0.0, total_time, 100*total_time)
     
     # initlal state
     # [theta1, omega1, ... theta5, omega5]
-    z0 = np.array([ 
-        np.pi/2, 0.0,
-        0.0, 0.0,
-        0.0, 0.0, 
-        0.0, 0.0, 
-        0.0, 0.0
-    ])
+    # z0 = np.array([ np.pi/2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    z0 = np.array([ 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
     try:
         z = odeint(
-            five_link_pendulum, z0, t, args=(params,),
+            test, z0, t, args=(params,),
             rtol=1e-12, atol=1e-12
         )
     except Exception as e:
         print(e)
     finally:
-        t_interp, z_interp = interpolation(t, z, params)
-        animate(t_interp, z_interp, params)
+        # t_interp, z_interp = interpolation(t, z, params)
+        # animate(t_interp, z_interp, params)
         print("done")

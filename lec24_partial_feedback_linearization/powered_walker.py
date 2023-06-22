@@ -159,8 +159,10 @@ def single_stance(t, z, M, m, I, l, c, g, gam, control_on, traj_val):
     # print(u, B*u)
     alpha1, alpha2 = np.linalg.solve(A, b + B*u)
     # alpha1, alpha2 = np.linalg.inv(A).dot(b + B*u)
+
+    output = np.array([ omega1, alpha1[0], omega2, alpha2[0] ])
     
-    return [ omega1, alpha1, omega2, alpha2 ]
+    return output
 
 def single_stance_ode_int(z, t, M, m, I, l, c, g, gam, control_on, traj_val):
     
@@ -186,8 +188,10 @@ def single_stance_ode_int(z, t, M, m, I, l, c, g, gam, control_on, traj_val):
     B[0] = 0; B[1] = 1
     
     alpha1, alpha2 = np.linalg.solve(A, b + B*u)
+
+    output = np.array([ omega1, alpha1[0], omega2, alpha2[0] ])
     
-    return [ omega1, alpha1, omega2, alpha2 ]
+    return output
 
 def footstrike(t_minus, z_minus, params):
 

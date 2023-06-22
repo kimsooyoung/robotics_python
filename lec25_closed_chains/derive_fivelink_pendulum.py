@@ -197,5 +197,8 @@ with open("fivelinkpendulum_rhs.py", "w") as f:
     f.write(f"        [C4 + G4],\n")
     f.write(f"        [C5 + G5]])\n\n")
     f.write(f"    x = np.linalg.solve(A, b)\n\n")
-    f.write(f"    return [u1, x[0], u2, x[1], u3, x[2], u4, x[3], u5, x[4]]\n\n")
-    
+    f.write(f"    output = np.array([u1, x[0,0], u2, x[1,0], u3, x[2,0], u4, x[3,0], u5, x[4,0]])\n\n")
+
+    f.write(f"    return output\n\n")
+
+print("Done!")
