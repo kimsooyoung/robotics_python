@@ -26,10 +26,11 @@ def interpolation(t, z, params):
 
     #interpolation
     t_interp = np.arange(t[0], t[len(t)-1], 1/params.fps)
-    [rows, cols] = np.shape(z)
-    z_interp = np.zeros((len(t_interp), cols))
+    # [rows, cols] = np.shape(z)
+    [cols, rows] = np.shape(z)
+    z_interp = np.zeros((len(t_interp), rows))
 
-    for i in range(0, cols):
+    for i in range(0, rows):
         f = interpolate.interp1d(t, z[:,i])
         z_interp[:,i] = f(t_interp)
 
@@ -38,78 +39,88 @@ def interpolation(t, z, params):
 def animate(t_interp, z_interp, params):
 
     l = params.l
-    c1 = params.c1
-    c2 = params.c2
+    ll = 5*l+0.2
 
     # #plot
     for i in range(0,len(t_interp)):
-        theta1 = z_interp[i,0];
-        theta2 = z_interp[i,2];
+        theta1 = z_interp[i,0]
+        theta2 = z_interp[i,2]
+        theta3 = z_interp[i,4]
+        theta4 = z_interp[i,6]
+        theta5 = z_interp[i,8]
+
         O = np.array([0, 0])
-        P = np.array([l*sin(theta1), -l*cos(theta1)])
-        # 그림을 그려야 하니까 + P를 해주었음
-        Q = P + np.array([l*sin(theta1+theta2),-l*cos(theta1+theta2)])
+        P1 = np.array([l*sin(theta1), -l*cos(theta1)])
+        P2 = P1 + l*np.array([sin(theta1+theta2), -cos(theta1+theta2)])
+        P3 = P2 + l*np.array([sin(theta1+theta2+theta3), -cos(theta1+theta2+theta3)])
+        P4 = P3 + l*np.array([sin(theta1+theta2+theta3+theta4), -cos(theta1+theta2+theta3+theta4)])
+        P5 = P4 + l*np.array([sin(theta1+theta2+theta3+theta4+theta5), -cos(theta1+theta2+theta3+theta4+theta5)])
         
-        # 사실 이렇게도 구할 수 있다.
-        # H_01 = np.array([
-        #     [np.cos(3*np.pi/2 + theta1), -np.sin(3*np.pi/2 + theta1), 0],
-        #     [np.sin(3*np.pi/2 + theta1), -np.cos(3*np.pi/2 + theta1), 0],
-        #     [0, 0, 1],
-        # ])
-        # H_12 = np.array([
-        #     [np.cos(theta2), -np.sin(theta2), 0],
-        #     [np.sin(theta2), -np.cos(theta2), 0],
-        #     [0, 0, 1],
-        # ])
+        h1, = plt.plot([O[0], P1[0]],[O[1], P1[1]],linewidth=5, color='red')
+        h2, = plt.plot([P1[0], P2[0]],[P1[1], P2[1]],linewidth=5, color='green')
+        h3, = plt.plot([P2[0], P3[0]],[P2[1], P3[1]],linewidth=5, color='blue')
+        h4, = plt.plot([P3[0], P4[0]],[P3[1], P4[1]],linewidth=5, color='cyan')
+        h5, = plt.plot([P4[0], P5[0]],[P4[1], P5[1]],linewidth=5, color='magenta')
+        
+        # pend1, = plt.plot([O[0], P[0]],[O[1], P[1]],linewidth=5, color='red')
+        # pend2, = plt.plot([P[0], Q[0]],[P[1], Q[1]],linewidth=5, color='blue')
+        
+        # # COM Point
+        # G1 = np.array([c1*sin(theta1), -c1*cos(theta1)])
+        # G2 = P + np.array([c2*sin(theta1+theta2),-c2*cos(theta1+theta2)])
 
-        # COM Point
-        G1 = np.array([c1*sin(theta1), -c1*cos(theta1)])
-        G2 = P + np.array([c2*sin(theta1+theta2),-c2*cos(theta1+theta2)])
+        # com1, = plt.plot(G1[0],G1[1],color='black',marker='o',markersize=10)
+        # com2, = plt.plot(G2[0],G2[1],color='black',marker='o',markersize=10)
 
-        pend1, = plt.plot([O[0], P[0]],[O[1], P[1]],linewidth=5, color='red')
-        pend2, = plt.plot([P[0], Q[0]],[P[1], Q[1]],linewidth=5, color='blue')
-        com1, = plt.plot(G1[0],G1[1],color='black',marker='o',markersize=10)
-        com2, = plt.plot(G2[0],G2[1],color='black',marker='o',markersize=10)
-
-        plt.xlim(-2,2)
-        plt.ylim(-2,2)
+        plt.xlim(-ll, ll)
+        plt.ylim(-ll ,ll)
         plt.gca().set_aspect('equal')
 
         plt.pause(params.pause)
 
         if (i < len(t_interp)-1):
-            pend1.remove()
-            pend2.remove()
-            com1.remove()
-            com2.remove()
+            h1.remove()
+            h2.remove()
+            h3.remove()
+            h4.remove()
+            h5.remove()
+            # com1.remove()
+            # com2.remove()
 
     #plt.show()
     plt.show(block=False)
     plt.pause(1)
     plt.close()
 
-    # result plotting
+    # # result plotting
     plt.figure(1)
     plt.subplot(2, 1, 1)
     plt.plot(t,z[:,0],color='red',label='theta1');
-    plt.plot(t,z[:,2],color='blue',label='theta2');
+    plt.plot(t,z[:,2],color='green',label='theta2');
+    plt.plot(t,z[:,4],color='blue',label='theta2');
+    plt.plot(t,z[:,6],color='cyan',label='theta2');
+    plt.plot(t,z[:,8],color='magenta',label='theta2');
     plt.ylabel("angle")
     plt.legend(loc="upper left")
     
     plt.subplot(2, 1, 2)
     plt.plot(t,z[:,1],color='red',label='omega1');
-    plt.plot(t,z[:,3],color='blue',label='omega2');
+    plt.plot(t,z[:,3],color='green',label='omega2');
+    plt.plot(t,z[:,5],color='blue',label='omega2');
+    plt.plot(t,z[:,7],color='cyan',label='omega2');
+    plt.plot(t,z[:,9],color='magenta',label='omega2');
     plt.xlabel("t")
     plt.ylabel("angular rate")
     plt.legend(loc="lower left")
 
     plt.show()
 
+
 if __name__=="__main__":
 
     params = parameters()
 
-    total_time = 20
+    total_time = 2
     t = np.linspace(0, total_time, 100*total_time)
     
     # initlal state
@@ -126,7 +137,7 @@ if __name__=="__main__":
         five_link_pendulum, z0, t, args=(params,),
         rtol=1e-12, atol=1e-12
     )
-    # t_interp, z_interp = interpolation(t, z, params)
-
-
-    # animate(t_interp, z_interp, params)
+    t_interp, z_interp = interpolation(t, z, params)
+    animate(t_interp, z_interp, params)
+    
+    print("done")
