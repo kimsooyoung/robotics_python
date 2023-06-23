@@ -258,7 +258,7 @@ with open("fivelinkchain_rhs.py", "w") as f:
     
     f.write(f"    bigB = np.block([\n")
     f.write(f"        [b],\n")
-    f.write(f"        [-Jdot @ qdot.T]\n")
+    f.write(f"        [ np.reshape(-Jdot @ qdot.T, (2, 1)) ]\n")
     f.write(f"    ])\n\n")
     
     f.write(f"    x = np.linalg.solve(bigA, bigB)\n\n")
