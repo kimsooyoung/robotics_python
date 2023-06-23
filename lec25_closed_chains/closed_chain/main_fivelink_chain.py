@@ -2,16 +2,19 @@ from matplotlib import pyplot as plt
 import numpy as np
 
 from scipy import interpolate
+from scipy.optimize import fsolve
 from scipy.integrate import odeint
-from fivelinkpendulum_rhs import five_link_pendulum
+from fivelinkchain_rhs import five_link_chain
 
 class parameters:
     def __init__(self):
         
-        self.m = 1
+        self.m = 5
         self.I = 0.1
         self.l = 1
         self.g = 9.81
+        
+        self.lx, self.ly = 3, 0
         
         self.pause = 0.02
         self.fps = 20
@@ -104,6 +107,29 @@ def animate(t_interp, z_interp, params):
     plt.show()
 
 
+def position_last_link_tip(z, params):
+    l = params.l
+    lx = params.lx
+    ly = params.ly
+    
+    q1, q2, q3, q4, q5 = z
+    
+    xP = l*(sin(q1 + q2 + q3 + q4 + q5) + sin(q1 + q2 + q3) + sin(q1 + q2 + q3 + q4) + sin(q1 + q2) + sin(q1))
+    yP = -l*(cos(q1 + q2 + q3) + cos(q1 + q2 + q3 + q4) + cos(q1 + q2) + cos(q1) + cos(q1 + q2 + q3 + q4 + q5))
+    
+    return xP-lx, yP-ly
+
+def velocity_last_link_tip(z, params, q_star):
+    
+    l = params.l
+    q1, q2, q3, q4, q5 = q_star
+    u1, u2, u3, u4, u5 = z
+    
+    vx_P = l*u4*(cos(q1 + q2 + q3 + q4) + cos(q1 + q2 + q3 + q4 + q5)) + l*u3*(cos(q1 + q2 + q3) + cos(q1 + q2 + q3 + q4) + cos(q1 + q2 + q3 + q4 + q5)) + l*u5*cos(q1 + q2 + q3 + q4 + q5) + l*u2*(cos(q1 + q2) + cos(q1 + q2 + q3) + cos(q1 + q2 + q3 + q4) + cos(q1 + q2 + q3 + q4 + q5)) + l*u1*(cos(q1) + cos(q1 + q2) + cos(q1 + q2 + q3) + cos(q1 + q2 + q3 + q4) + cos(q1 + q2 + q3 + q4 + q5))
+    vy_P = l*u4*(sin(q1 + q2 + q3 + q4) + sin(q1 + q2 + q3 + q4 + q5)) + l*u3*(sin(q1 + q2 + q3) + sin(q1 + q2 + q3 + q4) + sin(q1 + q2 + q3 + q4 + q5)) + l*u5*sin(q1 + q2 + q3 + q4 + q5) + l*u2*(sin(q1 + q2) + sin(q1 + q2 + q3) + sin(q1 + q2 + q3 + q4) + sin(q1 + q2 + q3 + q4 + q5)) + l*u1*(sin(q1) + sin(q1 + q2) + sin(q1 + q2 + q3) + sin(q1 + q2 + q3 + q4) + sin(q1 + q2 + q3 + q4 + q5))
+    
+    return vx_P, vy_P
+
 if __name__=="__main__":
 
     params = parameters()
@@ -112,19 +138,31 @@ if __name__=="__main__":
     total_time = 2
     t = np.linspace(0, total_time, 100*total_time)
     
-    # initlal state
-    # [theta1, omega1, ... theta5, omega5]
-    z0 = np.array([ 
-        np.pi/2, 0.0,
-        0.0, 0.0,
-        0.0, 0.0, 
-        0.0, 0.0, 
-        0.0, 0.0
+    ### Solve q's such that end of final link is at lx,ly ###
+    q1 = np.pi/8; q2 = -np.pi/8; q3 = 0; q4 = 0; q5 = 0;
+    q0 = [q1, q2, q3, q4, q5]
+    
+    q_star = fsolve(position_last_link_tip, q0, params)
+    q1, q2, q3, q4, q5 = q_star
+    
+    ### Solve u's such that end of final link is linear velocity 0,0 ###
+    u1 = 0; u2 = 0; u3 = 0; u4 = 0; u5 = 0;
+    u0 = [u1, u2, u3, u4, u5]
+    u_star = fsolve(velocity_last_link_tip, u0, params, q_star)
+    u1, u2, u3, u4, u5 = u_star
+    
+    ### Now use ode45 to do simulation ###
+    z0 = np.array([
+        q1, u1,
+        q2, u2,
+        q3, u3,
+        q4, u4,
+        q5, u5
     ])
 
     try:
         z = odeint(
-            five_link_pendulum, z0, t, args=(params,),
+            five_link_chain, z0, t, args=(params,),
             rtol=1e-12, atol=1e-12
         )
     except Exception as e:
