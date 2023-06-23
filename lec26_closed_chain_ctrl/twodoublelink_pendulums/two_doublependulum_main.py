@@ -93,29 +93,6 @@ def animate(t_interp, z_interp, params):
     plt.pause(1)
     plt.close()
 
-    # # result plotting
-    plt.figure(1)
-    plt.subplot(2, 1, 1)
-    plt.plot(t,z[:,0],color='red',label='theta1');
-    plt.plot(t,z[:,2],color='green',label='theta2');
-    plt.plot(t,z[:,4],color='blue',label='theta2');
-    plt.plot(t,z[:,6],color='cyan',label='theta2');
-    plt.plot(t,z[:,8],color='magenta',label='theta2');
-    plt.ylabel("angle")
-    plt.legend(loc="upper left")
-    
-    plt.subplot(2, 1, 2)
-    plt.plot(t,z[:,1],color='red',label='omega1');
-    plt.plot(t,z[:,3],color='green',label='omega2');
-    plt.plot(t,z[:,5],color='blue',label='omega2');
-    plt.plot(t,z[:,7],color='cyan',label='omega2');
-    plt.plot(t,z[:,9],color='magenta',label='omega2');
-    plt.xlabel("t")
-    plt.ylabel("angular rate")
-    plt.legend(loc="lower left")
-
-    plt.show()
-
 if __name__=="__main__":
 
     params = parameters()
