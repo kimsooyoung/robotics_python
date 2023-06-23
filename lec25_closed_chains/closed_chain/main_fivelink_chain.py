@@ -106,7 +106,6 @@ def animate(t_interp, z_interp, params):
 
     plt.show()
 
-
 def position_last_link_tip(z, params):
     l = params.l
     lx = params.lx
@@ -117,18 +116,21 @@ def position_last_link_tip(z, params):
     xP = l*(sin(q1 + q2 + q3 + q4 + q5) + sin(q1 + q2 + q3) + sin(q1 + q2 + q3 + q4) + sin(q1 + q2) + sin(q1))
     yP = -l*(cos(q1 + q2 + q3) + cos(q1 + q2 + q3 + q4) + cos(q1 + q2) + cos(q1) + cos(q1 + q2 + q3 + q4 + q5))
     
-    return xP-lx, yP-ly
+    return xP-lx, yP-ly, 0, 0, 0
 
 def velocity_last_link_tip(z, params, q_star):
     
+    # params, q_star = fsolve_params
+    
     l = params.l
     q1, q2, q3, q4, q5 = q_star
+    # q1, q2, q3, q4, q5 = 0, 0, 0, 0, 0
     u1, u2, u3, u4, u5 = z
     
     vx_P = l*u4*(cos(q1 + q2 + q3 + q4) + cos(q1 + q2 + q3 + q4 + q5)) + l*u3*(cos(q1 + q2 + q3) + cos(q1 + q2 + q3 + q4) + cos(q1 + q2 + q3 + q4 + q5)) + l*u5*cos(q1 + q2 + q3 + q4 + q5) + l*u2*(cos(q1 + q2) + cos(q1 + q2 + q3) + cos(q1 + q2 + q3 + q4) + cos(q1 + q2 + q3 + q4 + q5)) + l*u1*(cos(q1) + cos(q1 + q2) + cos(q1 + q2 + q3) + cos(q1 + q2 + q3 + q4) + cos(q1 + q2 + q3 + q4 + q5))
     vy_P = l*u4*(sin(q1 + q2 + q3 + q4) + sin(q1 + q2 + q3 + q4 + q5)) + l*u3*(sin(q1 + q2 + q3) + sin(q1 + q2 + q3 + q4) + sin(q1 + q2 + q3 + q4 + q5)) + l*u5*sin(q1 + q2 + q3 + q4 + q5) + l*u2*(sin(q1 + q2) + sin(q1 + q2 + q3) + sin(q1 + q2 + q3 + q4) + sin(q1 + q2 + q3 + q4 + q5)) + l*u1*(sin(q1) + sin(q1 + q2) + sin(q1 + q2 + q3) + sin(q1 + q2 + q3 + q4) + sin(q1 + q2 + q3 + q4 + q5))
     
-    return vx_P, vy_P
+    return vx_P, vy_P, 0, 0, 0
 
 if __name__=="__main__":
 
@@ -144,12 +146,15 @@ if __name__=="__main__":
     
     q_star = fsolve(position_last_link_tip, q0, params)
     q1, q2, q3, q4, q5 = q_star
+    print(f"q1: {q1}, q2: {q2}, q3: {q3}, q4: {q4}, q5: {q5}")
     
     ### Solve u's such that end of final link is linear velocity 0,0 ###
     u1 = 0; u2 = 0; u3 = 0; u4 = 0; u5 = 0;
     u0 = [u1, u2, u3, u4, u5]
-    u_star = fsolve(velocity_last_link_tip, u0, params, q_star)
+    fsolve_params = (params, q_star)
+    u_star = fsolve(velocity_last_link_tip, u0, fsolve_params)
     u1, u2, u3, u4, u5 = u_star
+    print(f"u1: {u1}, u2: {u2}, u3: {u3}, u4: {u4}, u5: {u5}")
     
     ### Now use ode45 to do simulation ###
     z0 = np.array([

@@ -157,15 +157,16 @@ def five_link_chain(z0, t, params):
         [A, -J.T],
         [J, np.zeros((2,2))]
     ])
-
+    
     bigB = np.block([
         [b],
-        [-Jdot @ qdot.T]
+        [ np.reshape(-Jdot @ qdot.T, (2, 1)) ]
     ])
 
     x = np.linalg.solve(bigA, bigB)
 
     output = np.array([u1, x[0,0], u2, x[1,0], u3, x[2,0], u4, x[3,0], u5, x[4,0]])
+    
 
     return output
 
