@@ -24,3 +24,5 @@ for i in range(col):
     J_dot.append(list(J_temp))
     
 print(J_dot)
+
+print(J_dot[0][0])
