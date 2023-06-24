@@ -38,4 +38,6 @@ def fourlinkchain_rhs(z, t, params, q1_refs, q3_refs):
     elif params.leg == 'digit':
         output = np.array([u1, x[0,0], u2, x[3,0], u3, x[1,0], u4, x[2,0]])
 
+    # print(output)
+
     return output

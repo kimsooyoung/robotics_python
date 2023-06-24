@@ -4,19 +4,19 @@ from scipy import interpolate
 from scipy.optimize import fsolve
 from scipy.integrate import odeint
 
-from get_reference import get_reference
 
 from fourlinkchain_rhs import fourlinkchain_rhs
-from quinticpolytraj import quinticpolytraj
+from get_reference import get_reference
+from visualize import animate, plot_result
 
 class parameters:
     def __init__(self):
         
-        self.leg = "atrias"
+        # self.leg = "atrias"
         # self.leg = "minitaur"
-        # self.leg = "digit"
+        self.leg = "digit"
         
-        self.show_phase = False
+        self.show_phase = True
         
         self.m1 = 1; self.m2 = 1; self.m3 = 1; self.m4 = 1;
         self.I1 = 0.1; self.I2 = 0.1; self.I3 = 0.1; self.I4 = 0.1;
@@ -107,8 +107,8 @@ if __name__=="__main__":
         q3, u3, 
         q4, u4
     ])
-    
-    print("t_ref: ", len(t_ref))
+
+    z_result = np.zeros((len(t_ref)-1,8))
     
     for i in range(len(t_ref)-1):
         t = np.array([t_ref[i], t_ref[i+1]])
@@ -117,11 +117,13 @@ if __name__=="__main__":
         
         z = odeint(
             fourlinkchain_rhs, z0, t, args=(params, q1_ref, q3_ref),
-            rtol=1e-9, atol=1e-9, mxstep=5000
+            rtol=1e-9, atol=1e-9, mxstep=9000
         )
+        z0 = z[-1]
+        z_result[i] = z0
     
-    # total_time = t_ref(end);
+    t_interp, z_interp = interpolation(t_ref[1:], z_result, params)
+    animate(t_interp, z_interp, params)
+    plot_result(t_interp, z_interp, t_ref, q1_refs, q3_refs, z_result)
     
-    # animate(t_ref, q_ref, params)
-    # plot_traj(t_ref, q_ref, q1d_ref, q3d_ref, q1dd_ref, q3dd_ref)
     
