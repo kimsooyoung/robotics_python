@@ -8,7 +8,7 @@ def fourlinkchain_rhs(z, t, params, q1_refs, q3_refs):
     q1, u1 = z[0], z[1] 
     q2, u2 = z[2], z[3] 
     q3, u3 = z[4], z[5] 
-    q4, u4 = z[6], z[7]
+    q4, u4 = z[6], z[7] 
 
     A, b, J, Jdot = fourlinkchain_dynamics(z, params)
 
@@ -36,8 +36,6 @@ def fourlinkchain_rhs(z, t, params, q1_refs, q3_refs):
     if params.leg == 'minitaur' or params.leg == 'atrias':
         output = np.array([u1, x[0,0], u2, x[2,0], u3, x[1,0], u4, x[3,0]])
     elif params.leg == 'digit':
-        output = np.array([u1, x[0,0], u2, x[3,0], u3, x[1,0], u4, x[2,0]])
-
-    # print(output)
+        output = np.array([u1, x[0,0], u2, x[2,0], u3, x[3,0], u4, x[1,0]])
 
     return output

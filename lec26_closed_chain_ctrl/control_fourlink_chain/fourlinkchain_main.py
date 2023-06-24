@@ -16,7 +16,7 @@ class parameters:
         # self.leg = "minitaur"
         self.leg = "digit"
         
-        self.show_phase = True
+        self.show_phase = False
         
         self.m1 = 1; self.m2 = 1; self.m3 = 1; self.m4 = 1;
         self.I1 = 0.1; self.I2 = 0.1; self.I3 = 0.1; self.I4 = 0.1;

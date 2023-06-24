@@ -11,8 +11,8 @@ lx, ly = sy.symbols('lx ly')
 g = sy.symbols('g')
 
 # leg = "atrias"
-leg = "minitaur"
-# leg = "digit"
+# leg = "minitaur"
+leg = "digit"
 
 if leg == "minitaur" or leg == "atrias":
     q = sy.Matrix([q1, q3, q2, q4])
@@ -229,27 +229,27 @@ with open("fourlinkchain_rhs.py", "w") as f:
     f.write("from controller import controller\n")
     f.write("from fourlinkchain_dynamics import fourlinkchain_dynamics\n\n")
     
-    f.write("def fourlinkchain_rhs(z, t, params):\n\n")
+    f.write("def fourlinkchain_rhs(z, t, params, q1_refs, q3_refs):\n\n")
     f.write("    q1, u1 = z[0], z[1] \n")
     f.write("    q2, u2 = z[2], z[3] \n")
     f.write("    q3, u3 = z[4], z[5] \n")
     f.write("    q4, u4 = z[6], z[7] \n\n")
     f.write("    A, b, J, Jdot = fourlinkchain_dynamics(z, params)\n\n")
-    f.write("    T_first, T_second = controller(z, t, params)\n\n")
+    f.write("    T_first, T_second = controller(z, t, params, q1_refs, q3_refs)\n\n")
     
     f.write("    if params.leg == 'minitaur' or params.leg == 'atrias':\n")
     f.write("        qdot = np.array([u1, u3, u2, u4])\n")
     f.write("    elif params.leg == 'digit':\n")
     f.write("        qdot = np.array([u1, u4, u2, u3])\n\n")
         
-    f.write("    T = np.array([T_first, T_second, 0, 0])\n\n")
+    f.write("    T = np.array([[T_first, T_second, 0, 0]])\n\n")
     
     f.write("    bigA = np.block([\n")
     f.write("        [A, -J.T],\n")
     f.write("        [J, np.zeros((2,2))]\n")
     f.write("    ])\n\n")
     f.write("    bigB = np.block([\n")
-    f.write("        [ b + T ],\n")
+    f.write("        [ b + T.T ],\n")
     f.write("        [ np.reshape(-Jdot @ qdot.T, (2, 1)) ]\n")
     f.write("    ])\n\n")
     
@@ -258,7 +258,8 @@ with open("fourlinkchain_rhs.py", "w") as f:
     f.write("    if params.leg == 'minitaur' or params.leg == 'atrias':\n")
     f.write("        output = np.array([u1, x[0,0], u2, x[2,0], u3, x[1,0], u4, x[3,0]])\n")
     f.write("    elif params.leg == 'digit':\n")
-    f.write("        output = np.array([u1, x[0,0], u2, x[3,0], u3, x[1,0], u4, x[2,0]])\n\n")
+    # f.write("        output = np.array([u1, x[0,0], u2, x[3,0], u3, x[1,0], u4, x[2,0]])\n\n")
+    f.write("        output = np.array([u1, x[0,0], u2, x[2,0], u3, x[3,0], u4, x[1,0]])\n\n")
     
     f.write("    return output\n")
     print("[File Write] fourlinkchain_rhs.py Done!")

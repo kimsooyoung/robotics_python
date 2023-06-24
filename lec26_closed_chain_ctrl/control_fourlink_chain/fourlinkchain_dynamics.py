@@ -28,11 +28,11 @@ def fourlinkchain_dynamics(z, params):
 
     M21 = 0 
 
-    M22 = 1.0*I3 + 1.0*I4 + 0.25*l3**2*m3 + 0.5*m4*(2.0*l3**2 + 2.0*l3*l4*cos(q4) + 0.5*l4**2) 
+    M22 = 1.0*I4 + 0.25*l4**2*m4 
 
     M23 = 0 
 
-    M24 = 1.0*I4 + 0.25*l4*m4*(2*l3*cos(q4) + l4) 
+    M24 = 1.0*I4 + 0.5*l4*m4*(1.0*l3*cos(q4) + 0.5*l4) 
 
     M31 = 1.0*I2 + 0.5*l2*m2*(1.0*l1*cos(q2) + 0.5*l2) 
 
@@ -44,11 +44,11 @@ def fourlinkchain_dynamics(z, params):
 
     M41 = 0 
 
-    M42 = 1.0*I4 + 0.5*l4*m4*(1.0*l3*cos(q4) + 0.5*l4) 
+    M42 = 1.0*I4 + 0.25*l4*m4*(2*l3*cos(q4) + l4) 
 
     M43 = 0 
 
-    M44 = 1.0*I4 + 0.25*l4**2*m4 
+    M44 = 1.0*I3 + 1.0*I4 + 0.25*l3**2*m3 + 0.5*m4*(2.0*l3**2 + 2.0*l3*l4*cos(q4) + 0.5*l4**2) 
 
     C1 = -1.0*l1*l2*m2*u1*u2*sin(q2)
 
@@ -60,43 +60,43 @@ def fourlinkchain_dynamics(z, params):
 
     G1 = 0.5*g*l1*m1*sin(q1) + 1.0*g*l1*m2*sin(q1) + 0.5*g*l2*m2*sin(q1 + q2) - 0.5*l1*l2*m2*u2**2*sin(q2)
 
-    G2 = 0.5*g*l3*m3*sin(q3) + 1.0*g*l3*m4*sin(q3) + 0.5*g*l4*m4*sin(q3 + q4) - 1.0*l3*l4*m4*u3*u4*sin(q4) - 0.5*l3*l4*m4*u4**2*sin(q4)
+    G2 = 0.5*l4*m4*(g*sin(q3 + q4) + l3*u3**2*sin(q4))
 
     G3 = 0.5*g*l2*m2*sin(q1 + q2)
 
-    G4 = 0.5*l4*m4*(g*sin(q3 + q4) + l3*u3**2*sin(q4))
+    G4 = 0.5*g*l3*m3*sin(q3) + 1.0*g*l3*m4*sin(q3) + 0.5*g*l4*m4*sin(q3 + q4) - 1.0*l3*l4*m4*u3*u4*sin(q4) - 0.5*l3*l4*m4*u4**2*sin(q4)
 
     J11 = l1*cos(q1) + l2*cos(q1 + q2)
 
-    J12 = -l3*cos(q3) - l4*cos(q3 + q4)
+    J12 = -l4*cos(q3 + q4)
 
     J13 = l2*cos(q1 + q2)
 
-    J14 = -l4*cos(q3 + q4)
+    J14 = -l3*cos(q3) - l4*cos(q3 + q4)
 
     J21 = l1*sin(q1) + l2*sin(q1 + q2)
 
-    J22 = -l3*sin(q3) - l4*sin(q3 + q4)
+    J22 = -l4*sin(q3 + q4)
 
     J23 = l2*sin(q1 + q2)
 
-    J24 = -l4*sin(q3 + q4)
+    J24 = -l3*sin(q3) - l4*sin(q3 + q4)
 
     Jdot11 = -l2*u2*sin(q1 + q2) + u1*(-l1*sin(q1) - l2*sin(q1 + q2))
 
-    Jdot12 = l4*u4*sin(q3 + q4) + u3*(l3*sin(q3) + l4*sin(q3 + q4))
+    Jdot12 = l4*u3*sin(q3 + q4) + l4*u4*sin(q3 + q4)
 
     Jdot13 = -l2*u1*sin(q1 + q2) - l2*u2*sin(q1 + q2)
 
-    Jdot14 = l4*u3*sin(q3 + q4) + l4*u4*sin(q3 + q4)
+    Jdot14 = l4*u4*sin(q3 + q4) + u3*(l3*sin(q3) + l4*sin(q3 + q4))
 
     Jdot21 = l2*u2*cos(q1 + q2) + u1*(l1*cos(q1) + l2*cos(q1 + q2))
 
-    Jdot22 = -l4*u4*cos(q3 + q4) + u3*(-l3*cos(q3) - l4*cos(q3 + q4))
+    Jdot22 = -l4*u3*cos(q3 + q4) - l4*u4*cos(q3 + q4)
 
     Jdot23 = l2*u1*cos(q1 + q2) + l2*u2*cos(q1 + q2)
 
-    Jdot24 = -l4*u3*cos(q3 + q4) - l4*u4*cos(q3 + q4)
+    Jdot24 = -l4*u4*cos(q3 + q4) + u3*(-l3*cos(q3) - l4*cos(q3 + q4))
 
     A = np.array([ 
         [M11, M12, M13, M14], 
