@@ -66,7 +66,7 @@ def get_reference(params):
     q1_ref, q1d_ref, q1dd_ref, t_ref = quinticpolytraj(q_ini[0], q_middle[0], q_final[0], t_init, t_mid, t_end)
     q3_ref, q3d_ref, q3dd_ref, t_ref = quinticpolytraj(q_ini[2], q_middle[2], q_final[2], t_init, t_mid, t_end)
     
-    q1_refs = np.concatenate( (q1_ref, q1d_ref, q1dd_ref), axis=1 )
-    q3_refs = np.concatenate( (q3_ref, q3d_ref, q3dd_ref), axis=1 )
+    q1_refs = np.column_stack([q1_ref, q1d_ref, q1dd_ref])
+    q3_refs = np.column_stack([q3_ref, q3d_ref, q3dd_ref])
     
-    return t_ref, q1_refs, q3_refs
+    return q_ini, t_ref, q1_refs, q3_refs

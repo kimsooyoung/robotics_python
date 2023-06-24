@@ -18,12 +18,12 @@ def controller(z, t, params, q1_refs, q2_refs):
     
     if params.leg == 'minitaur' or params.leg == 'atrias':
         qdot = np.array([u1, u3, u2, u4])
-        theta = np.array([q1, q3])
-        thetadot = np.array([u1, u3])
+        theta = np.array([[q1, q3]])
+        thetadot = np.array([[u1, u3]])
     elif params.leg == 'digit':
         qdot = np.array([u1, u4, u2, u3])
-        theta = np.array([q1, q4])
-        thetadot = np.array([u1, u4])
+        theta = np.array([[q1, q4]])
+        thetadot = np.array([[u1, u4]])
 
     bigA = np.block([
         [A, -J.T],
@@ -76,21 +76,34 @@ def controller(z, t, params, q1_refs, q2_refs):
     A21 = bigA[2:,:2]
     A22 = bigA[2:,2:]
     
-    print(bigA)
-    print(f"A11 : {A11}")
-    print(f"A12 : {A12}")
-    print(f"A21 : {A21}")
-    print(f"A22 : {A22}")
+    # print(f"bigA : {bigA}")
+    # print(f"A11 : {A11}")
+    # print(f"A12 : {A12}")
+    # print(f"A21 : {A21}")
+    # print(f"A22 : {A22}")
     
     b1 = bigB[:2]
     b2 = bigB[2:]
-    
-    print(bigB)
     
     invA22 = np.linalg.inv(A22)
     Atil = A11 - A12 @ invA22 @ A21
     btil = b1 - A12 @ invA22 @ b2
     
+    # print("thetaddot_ref")
+    # print(thetaddot_ref)
+    # print("theta.T - theta_ref")
+    # print(theta.T - theta_ref)
+    # print("theta.T")
+    # print(theta.T)
+    # print("theta_ref")
+    # print(theta_ref)
+    # print("Kp @ ( theta.T - theta_ref )")
+    # print(Kp @ ( theta.T - theta_ref ))
+
     T = Atil @ ( thetaddot_ref - Kp @ ( theta.T - theta_ref ) - Kd @ ( thetadot.T - thetadot_ref ) ) - btil
     
-    # return T[0], T[1]
+    # print(T)
+    # print(T[0][0])
+    # print(T[1][0])
+    
+    return T[0][0], T[1][0]

@@ -95,11 +95,32 @@ if __name__=="__main__":
     params = parameters()
     show_phase = params.show_phase
     l1, l2, l3, l4 = params.l1, params.l2, params.l3, params.l4
-
     
-    t_ref, q1_refs, q3_refs = get_reference(params)
+    q_ini, t_ref, q1_refs, q3_refs = get_reference(params)
+    q1, q2, q3, q4 = q_ini[0], q_ini[1], q_ini[2], q_ini[3]
+    u1, u2, u3, u4 = 0, 0, 0, 0
     
-    print(t_ref)
+    ### Use ode45 to do simulation ###
+    z0 = np.array([
+        q1, u1, 
+        q2, u2, 
+        q3, u3, 
+        q4, u4
+    ])
+    
+    print("t_ref: ", len(t_ref))
+    
+    for i in range(len(t_ref)-1):
+        t = np.array([t_ref[i], t_ref[i+1]])
+        q1_ref = q1_refs[i,:]
+        q3_ref = q3_refs[i,:]
+        
+        z = odeint(
+            fourlinkchain_rhs, z0, t, args=(params, q1_ref, q3_ref),
+            rtol=1e-9, atol=1e-9, mxstep=5000
+        )
+    
+    # total_time = t_ref(end);
     
     # animate(t_ref, q_ref, params)
     # plot_traj(t_ref, q_ref, q1d_ref, q3d_ref, q1dd_ref, q3dd_ref)
