@@ -126,7 +126,7 @@ def double_pendulum(z0, t, m1, m2, I1, I2, c1, c2, link1, g):
     
     x = np.linalg.solve(A, b)
     
-    return [omega1, x[0], omega2, x[1]]
+    return [omega1, x[0,0], omega2, x[1,0]]
 
 if __name__=="__main__":
 

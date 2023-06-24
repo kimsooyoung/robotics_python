@@ -1,5 +1,6 @@
 import sympy as sy
 
+### define symbolic quantities ### 
 theta1, theta2 = sy.symbols('theta1 theta2', real=True)
 m1, m2 = sy.symbols('m1 m2', real=True)
 l1, l2 = sy.symbols('l1 l2', real=True)
@@ -7,6 +8,7 @@ c1, c2 = sy.symbols('c1 c2', real=True)
 I1, I2 = sy.symbols('I1 I2', real=True)
 g = sy.symbols('g', real=True)
 
+### position vectors ###
 # link1 frame to world frame
 theta1_ = 3*sy.pi/2 + theta1
 H_01 = sy.Matrix([
@@ -31,7 +33,7 @@ G1_xy = sy.Matrix([G1[0], G1[1]])
 G2 = H_02 * sy.Matrix([c2, 0, 1])
 G2_xy = sy.Matrix([G2[0], G2[1]])
 
-# velocity vectors
+### velocity vectors ###
 theta1_d, theta2_d = sy.symbols('theta1_d theta2_d', real=True)
 q = sy.Matrix([theta1, theta2])
 q_d = sy.Matrix([theta1_d, theta2_d])
@@ -49,7 +51,7 @@ V1 = m1*g*G1[1]
 V2 = m2*g*G2[1]
 V = V1 + V2
 
-# Lagrangian
+### Lagrangian ###
 L = T - V
 
 # Lagrange equation
@@ -61,6 +63,7 @@ dt_dL_dq_d = []
 dL_dq = []
 EOM = []
 
+# Derive equations
 for i in range(len(q)):
     dL_dq_d.append(sy.diff(L, q_d[i]))
     temp = 0
@@ -73,12 +76,17 @@ for i in range(len(q)):
     # 현재 외력이 0이므로 이 두개 항만 있다.
     EOM.append(dt_dL_dq_d[i] - dL_dq[i])
 
+#EOM_0 = A11 theta1ddot + A12 theta2ddot - b1 = 0
+#EOM_1 = A21 theta1ddot + A22 theta2ddot - b2 = 0
 EOM = sy.Matrix([EOM[0],EOM[1]])
 
-# print(sy.simplify(EOM[0]))
-# print(sy.simplify(EOM[1]))
-
 # M(q)*q_dd + C(q, q_d)*q_d + G(q) -Tau = 0
+# C : coriolis force
+# G : gravity
+# M(q)*q_dd + C(q, q_d)*q_d + G(q) -Tau = 0
+# b = C(q, q_d)*q_d + G(q) -Tau
+# G = G(q)
+# C = b - G = C(q, q_d)*q_d + G(q) - G(q) = C(q, q_d)*q_d
 M = EOM.jacobian(q_dd)
 b = EOM.subs([ 
     (theta1_dd, 0),
@@ -90,7 +98,6 @@ G = b.subs([
 ])
 C = b - G
 
-# print('M = ', sy.simplify(M))
 print('M11 = ', sy.simplify(M[0,0]))
 print('M12 = ', sy.simplify(M[0,1]))
 print('M21 = ', sy.simplify(M[1,0]))
