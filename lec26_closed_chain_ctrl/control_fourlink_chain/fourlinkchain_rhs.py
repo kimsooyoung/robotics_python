@@ -3,7 +3,7 @@ import numpy as np
 from controller import controller
 from fourlinkchain_dynamics import fourlinkchain_dynamics
 
-def fourlinkchain_rhs(z, t, params, q1_refs, q3_refs):
+def fourlinkchain_rhs(z, t, params, q1_refs, q2_refs):
 
     q1, u1 = z[0], z[1] 
     q2, u2 = z[2], z[3] 
@@ -12,7 +12,7 @@ def fourlinkchain_rhs(z, t, params, q1_refs, q3_refs):
 
     A, b, J, Jdot = fourlinkchain_dynamics(z, params)
 
-    T_first, T_second = controller(z, t, params, q1_refs, q3_refs)
+    T_first, T_second = controller(z, t, params, q1_refs, q2_refs)
 
     if params.leg == 'minitaur' or params.leg == 'atrias':
         qdot = np.array([u1, u3, u2, u4])

@@ -5,6 +5,7 @@ from scipy.optimize import fsolve
 from scipy.integrate import odeint
 
 
+from derive_fourlinkchain import eq_auto_generation
 from fourlinkchain_rhs import fourlinkchain_rhs
 from get_reference import get_reference
 from visualize import animate, plot_result
@@ -96,7 +97,10 @@ if __name__=="__main__":
     show_phase = params.show_phase
     l1, l2, l3, l4 = params.l1, params.l2, params.l3, params.l4
     
-    q_ini, t_ref, q1_refs, q3_refs = get_reference(params)
+    eq_auto_generation(params.leg)
+    
+    # q2 here means second controllerable angle
+    q_ini, t_ref, q1_refs, q2_refs = get_reference(params)
     q1, q2, q3, q4 = q_ini[0], q_ini[1], q_ini[2], q_ini[3]
     u1, u2, u3, u4 = 0, 0, 0, 0
     
@@ -113,10 +117,10 @@ if __name__=="__main__":
     for i in range(len(t_ref)-1):
         t = np.array([t_ref[i], t_ref[i+1]])
         q1_ref = q1_refs[i,:]
-        q3_ref = q3_refs[i,:]
+        q2_ref = q2_refs[i,:]
         
         z = odeint(
-            fourlinkchain_rhs, z0, t, args=(params, q1_ref, q3_ref),
+            fourlinkchain_rhs, z0, t, args=(params, q1_ref, q2_ref),
             rtol=1e-9, atol=1e-9, mxstep=9000
         )
         z0 = z[-1]
@@ -124,6 +128,6 @@ if __name__=="__main__":
     
     t_interp, z_interp = interpolation(t_ref[1:], z_result, params)
     animate(t_interp, z_interp, params)
-    plot_result(t_interp, z_interp, t_ref, q1_refs, q3_refs, z_result)
+    plot_result(t_interp, z_interp, t_ref, q1_refs, q2_refs, z_result, params)
     
     

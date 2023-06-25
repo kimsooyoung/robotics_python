@@ -64,7 +64,11 @@ def get_reference(params):
     t_init, t_mid, t_end = 0, params.t_end/2, params.t_end
     
     q1_ref, q1d_ref, q1dd_ref, t_ref = quinticpolytraj(q_ini[0], q_middle[0], q_final[0], t_init, t_mid, t_end)
-    q3_ref, q3d_ref, q3dd_ref, t_ref = quinticpolytraj(q_ini[2], q_middle[2], q_final[2], t_init, t_mid, t_end)
+    
+    if params.leg == "minitaur" or params.leg == "atrias":
+        q3_ref, q3d_ref, q3dd_ref, t_ref = quinticpolytraj(q_ini[2], q_middle[2], q_final[2], t_init, t_mid, t_end)
+    elif params.leg == "digit":
+        q3_ref, q3d_ref, q3dd_ref, t_ref = quinticpolytraj(q_ini[3], q_middle[3], q_final[3], t_init, t_mid, t_end)
     
     q1_refs = np.column_stack([q1_ref, q1d_ref, q1dd_ref])
     q3_refs = np.column_stack([q3_ref, q3d_ref, q3dd_ref])

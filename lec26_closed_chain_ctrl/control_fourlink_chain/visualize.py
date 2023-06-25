@@ -10,7 +10,6 @@ def animate(t_interp, z_interp, params):
     l1, l2, l3, l4 = params.l1, params.l2, params.l3, params.l4
     ll = 1.5*(l1+l2)+0.2
     
-    # #plot
     for i in range(0,len(t_interp)):
         theta1 = z_interp[i,0]
         theta2 = z_interp[i,2]
@@ -53,7 +52,7 @@ def animate(t_interp, z_interp, params):
 
     plt.show()
 
-def plot_result(t, z, t_ref, q1_refs, q3_refs, z_result):
+def plot_result(t, z, t_ref, q1_refs, q2_refs, z_result, params):
     
     plt.figure(1)
     plt.subplot(2, 1, 1)
@@ -80,16 +79,22 @@ def plot_result(t, z, t_ref, q1_refs, q3_refs, z_result):
     plt.subplot(2, 1, 1)
     plt.plot(t_ref[1:],q1_refs[1:,0],'k--',color='red',label=r'$ \theta_{1ref} $')
     plt.plot(t_ref[1:],z_result[:,0],color='black',label=r'$ \theta_1 $')
-    plt.plot(t_ref[1:],q3_refs[1:,0],'k--',color='blue',label=r'$ \theta_{3ref} $')
-    plt.plot(t_ref[1:],z_result[:,4],color='black',label=r'$ \theta_3 $')
+    plt.plot(t_ref[1:],q2_refs[1:,0],'k--',color='blue',label=r'$ \theta_{2ref} $')
+    if params.leg == "minitaur" or params.leg == "atrias":
+        plt.plot(t_ref[1:],z_result[:,4],color='black',label=r'$ \theta_2 $')
+    elif params.leg == "digit":
+        plt.plot(t_ref[1:],z_result[:,6],color='black',label=r'$ \theta_2 $')
     plt.ylabel("angle reference")
     plt.legend(loc="upper left")
     
     plt.subplot(2, 1, 2)
     plt.plot(t_ref[1:],q1_refs[1:,1],'k--',color='red',label=r'$ w_{1ref}} $')
     plt.plot(t_ref[1:],z_result[:,1],color='black',label=r'$ w_1 $')
-    plt.plot(t_ref[1:],q3_refs[1:,1],'k--',color='blue',label=r'$ w_{3ref}} $')
-    plt.plot(t_ref[1:],z_result[:,5],color='black',label=r'$ w_3 $')
+    plt.plot(t_ref[1:],q2_refs[1:,1],'k--',color='blue',label=r'$ w_{2ref}} $')
+    if params.leg == "minitaur" or params.leg == "atrias":
+        plt.plot(t_ref[1:],z_result[:,5],color='black',label=r'$ w_2 $')
+    elif params.leg == "digit":
+        plt.plot(t_ref[1:],z_result[:,7],color='black',label=r'$ w_2 $')
     plt.xlabel("t")
     plt.ylabel("velocity reference")
     plt.legend(loc="upper left")
