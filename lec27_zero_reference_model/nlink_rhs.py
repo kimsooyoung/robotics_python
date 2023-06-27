@@ -6,7 +6,7 @@ def cos(angle):
 def sin(angle): 
     return np.sin(angle) 
 
-def nlink_rhs(t, z, params): 
+def nlink_rhs(z, t, params): 
 
     m_0 = params.m1; I_0 = params.I1
     c_0 = params.c1; l_0 = params.l1;
