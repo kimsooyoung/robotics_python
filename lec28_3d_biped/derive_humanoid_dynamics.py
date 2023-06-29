@@ -79,18 +79,20 @@ r = sy.Matrix([0, 0, 0])
 u = sy.Matrix([1, 0, 0])
 T12 = revolute(phi,r,u); #yaw
 R12 = T12[0:3,0:3]
-omega_12 = phid * u.T
+omega_12 = phid * u
+# TODO: check transpose requiured or not 
 
 r = sy.Matrix([0, 0, 0])
 u = sy.Matrix([0, 1, 0])
 T23 = revolute(theta,r,u); #pitch
 R23 = T23[0:3,0:3]
-omega_23 = thetad * u.T
+omega_23 = thetad * u
 
 r = sy.Matrix([0, 0, 0])
 u = sy.Matrix([0, 0, 1])
 T34 = revolute(psi,r,u); #roll
-omega_34 = psid * u.T
+R34 = T34[0:3,0:3]
+omega_34 = psid * u
 
 ### left side ###
 r = sy.Matrix([0, w, 0])
@@ -175,82 +177,260 @@ lc = sy.simplify(T08l*sy.Matrix([0, w, -(l1+0.5*l2), 1]))
 rt = sy.simplify(T07r*sy.Matrix([0, -w, -0.5*l1, 1]))
 rc = sy.simplify(T08r*sy.Matrix([0, -w, -(l1+0.5*l2), 1]))
 
+print(f"[     ] Position Vector Caculation Done")
 # print(LA[0])
 # print(RA[0])
 
 # 왜 여기 - 붙었지?
-pos_hip_l_stance = (-LA).subs([(x,0), (y,0), (z,0)])
-pos_hip_r_stance = (-RA).subs([(x,0), (y,0), (z,0)])
+# pos_hip_l_stance = (-LA).subs([(x,0), (y,0), (z,0)])
+# pos_hip_r_stance = (-RA).subs([(x,0), (y,0), (z,0)])
 
+# print(pos_hip_l_stance)
+# print()
+# print(pos_hip_r_stance)
 
-# # TODO: hip_positions file 
-# # f_pos_hip = sy.lambdify([phi, theta, psi, phi_lh, theta_lh, psi_lh, phi_rh, theta_rh, psi_rh], [pos_hip_l_stance, pos_hip_r_stance], "numpy")
-
-# ### collision detection condition ###
+### collision detection condition ###
 # print(f"gstop = {sy.simplify(LA[2]-RA[2])}")
 
+omega_13 = omega_12 + R12*omega_23
 
-# omega_13 = omega_12 + R12*omega_23;
+R13 = R12 * R23
+omega_14 = omega_13 + R13*omega_34
 
-# R13 = R12*R23;
-# omega_14 = omega_13 + R13*omega_34;
+R14 = R13 * R34
+omega_15l = omega_14 + R14*omega_45l
+omega_15r = omega_14 + R14*omega_45r
 
+R15l = R14*R45l
+omega_16l = omega_15l + R15l*omega_56l
+R15r = R14*R45r
+omega_16r = omega_15r + R15r*omega_56r
 
-# R14 = R13*R34;
-# omega_15l = omega_14 + R14*omega_45l;
-# omega_15r = omega_14 + R14*omega_45r;
+R16l = R15l*R56l
+omega_17l = omega_16l + R16l*omega_67l
+R16r = R15r*R56r
+omega_17r = omega_16r + R16r*omega_67r
 
+R17l = R16l*R67l
+omega_18l = omega_17l + R17l*omega_78l
+R17r = R16r*R67r
+omega_18r = omega_17r + R17r*omega_78r
+R18l = R17l*R78l
+R18r = R17r*R78r
 
-# R15l = R14*R45l;
-# omega_16l = omega_15l + R15l*omega_56l;
-# R15r = R14*R45r;
-# omega_16r = omega_15r + R15r*omega_56r;
-
-# R16l = R15l*R56l;
-# omega_17l = omega_16l + R16l*omega_67l;
-# R16r = R15r*R56r;
-# omega_17r = omega_16r + R16r*omega_67r;
-
-# R17l = R16l*R67l;
-# omega_18l = omega_17l + R17l*omega_78l;
-# R17r = R16r*R67r;
-# omega_18r = omega_17r + R17r*omega_78r;
-# R18l = R17l*R78l;
-# R18r = R17r*R78r;
-
-# ### angular velocity in body frame ###
-# omegaB_2 = omega_12;
-# omegaB_3 = omega_23 + R23'*omegaB_2;
-# omegaB_4 = omega_34 + R34'*omegaB_3;
+### angular velocity in body frame ###
+omegaB_2 = omega_12
+omegaB_3 = omega_23 + R23.T * omegaB_2
+omegaB_4 = omega_34 + R34.T * omegaB_3
 
 # % A = jacobian(omegaB_4,[phid,thetad,psid]) %used in sdfast to convert
 # % euler to body frame angular velocity for torso
 
-# omegaB_5l = omega_45l + R45l'*omegaB_4;
-# omegaB_6l = omega_56l + R56l'*omegaB_5l;
-# omegaB_7l = omega_67l + R67l'*omegaB_6l;
-# omegaB_8l = omega_78l + R78l'*omegaB_7l;
+omegaB_5l = omega_45l + R45l.T * omegaB_4
+omegaB_6l = omega_56l + R56l.T * omegaB_5l
+omegaB_7l = omega_67l + R67l.T * omegaB_6l
+omegaB_8l = omega_78l + R78l.T * omegaB_7l
 
-# omegaB_5r = omega_45r + R45r'*omegaB_4;
-# omegaB_6r = omega_56r + R56r'*omegaB_5r;
-# omegaB_7r = omega_67r + R67r'*omegaB_6r;
-# omegaB_8r = omega_78r + R78r'*omegaB_7r;
+omegaB_5r = omega_45r + R45r.T * omegaB_4
+omegaB_6r = omega_56r + R56r.T * omegaB_5r
+omegaB_7r = omega_67r + R67r.T * omegaB_6r
+omegaB_8r = omega_78r + R78r.T * omegaB_7r
 
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+print(f"[=    ] Angular Velocity Caculation Done")
 
+### mass Intertia ###
 
-# I_LA(1) = P*(LK(1)-LA(1))/l2;
-# I_LA(2) = P*(LK(2)-LA(2))/l2;
-# I_LA(3) = P*(LK(3)-LA(3))/l2;
+I_LA_1 = P * (LK[0] - LA[0]) / l2
+I_LA_2 = P * (LK[1] - LA[1]) / l2
+I_LA_3 = P * (LK[2] - LA[2]) / l2
 
-# I_RA(1) = P*(RK(1)-RA(1))/l2;
-# I_RA(2) = P*(RK(2)-RA(2))/l2;
-# I_RA(3) = P*(RK(3)-RA(3))/l2;
+I_RA_1 = P * (RK[0] - RA[0]) / l2
+I_RA_2 = P * (RK[1] - RA[1]) / l2
+I_RA_3 = P * (RK[2] - RA[2]) / l2
+
 # % f_impulse = matlabFunction(I_LA, I_RA,...
 # %    'File','foot_impulse','Outputs',{'I_LA', 'I_RA'});
 
+### velocity and acceleration vectors ###
 
-# %%%%%% velocity and acceleration vectors %%%%%%
-# q = [x y z phi theta psi phi_lh theta_lh psi_lh theta_lk phi_rh theta_rh psi_rh theta_rk];
-# qdot = [xd yd zd phid thetad psid phi_lhd theta_lhd psi_lhd theta_lkd phi_rhd theta_rhd psi_rhd theta_rkd];
-# qddot = [xdd ydd zdd phidd thetadd psidd phi_lhdd theta_lhdd psi_lhdd theta_lkdd phi_rhdd theta_rhdd psi_rhdd theta_rkdd];
+q = sy.Matrix([x, y, z, phi, theta, psi, phi_lh, theta_lh, psi_lh, theta_lk, phi_rh, theta_rh, psi_rh, theta_rk])
+qdot = sy.Matrix([xd, yd, zd, phid, thetad, psid, phi_lhd, theta_lhd, psi_lhd, theta_lkd, phi_rhd, theta_rhd, psi_rhd, theta_rkd])
+qddot = sy.Matrix([xdd, ydd, zdd, phidd, thetadd, psidd, phi_lhdd, theta_lhdd, psi_lhdd, theta_lkdd, phi_rhdd, theta_rhdd, psi_rhdd, theta_rkdd])
+
+v_b = b.jacobian(q) * qdot
+v_rt = rt.jacobian(q) * qdot
+v_rc = rc.jacobian(q) * qdot
+v_lt = lt.jacobian(q) * qdot
+v_lc = lc.jacobian(q) * qdot
+v_RA = RA.jacobian(q) * qdot
+v_LA = LA.jacobian(q) * qdot
+
+print(f"[==   ] Linear Velocity Caculation Done")
+
+# vel_hip_l_stance = (-v_LA).subs([(x,0), (y,0), (z,0)])
+# vel_hip_r_stance = (-v_RA).subs([(x,0), (y,0), (z,0)])
+
+# print(vel_hip_l_stance)
+# print()
+# print(vel_hip_r_stance)
+
+### Potential, Kinetic, and Total Energy ###
+
+Ib = sy.Matrix([
+    [Ibx, 0, 0],
+    [0, Iby, 0],
+    [0, 0, Ibz]
+])
+
+It = sy.Matrix([
+    [Itx, 0, 0],
+    [0, Ity, 0],
+    [0, 0, Itz]
+])
+
+Ic = sy.Matrix([
+    [Icx, 0, 0],
+    [0, Icy, 0],
+    [0, 0, Icz]
+])
+
+# print(v_b)
+# print(v_rt.dot(v_rt))
+# print(omegaB_4.dot(omegaB_4))
+
+# T = 0.5 * mb * v_b.dot(v_b)
+T = 0.5 * mb * v_b.dot(v_b) + \
+    0.5 * mt * v_rt.dot(v_rt) + \
+    0.5 * mc * v_rc.dot(v_rc) + \
+    0.5 * mt * v_lt.dot(v_lt) + \
+    0.5 * mc * v_lc.dot(v_lc) + \
+    0.5 * omegaB_4.dot(Ib * omegaB_4) + \
+    0.5 * omegaB_7l.dot(It * omegaB_7l) + \
+    0.5 * omegaB_7r.dot(It * omegaB_7r) + \
+    0.5 * omegaB_8l.dot(Ic * omegaB_8l) + \
+    0.5 * omegaB_8r.dot(Ic * omegaB_8r)
+
+V = mb * g * b[2] + \
+    mt * g * rt[2] + \
+    mt * g * lt[2] + \
+    mc * g * lc[2] + \
+    mc * g * rc[2]
+    
+L = T - V
+
+print(f"[===  ] Energy Caculation Done")
+
+dL_dq_d = []
+dt_dL_dq_d = []
+dL_dq = []
+EOM = []
+
+for i in range(len(q)):
+    dL_dq_d.append(sy.diff(L, qdot[i]))
+    temp = 0
+    for j in range(len(q)):
+        temp += sy.diff(dL_dq_d[i], q[j]) * qdot[j] + \
+                sy.diff(dL_dq_d[i], qdot[j]) * qddot[j]
+    
+    dt_dL_dq_d.append(temp)
+    dL_dq.append(sy.diff(L, q[i]))
+    
+    EOM.append(dt_dL_dq_d[i] - dL_dq[i])
+
+print(f"[==== ] EOM Caculation Done")
+
+# q = sy.Matrix([
+    # x, y, z, phi, theta, psi, 
+    # phi_lh, theta_lh, psi_lh, theta_lk, 
+    # phi_rh, theta_rh, psi_rh, theta_rk])
+EOM = sy.Matrix([
+    EOM[0],EOM[1],EOM[2], EOM[3],EOM[4],EOM[5],
+    EOM[6],EOM[7],EOM[8],EOM[9],
+    EOM[10],EOM[11],EOM[12],EOM[13]
+])
+
+M = EOM.jacobian(qddot)
+b = EOM.subs([
+    *list(zip(qddot, [0]*len(qddot))),
+])
+G = b.subs([
+    *list(zip(qdot, [0]*len(qdot))),
+])
+
+C = b - G
+
+### jacobians and its rate ###
+p_right_ankle = sy.Matrix(RA[0:3])
+p_left_anke = sy.Matrix(LA[0:3])
+
+J_l = p_right_ankle.jacobian(q)
+J_r = p_left_anke.jacobian(q)
+col, row = J_l.shape
+
+Jdot_l = []
+Jdot_r = []
+
+for i in range(col):
+    J_temp_l = J_l[i,:].jacobian(q) * qdot
+    J_temp_r = J_r[i,:].jacobian(q) * qdot
+    Jdot_l.append(list(J_temp_l))
+    Jdot_r.append(list(J_temp_r))
+
+print(f"[=====] M C G J Jdot Calculation Done")
+
+print("Generating rhs file")
+
+dof = len(q)
+
+with open("humanoid_rhs.py", "w") as f:
+    
+    f.write("import numpy as np \n\n")
+    f.write("def cos(angle): \n")
+    f.write("    return np.cos(angle) \n\n")
+    f.write("def sin(angle): \n")
+    f.write("    return np.sin(angle) \n\n")
+
+    f.write("def humanoid_rhs(z, t, params): \n\n")
+    
+    f.write("    x, xd, y, yd, z, zd, phi, phid, theta, thetad, psi, psid, \ \n")
+    f.write("    phi_lh, phi_lhd, theta_lh, theta_lhd, \ \n")
+    f.write("    psi_lh, psi_lhd, theta_lk, theta_lkd, \ \n")
+    f.write("    phi_rh, phi_rhd, theta_rh, theta_rhd, \ \n")
+    f.write("    psi_rh, psi_rhd, theta_rk, theta_rkd = z \n\n")
+    
+    f.write("    mb, mt, mc = params.mb, params.mt, params.mc \n")
+    f.write("    Ibx, Iby, Ibz = params.Ibx, params.Iby, params.Ibz \n")
+    f.write("    Itx, Ity, Itz = params.Itx, params.Ity, params.Itz \n")
+    f.write("    Icx, Icy, Icz = params.Icx, params.Icy, params.Icz \n")
+    f.write("    l0, l1, l2 = params.l0, params.l1, params.l2 \n")
+    f.write("    w, g = params.w, params.g \n\n")
+    
+    for i in range(dof):
+        for j in range(dof):
+            elem = sy.simplify(M[i,j])
+            f.write(f"    M{i+1}{j+1} = {elem} \n\n")
+    f.write("\n")
+    
+    for i in range(dof):
+        elem = sy.simplify( C[i] )
+        f.write(f"    C{i+1} = {elem} \n\n")
+    f.write("\n")
+    
+    for i in range(dof):
+        elem = sy.simplify( G[i] )
+        f.write(f"    G{i+1} = {elem} \n\n")
+    f.write("\n")
+
+    print("Generating humanoid_rhs done...")
+
+# with open("single_stance.py", "w") as f:
+    
+#     f.write("import numpy as np \n\n")
+#     f.write("def cos(angle): \n")
+#     f.write("    return np.cos(angle) \n\n")
+#     f.write("def sin(angle): \n")
+#     f.write("    return np.sin(angle) \n\n")
+
+#     f.write("def single_stance(z, t, params): \n\n")
+    
+    
