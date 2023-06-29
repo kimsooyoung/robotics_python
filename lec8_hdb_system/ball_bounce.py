@@ -35,15 +35,15 @@ def projectile(t, z, m, g, c):
     return x_dot, ax, y_dot, ay
 
 def one_bounce(t0, z0, params):
-
-    t_final = t0 + 5
+    
+    t_end = t0 + 5
     contact.terminal = True
-    # 위에서 아래로 내려갈 때만 잡는다.
+    # 위에서 아래로 내려갈 때만 event 발생
     contact.direction = -1
-
+    
     sol = solve_ivp(
-        fun=projectile, t_span=(t0, t_final), y0=z0, method='RK45',
-        t_eval=np.linspace(t0, t_final, 1001), dense_output=True,
+        fun=projectile, t_span=(t0, t_end), y0=z0, method='RK45',
+        t_eval=np.linspace(t0, t_end, 1001), dense_output=True,
         events=contact, args=(params.m, params.g, params.c)
     )
 
@@ -54,31 +54,29 @@ def one_bounce(t0, z0, params):
     # [10.   10.   10.   ... 10.   10.   10.  ]]
 
     t = sol.t
-
+    
     m, n = sol.y.shape
     z = np.zeros((n, m))
     z = sol.y.T
+    
+    z[-1, 3] *= -params.e
+    
+    return t, z    
 
-    z[n-1, 3] *= -1 * params.e
-
-    return t, z
 
 def simulation(t0, t_end, z0, params):
 
     t = np.array([t0])
     z = np.zeros((1, 4))
-
-    i = 0
-    while t0 <= t_end:
+    
+    while t0 < t_end:
         t_temp, z_temp = one_bounce(t0, z0, params)
-
-        z = np.concatenate((z, z_temp), axis=0)
-        t = np.concatenate((t, t_temp), axis=0)
-
+        
         t0 = t_temp[-1]
         z0 = z_temp[-1]
         
-        i += 1
+        z = np.concatenate((z, z_temp), axis=0)
+        t = np.concatenate((t, t_temp), axis=0)
 
     return t, z
 
