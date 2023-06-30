@@ -9,35 +9,6 @@ def sin(theta):
 def hip_positions(l1, l2, phi, phi_lh, phi_rh, psi_lh, psi_rh, psi, theta, theta_lh, theta_lk, theta_rh, theta_rk, w):
     
     # matlab result
-
-    # t2 = cos(phi);
-    # t3 = cos(phi_lh);
-    # t4 = cos(phi_rh);
-    # t5 = cos(psi_lh);
-    # t6 = cos(psi_rh);
-    # t7 = cos(psi);
-    # t8 = cos(theta);
-    # t9 = cos(theta_lh);
-    # t10 = cos(theta_lk);
-    # t11 = cos(theta_rh);
-    # t12 = cos(theta_rk);
-    # t13 = sin(phi);
-    # t14 = sin(phi_lh);
-    # t15 = sin(phi_rh);
-    # t16 = sin(psi_lh);
-    # t17 = sin(psi_rh);
-    # t18 = sin(psi);
-    # t19 = sin(theta);
-    # t20 = sin(theta_lh);
-    # t21 = sin(theta_lk);
-    # t22 = sin(theta_rh);
-    # t23 = sin(theta_rk);
-    # t24 = t2.*t7.*w;
-    # t25 = t7.*t13.*w;
-    # t26 = t8.*t18.*w;
-    # t27 = t2.*t18.*t19.*w;
-    # t28 = t13.*t18.*t19.*w;
-    # convert to python
     t2 = cos(phi)
     t3 = cos(phi_lh)
     t4 = cos(phi_rh)
@@ -89,7 +60,7 @@ def hip_positions(l1, l2, phi, phi_lh, phi_rh, psi_lh, psi_rh, psi, theta, theta
         -10
     ])
     
-    # # python result
+    ### python result ###
     # pos_hip_l_stance_1 = l1*(1 - cos(theta_lk))*((-(-sin(psi)*cos(psi_lh)*cos(theta) - sin(psi_lh)*cos(psi)*cos(theta))*sin(phi_lh) + sin(theta)*cos(phi_lh))*cos(theta_lh) - (-sin(psi)*sin(psi_lh)*cos(theta) + cos(psi)*cos(psi_lh)*cos(theta))*sin(theta_lh)) + l1*((-(-sin(psi)*cos(psi_lh)*cos(theta) - sin(psi_lh)*cos(psi)*cos(theta))*sin(phi_lh) + sin(theta)*cos(phi_lh))*sin(theta_lh) + (-sin(psi)*sin(psi_lh)*cos(theta) + cos(psi)*cos(psi_lh)*cos(theta))*cos(theta_lh))*sin(theta_lk) - w*(1 - cos(phi_lh))*(-sin(psi)*cos(psi_lh)*cos(theta) - sin(psi_lh)*cos(psi)*cos(theta)) + w*(1 - cos(psi_lh))*sin(psi)*cos(theta) - w*((-sin(psi)*cos(psi_lh)*cos(theta) - sin(psi_lh)*cos(psi)*cos(theta))*cos(phi_lh) + sin(phi_lh)*sin(theta)) + w*sin(phi_lh)*sin(theta) - w*sin(psi_lh)*cos(psi)*cos(theta) - (-l1 - l2)*(-((-(-sin(psi)*cos(psi_lh)*cos(theta) - sin(psi_lh)*cos(psi)*cos(theta))*sin(phi_lh) + sin(theta)*cos(phi_lh))*sin(theta_lh) + (-sin(psi)*sin(psi_lh)*cos(theta) + cos(psi)*cos(psi_lh)*cos(theta))*cos(theta_lh))*sin(theta_lk) + ((-(-sin(psi)*cos(psi_lh)*cos(theta) - sin(psi_lh)*cos(psi)*cos(theta))*sin(phi_lh) + sin(theta)*cos(phi_lh))*cos(theta_lh) - (-sin(psi)*sin(psi_lh)*cos(theta) + cos(psi)*cos(psi_lh)*cos(theta))*sin(theta_lh))*cos(theta_lk))
     # pos_hip_l_stance_2 = l1*(1 - cos(theta_lk))*((-((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*cos(psi_lh) - (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*sin(psi_lh))*sin(phi_lh) - sin(phi)*cos(phi_lh)*cos(theta))*cos(theta_lh) - ((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*cos(psi_lh))*sin(theta_lh)) + l1*((-((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*cos(psi_lh) - (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*sin(psi_lh))*sin(phi_lh) - sin(phi)*cos(phi_lh)*cos(theta))*sin(theta_lh) + ((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*cos(psi_lh))*cos(theta_lh))*sin(theta_lk) - w*(1 - cos(phi_lh))*((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*cos(psi_lh) - (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*sin(psi_lh)) - w*(1 - cos(psi_lh))*(-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi)) - w*(((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*cos(psi_lh) - (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*sin(psi_lh))*cos(phi_lh) - sin(phi)*sin(phi_lh)*cos(theta)) - w*(sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*sin(psi_lh) - w*sin(phi)*sin(phi_lh)*cos(theta) - (-l1 - l2)*(-((-((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*cos(psi_lh) - (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*sin(psi_lh))*sin(phi_lh) - sin(phi)*cos(phi_lh)*cos(theta))*sin(theta_lh) + ((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*cos(psi_lh))*cos(theta_lh))*sin(theta_lk) + ((-((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*cos(psi_lh) - (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*sin(psi_lh))*sin(phi_lh) - sin(phi)*cos(phi_lh)*cos(theta))*cos(theta_lh) - ((-sin(phi)*sin(psi)*sin(theta) + cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*sin(theta)*cos(psi) + sin(psi)*cos(phi))*cos(psi_lh))*sin(theta_lh))*cos(theta_lk))
     # pos_hip_l_stance_3 = l1*(1 - cos(theta_lk))*((-(-(sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*cos(psi_lh))*sin(phi_lh) + cos(phi)*cos(phi_lh)*cos(theta))*cos(theta_lh) - ((sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*cos(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*sin(psi_lh))*sin(theta_lh)) + l1*((-(-(sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*cos(psi_lh))*sin(phi_lh) + cos(phi)*cos(phi_lh)*cos(theta))*sin(theta_lh) + ((sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*cos(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*sin(psi_lh))*cos(theta_lh))*sin(theta_lk) - w*(1 - cos(phi_lh))*(-(sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*cos(psi_lh)) - w*(1 - cos(psi_lh))*(sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi)) - w*((-(sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*cos(psi_lh))*cos(phi_lh) + sin(phi_lh)*cos(phi)*cos(theta)) - w*(sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*sin(psi_lh) + w*sin(phi_lh)*cos(phi)*cos(theta) - (-l1 - l2)*(-((-(-(sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*cos(psi_lh))*sin(phi_lh) + cos(phi)*cos(phi_lh)*cos(theta))*sin(theta_lh) + ((sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*cos(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*sin(psi_lh))*cos(theta_lh))*sin(theta_lk) + ((-(-(sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*sin(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*cos(psi_lh))*sin(phi_lh) + cos(phi)*cos(phi_lh)*cos(theta))*cos(theta_lh) - ((sin(phi)*sin(psi) - sin(theta)*cos(phi)*cos(psi))*cos(psi_lh) + (sin(phi)*cos(psi) + sin(psi)*sin(theta)*cos(phi))*sin(psi_lh))*sin(theta_lh))*cos(theta_lk))
