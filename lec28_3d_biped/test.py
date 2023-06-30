@@ -29,3 +29,12 @@ print(X_des)
 k = np.array([1,2,3])
 k = np.hstack(( np.zeros(6) , k))
 print(k)
+
+t = np.zeros( (1,3) )
+t[0] = [1,2,3] 
+print(t)
+
+t = np.vstack( (t, np.array([ 0, 0, 0 ]) ) )
+t = np.vstack( (t, np.array([ 0.1, 0.2, 0.3 ]) ) )
+print(t)
+print(t[:,0])

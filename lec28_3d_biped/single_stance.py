@@ -1,30 +1,8 @@
 import numpy as np 
+from controller import controller
 from humanoid_rhs import humanoid_rhs
 
-def single_stance(z, t, params):
-    B = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0],
-        
-        [0, 0, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0],
-        
-        [0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1],
-        
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0],
-    ])
+def single_stance_helper(B, z, t, params):
     
     tau = controller(z, t, params)
     
@@ -78,6 +56,36 @@ def single_stance(z, t, params):
         P_LA = np.array([ x[14], x[15], x[16] ])
         P_RA = np.array([ 0, 0, 0 ])
         
+    return x, A, b, P_RA, P_LA, tau
+
+def single_stance(z, t, params):
+
+    B = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0],
+        
+        [0, 0, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0, 1, 0, 0],
+        
+        [0, 0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+    ])
+    
+    x, A, b, P_RA, P_LA, tau = single_stance_helper(B, z, t, params)
+    
     xdd = x[0]; ydd = x[1]; zdd = x[2]; 
     phidd = x[3]; thetadd = x[4]; psidd = x[5];
     
@@ -94,7 +102,5 @@ def single_stance(z, t, params):
         phi_rhd, phi_rhdd, theta_rhd, theta_rhdd, \
         psi_rhd, psi_rhdd, theta_rkd, theta_rkdd
     ])
-    
-    # return zdot, A, b, P_RA, P_LA, tau
     
     return zdot

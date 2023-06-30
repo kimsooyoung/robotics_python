@@ -1,5 +1,5 @@
 from scipy.integrate import solve_ivp
-from single_stance import single_stance
+from single_stance import single_stance, single_stance_helper
 
 def one_step(z0, params, steps):
     
@@ -45,9 +45,9 @@ def one_step(z0, params, steps):
     z_ode = z0
     tf = 0
     
-    P_LA_all = []
-    P_RA_all = []
-    Torque = []
+    P_LA_all = np.zeros( (1,3) )
+    P_RA_all = np.array( (1,3) )
+    Torque = np.zeros( (1,1) )
     
     for i in range(steps):
         
@@ -83,26 +83,32 @@ def one_step(z0, params, steps):
             args=(params,)
         )
         
+        t_temp1 = sol.t
+        m, n = np.shape(sol.y)
+        z_temp1 = np.zeros((n, m))
+        z_temp1 = sol.y.T
+        
+        t_temp1 = tf + t_temp1
+        tf = t_temp1[-1]
         
         ### collect reaction forces ###
-        if i == 0: # only for the first step take the first index
-        #     j = 1;
-        #     [~,~,~,P_LA,P_RA,tau] = single_stanceMEX(t_temp1(j),z_temp1(j,:),parms);
-        #     P_LA_all = [P_LA_all; P_LA];
-        #     P_RA_all = [P_RA_all; P_RA];
-        #     Torque = [Torque; tau'];
-        # end
-        # for j=2:length(t_temp1)
-        #     [~,~,~,P_LA,P_RA,tau] = single_stanceMEX(t_temp1(j),z_temp1(j,:),parms);
-        #     P_LA_all = [P_LA_all; P_LA];
-        #     P_RA_all = [P_RA_all; P_RA];
-        #     Torque = [Torque; tau'];
-        #     %P_LA_all(j,:,i) = P_LA; %jth item at step i
-        #     %P_RA_all(j,:,i) = P_RA;
-        #     %Torque(j,:,i) = tau;
-        # end
-        # t_temp1 = tf+t_temp1;
-        # tf = t_temp1(end);
+        for i in range(len(t_temp1)):
+            _, _, _, P_LA, P_RA, tau = single_stance_helper(t_temp1[i], z_temp1[i,:], params)
+            if i == 0:
+                P_LA_all[0] = P_LA
+                P_RA_all[0] = P_RA
+                Torque[0] = tau
+            else:
+                P_LA_all = np.vstack( (P_LA_all, P_LA) )
+                P_RA_all = np.vstack( (P_RA_all, P_RA) )
+                Torque = np.vstack( (Torque, tau) )
         
         ### foot strike: before to after foot strike ###
+        params.P = params.Impulse
+        
+        footstrike( t_temp1[-1], z_temp1[-1,:], params )
+        
+        # [zplus,I_LA,I_RA]=footstrike(t_temp1(end),z_temp1(end,:),parms);
+        
+        ### swap legs ###
         
