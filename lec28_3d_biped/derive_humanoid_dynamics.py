@@ -420,7 +420,110 @@ with open("humanoid_rhs.py", "w") as f:
         elem = sy.simplify( G[i] )
         f.write(f"    G{i+1} = {elem} \n\n")
     f.write("\n")
-
+    
+    for i in range(3):
+        for j in range(dof):
+            elem = sy.simplify(J_l[i,j])
+            f.write(f"    J_l{i+1}{j+1} = {elem} \n\n")
+    f.write("\n")
+    
+    for i in range(3):
+        for j in range(dof):
+            elem = sy.simplify(J_r[i,j])
+            f.write(f"    J_r{i+1}{j+1} = {elem} \n\n")
+    f.write("\n")
+    
+    for i in range(3):
+        for j in range(dof):
+            elem = sy.simplify(Jdot_l[i,j])
+            f.write(f"    Jdot_l{i+1}{j+1} = {elem} \n\n")
+    f.write("\n")
+    
+    for i in range(3):
+        for j in range(dof):
+            elem = sy.simplify(Jdot_r[i,j])
+            f.write(f"    Jdot_l{i+1}{j+1} = {elem} \n\n")
+    f.write("\n")
+    
+    
+    f.write("    M = np.array([")
+    for i in range(dof):
+        f.write(f"        [")
+        for j in range(dof):
+            f.write(f"M{i+1}{j+1}")
+            if j != dof-1:
+                f.write(f", ")
+        f.write(f"]")
+        if i != dof-1:
+            f.write(f",\n")
+        else:
+            f.write(f"\n")
+    f.write("    ]) \n\n")
+    
+    f.write("    b = -np.array([ \n")
+    for i in range(dof):
+        f.write(f"        [C{i+1} + G{i+1}]")
+        if i != dof-1:
+            f.write(f",")
+        f.write(f"\n")
+    f.write("    ]) \n\n")
+    
+    f.write("    J_l = np.array([ \n")
+    for i in range(dof):
+        f.write(f"        [")
+        for j in range(3):
+            f.write(f"J_l{i+1}{j+1}")
+            if j != dof-1:
+                f.write(f", ")
+        f.write(f"]")
+        if i != dof-1:
+            f.write(f",\n")
+        else:
+            f.write(f"\n")
+    f.write("    ]) \n\n")
+    
+    f.write("    J_r = np.array([ \n")
+    for i in range(3):
+        f.write(f"        [")
+        for j in range(dof):
+            f.write(f"J_r{i+1}{j+1}")
+            if j != dof-1:
+                f.write(f", ")
+        f.write(f"]")
+        if i != dof-1:
+            f.write(f",\n")
+        else:
+            f.write(f"\n")
+    f.write("    ]) \n\n")
+    
+    f.write("    Jdot_l = np.array([ \n")
+    for i in range(3):
+        f.write(f"        [")
+        for j in range(dof):
+            f.write(f"Jdot_l{i+1}{j+1}")
+            if j != dof-1:
+                f.write(f", ")
+        f.write(f"]")
+        if i != dof-1:
+            f.write(f",\n")
+        else:
+            f.write(f"\n")
+    f.write("    ]) \n\n")
+    
+    f.write("    Jdot_r = np.array([ \n")
+    for i in range(3):
+        f.write(f"        [")
+        for j in range(dof):
+            f.write(f"Jdot_r{i+1}{j+1}")
+            if j != dof-1:
+                f.write(f", ")
+        f.write(f"]")
+        if i != dof-1:
+            f.write(f",\n")
+        else:
+            f.write(f"\n")
+    f.write("    ]) \n\n")
+    
     print("Generating humanoid_rhs done...")
 
 # with open("single_stance.py", "w") as f:
