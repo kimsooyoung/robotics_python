@@ -95,4 +95,6 @@ def single_stance(z, t, params):
         psi_rhd, psi_rhdd, theta_rkd, theta_rkdd
     ])
     
-    return zdot, A, b, P_RA, P_LA, tau
+    # return zdot, A, b, P_RA, P_LA, tau
+    
+    return zdot
