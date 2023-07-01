@@ -1,4 +1,6 @@
 from scipy.integrate import solve_ivp
+
+from midstance import midstance
 from single_stance import single_stance, single_stance_helper
 
 def one_step(z0, params, steps):
@@ -144,9 +146,12 @@ def one_step(z0, params, steps):
         params.a0 = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         params.af = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         
+        midstance.terminal = True
+        midstance.direction = 0
+        
         sol = solve_ivp(
             single_stance, [t0, t1], z0, method='RK45', t_eval=t_span,
-            dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
+            dense_output=True, events=midstance, atol = 1e-13, rtol = 1e-13, 
             args=(params,)
         )
         
