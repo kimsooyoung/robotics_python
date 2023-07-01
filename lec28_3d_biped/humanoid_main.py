@@ -1,13 +1,11 @@
 
-
-from matplotlib import pyplot as plt
 import numpy as np
 
 from scipy import interpolate
 from scipy.integrate import odeint
 
+from one_step import one_step
 from utils import find_fixed_points
-from derive_nlink import derive_nlink
 
 class Parameters:
     
@@ -40,6 +38,9 @@ class Parameters:
         
         self.stance_foot_init = 'right'
         self.stance_foot = self.stance_foot_init
+        
+        self.fps = 10
+        self.pause = 0.01
 
 if __name__=="__main__":
 
@@ -62,48 +63,55 @@ if __name__=="__main__":
                          phi_rh, phi_rhd, theta_rh, theta_rhd, psi_rh, psi_rhd, theta_rk, theta_rkd])
     
     # 1) find fixed points and check stability
-    z_star = find_fixed_points(z0)
+    z_star = find_fixed_points(z0, params)
+    print(f"z_star: {z_star}")
     
-    zstar = np.array([ 
-        0.000000000000000,
-        0.000000000000000,
-        -0.000000000000000,
-        0.000000000000001,
-        -0.000000000000006,
-        -0.000000000000003,
-        0.000000000000006,
-        0.000000000000043,
-        -0.000000000000002,
-        0.000000000000070,
-        -0.000000000000013,
-        -0.000000000000057,
-        -0.999999999999981,
-        0.000000000000061,
-        -0.029247773468329,
-        0.054577886084082,
-        -0.001551040824746,
-        -1.029460778006675,
-        0.054690088280553,
-        0.559306810759302,
-        -0.000000000000001,
-        -0.000000000000031
-    ])
+    # z_star = np.array([ 
+    #     0.000000000000000,
+    #     0.000000000000000,
+    #     -0.000000000000000,
+    #     0.000000000000001,
+    #     -0.000000000000006,
+    #     -0.000000000000003,
+    #     0.000000000000006,
+    #     0.000000000000043,
+    #     -0.000000000000002,
+    #     0.000000000000070,
+    #     -0.000000000000013,
+    #     -0.000000000000057,
+    #     -0.999999999999981,
+    #     0.000000000000061,
+    #     -0.029247773468329,
+    #     0.054577886084082,
+    #     -0.001551040824746,
+    #     -1.029460778006675,
+    #     0.054690088280553,
+    #     0.559306810759302,
+    #     -0.000000000000001,
+    #     -0.000000000000031
+    # ])
     
-    # 2) forward simulation
-    steps = 4
-    params.stance_foot = params.stance_foot_init
-    
-    
-    [Z,t,P_LA_all,P_RA_all,Torque]=onestep(zstar,parms,steps);
+    # # 2) forward simulation
+    # steps = 4
+    # params.stance_foot = params.stance_foot_init
+    # Z, t, P_LA_all, P_RA_all, Torque = one_step(z_star, params, steps)
+    # print('----- start state --------- end state ----')
+    # print(np.hstack((z_star.reshape(-1, 1), Z[-1, 7:].reshape(-1, 1))))
 
-    disp('----- start state --------- end state ----');
-    disp([zstar' Z(end,7:end)']);
+    # # 3) plotting and animation
+    
+    # [Z,t,P_LA_all,P_RA_all,Torque] = onestep(zstar,parms,steps);
 
-    # 3) plotting and animation
-    # fps = 50;
-    # figure(1)
-    # title('animation');
-    # % view([0 0]);
-    # % view([71 17]);
-    # view([60 54]);
-    # animate(t,Z,parms,fps,view)
+    # disp('----- start state --------- end state ----');
+    # disp([zstar' Z(end,7:end)']);
+
+    # # 3) plotting and animation
+    
+    
+    # # fps = 50;
+    # # figure(1)
+    # # title('animation');
+    # # % view([0 0]);
+    # # % view([71 17]);
+    # # view([60 54]);
+    # # animate(t,Z,parms,fps,view)

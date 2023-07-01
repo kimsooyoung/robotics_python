@@ -1,21 +1,20 @@
 import numpy as np
+from one_step import one_step
 from scipy.optimize import fsolve
-
 
 def fixedpt(z0, params):
     
     z_temp = np.hstack(( np.zeros(6), z0 ))
     
-    # 28
-    x, xd, y, yd, z, zd,
-        phi, phid, theta, thetad, psi, psid, \
+    # 22
+    # x, xd, y, yd, z, zd, \
+    phi, phid, theta, thetad, psi, psid, \
         phi_lh, phi_lhd, theta_lh, theta_lhd, \
         psi_lh, psi_lhd, theta_lk, theta_lkd, \
         phi_rh, phi_rhd, theta_rh, theta_rhd, \
         psi_rh, psi_rhd, theta_rk, theta_rkd = z0
 
-
-    z, t = one_step(z0, 0, params, False)
+    z = one_step(z0, params, 1)
     
     x_f, xd_f, y_f, yd_f, z_f, zd_f, \
         phi_f, phid_f, theta_f, thetad_f, psi_f, psid_f, \
@@ -61,7 +60,7 @@ def partial_jacobian(z, params):
 
     return J
 
-def find_fixed_points(z0):
+def find_fixed_points(z0, params):
     
     print("\n1) Root finding \n")
     z_star = fsolve(fixedpt, z0, params)

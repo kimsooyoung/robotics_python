@@ -1,13 +1,15 @@
 import numpy as np
+
+from traj import traj
 from humanoid_rhs import humanoid_rhs
 
-def controller(z, t, params):
+def controller(z0, t, params):
     
     x, xd, y, yd, z, zd, phi, phid, theta, thetad, psi, psid, \
         phi_lh, phi_lhd, theta_lh, theta_lhd, \
         psi_lh, psi_lhd, theta_lk, theta_lkd, \
         phi_rh, phi_rhd, theta_rh, theta_rhd, \
-        psi_rh, psi_rhd, theta_rk, theta_rkd = z
+        psi_rh, psi_rhd, theta_rk, theta_rkd = z0
         
     mb, mt, mc = params.mb, params.mt, params.mc
     Ibx, Iby, Ibz = params.Ibx, params.Iby, params.Ibz
@@ -82,9 +84,13 @@ def controller(z, t, params):
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0] #theta_rk;
     ])
     
-    M, N, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs(z, t, params)
+    M, N, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs(z0, t, params)
     
-    qdot = np.array([xd yd zd phid thetad psid phi_lhd theta_lhd psi_lhd theta_lkd phi_rhd theta_rhd psi_rhd theta_rkd])
+    qdot = np.array([
+        xd, yd, zd, phid, thetad, psid,
+        phi_lhd, theta_lhd, psi_lhd, theta_lkd,
+        phi_rhd, theta_rhd, psi_rhd, theta_rkd
+    ])
     
     ### AX = b (without control) ###
     if params.stance_foot == 'right':
@@ -119,31 +125,35 @@ def controller(z, t, params):
     
     if params.stance_foot == 'right':
         X = np.array([
-            phi, theta, psi, phi_lh, theta_lh, psi_lh, theta_lk, theta_rk
+            [phi, theta, psi, phi_lh, theta_lh, psi_lh, theta_lk, theta_rk]
         ]).T
         
         Xd = np.array([
-            phid, thetad, psid, phi_lhd, theta_lhd, psi_lhd, theta_lkd, theta_rkd
+            [phid, thetad, psid, phi_lhd, theta_lhd, psi_lhd, theta_lkd, theta_rkd]
         ]).T
         
         v = Xdd_des + Kd*(Xd_des-Xd) + Kp*(X_des-X)
+        print(f"v: {v}")
+        # print(f"Xd_des-Xd: {Xd_des-Xd}")
         
         SAinvB = S_R @ Ainv @ B
         SAinvB_inv = np.linalg.inv(SAinvB)
-        tau = SAinvB_inv @ (v - S_R @ Ainv @ b)
+        tau = SAinvB_inv @ (v - S_R @ Ainv @ bb)
     elif params.stance_foot == 'left':
         X = np.array([
-            phi, theta, psi, phi_rh, theta_rh, psi_rh, theta_lk, theta_rk
+            [phi, theta, psi, phi_rh, theta_rh, psi_rh, theta_lk, theta_rk]
         ]).T
         
         Xd = np.array([
-            phid, thetad, psid, phi_rhd, theta_rhd, psi_rhd, theta_lkd, theta_rkd
+            [phid, thetad, psid, phi_rhd, theta_rhd, psi_rhd, theta_lkd, theta_rkd]
         ]).T
         
         v = Xdd_des + Kd*(Xd_des-Xd) + Kp*(X_des-X)
+        print(f"v: {v}")
+        # print(f"Xd_des-Xd: {Xd_des-Xd}")
         
         SAinvB = S_L @ Ainv @ B
         SAinvB_inv = np.linalg.inv(SAinvB)
-        tau = SAinvB_inv @ (v - S_L @ Ainv @ b)
+        tau = SAinvB_inv @ (v - S_L @ Ainv @ bb)
     
     return tau

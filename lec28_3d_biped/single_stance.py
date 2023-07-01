@@ -2,15 +2,16 @@ import numpy as np
 from controller import controller
 from humanoid_rhs import humanoid_rhs
 
-def single_stance_helper(B, z, t, params):
+def single_stance_helper(B, z0, t, params):
     
-    tau = controller(z, t, params)
+    tau = controller(z0, t, params)
+    # print(f"tau: {tau}")
     
     x, xd, y, yd, z, zd, phi, phid, theta, thetad, psi, psid, \
         phi_lh, phi_lhd, theta_lh, theta_lhd, \
         psi_lh, psi_lhd, theta_lk, theta_lkd, \
         phi_rh, phi_rhd, theta_rh, theta_rhd, \
-        psi_rh, psi_rhd, theta_rk, theta_rkd = z
+        psi_rh, psi_rhd, theta_rk, theta_rkd = z0
 
     mb, mt, mc = params.mb, params.mt, params.mc
     Ibx, Iby, Ibz = params.Ibx, params.Iby, params.Ibz
@@ -18,15 +19,17 @@ def single_stance_helper(B, z, t, params):
     Icx, Icy, Icz = params.Icx, params.Icy, params.Icz
     l0, l1, l2 = params.l0, params.l1, params.l2
     w, g = params.w, params.g
-
-    tau = controller(t,zz,params)
     
-    A, b, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs(t, z, params) 
+    A, b, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs(z0, t, params) 
     
-    qdot = np.array([xd yd zd phid thetad psid phi_lhd theta_lhd psi_lhd theta_lkd phi_rhd theta_rhd psi_rhd theta_rkd]) 
+    qdot = np.array([
+        xd, yd, zd, phid, thetad, psid,
+        phi_lhd, theta_lhd, psi_lhd, theta_lkd,
+        phi_rhd, theta_rhd, psi_rhd, theta_rkd
+    ]) 
     
     # P: impact force
-    x, P_RA, P_LA = None
+    x, P_RA, P_LA = None, None, None
     if params.stance_foot == 'right':
         AA = np.block([
             [A, -J_r.T], 
@@ -58,7 +61,13 @@ def single_stance_helper(B, z, t, params):
         
     return x, A, b, P_RA, P_LA, tau
 
-def single_stance(z, t, params):
+def single_stance(t, z, params):
+    
+    _, xd, _, yd, _, zd, _, phid, _, thetad, _, psid, \
+        phi_lh, phi_lhd, theta_lh, theta_lhd, \
+        psi_lh, psi_lhd, theta_lk, theta_lkd, \
+        phi_rh, phi_rhd, theta_rh, theta_rhd, \
+        psi_rh, psi_rhd, theta_rk, theta_rkd = z
 
     B = np.array([
         [0, 0, 0, 0, 0, 0, 0, 0],

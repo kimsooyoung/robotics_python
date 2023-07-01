@@ -1,6 +1,10 @@
+import numpy as np
 from scipy.integrate import solve_ivp
 
+from collision import collision
 from midstance import midstance
+from hip_positions import hip_positions
+from hip_velocities import hip_velocities
 from single_stance import single_stance, single_stance_helper
 
 def one_step(z0, params, steps):
@@ -9,11 +13,11 @@ def one_step(z0, params, steps):
     
     z_temp = np.hstack((np.zeros(6), z0))
     
-    x, xd, y, yd, z, zd,
-        phi, phid, theta, thetad, psi, psid, 
-        phi_lh, phi_lhd, theta_lh, theta_lhd, 
-        psi_lh, psi_lhd, theta_lk, theta_lkd, 
-        phi_rh, phi_rhd, theta_rh, theta_rhd, 
+    x, xd, y, yd, z, zd, \
+        phi, phid, theta, thetad, psi, psid, \
+        phi_lh, phi_lhd, theta_lh, theta_lhd, \
+        psi_lh, psi_lhd, theta_lk, theta_lkd, \
+        phi_rh, phi_rhd, theta_rh, theta_rhd, \
         psi_rh, psi_rhd, theta_rk, theta_rkd = z_temp
         
     pos_hip_l_stance, pos_hip_r_stance = hip_positions(
@@ -41,7 +45,7 @@ def one_step(z0, params, steps):
         x, y, z = pos_hip_l_stance[0], pos_hip_l_stance[1], pos_hip_l_stance[2]
         xd, yd, zd = vel_hip_l_stance[0], vel_hip_l_stance[1], vel_hip_l_stance[2]
         
-    z0 = np.hstack( [x, xd, y, yd, z, zd], z0 )
+    z0 = np.hstack(([x, xd, y, yd, z, zd], z0))
     
     t_ode = np.array([0.0])
     z_ode = np.zeros((1,28)); z_ode[0] = z0
@@ -55,11 +59,11 @@ def one_step(z0, params, steps):
     for i in range(steps):
         
         t0, t1 = 0, 2
-        x, xd, y, yd, z, zd, \ 
-            phi, phid, theta, thetad, psi, psid, \ 
-            phi_lh, phi_lhd, theta_lh, theta_lhd, \ 
-            psi_lh, psi_lhd, theta_lk, theta_lkd, \ 
-            phi_rh, phi_rhd, theta_rh, theta_rhd, \ 
+        x, xd, y, yd, z, zd, \
+            phi, phid, theta, thetad, psi, psid, \
+            phi_lh, phi_lhd, theta_lh, theta_lhd, \
+            psi_lh, psi_lhd, theta_lk, theta_lkd, \
+            phi_rh, phi_rhd, theta_rh, theta_rhd, \
             psi_rh, psi_rhd, theta_rk, theta_rkd = z0 #28
             
         t_span = np.linspace(t0, t1)
@@ -174,5 +178,8 @@ def one_step(z0, params, steps):
         
         t_ode = np.concatenate( (t, t_temp1, t_temp2), axis=0)
         z_ode = np.concatenate( (z, z_temp1, z_temp2), axis=0)
-        
-    return z_ode, t_ode, P_LA_all, P_RA_all, Torque
+    
+    if steps == 1:
+        return z_ode[-1][6:]
+    else:
+        return z_ode, t_ode, P_LA_all, P_RA_all, Torque
