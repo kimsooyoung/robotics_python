@@ -7,11 +7,11 @@ def one_step(z0, params, steps):
     
     z_temp = np.hstack((np.zeros(6), z0))
     
-    x, xd, y, yd, z, zd, \
-        phi, phid, theta, thetad, psi, psid, \
-        phi_lh, phi_lhd, theta_lh, theta_lhd, \
-        psi_lh, psi_lhd, theta_lk, theta_lkd, \
-        phi_rh, phi_rhd, theta_rh, theta_rhd, \
+    x, xd, y, yd, z, zd,
+        phi, phid, theta, thetad, psi, psid, 
+        phi_lh, phi_lhd, theta_lh, theta_lhd, 
+        psi_lh, psi_lhd, theta_lk, theta_lkd, 
+        phi_rh, phi_rhd, theta_rh, theta_rhd, 
         psi_rh, psi_rhd, theta_rk, theta_rkd = z_temp
         
     pos_hip_l_stance, pos_hip_r_stance = hip_positions(
@@ -41,8 +41,9 @@ def one_step(z0, params, steps):
         
     z0 = np.hstack( [x, xd, y, yd, z, zd], z0 )
     
-    t_ode = 0
-    z_ode = z0
+    t_ode = np.array([0.0])
+    z_ode = np.zeros((1,28)); z_ode[0] = z0
+    
     tf = 0
     
     P_LA_all = np.zeros( (1,3) )
@@ -52,12 +53,12 @@ def one_step(z0, params, steps):
     for i in range(steps):
         
         t0, t1 = 0, 2
-        x, xd, y, yd, z, zd, \
-            phi, phid, theta, thetad, psi, psid, \
-            phi_lh, phi_lhd, theta_lh, theta_lhd, \
-            psi_lh, psi_lhd, theta_lk, theta_lkd, \
-            phi_rh, phi_rhd, theta_rh, theta_rhd, \
-            psi_rh, psi_rhd, theta_rk, theta_rkd = z0
+        x, xd, y, yd, z, zd, \ 
+            phi, phid, theta, thetad, psi, psid, \ 
+            phi_lh, phi_lhd, theta_lh, theta_lhd, \ 
+            psi_lh, psi_lhd, theta_lk, theta_lkd, \ 
+            phi_rh, phi_rhd, theta_rh, theta_rhd, \ 
+            psi_rh, psi_rhd, theta_rk, theta_rkd = z0 #28
             
         t_span = np.linspace(t0, t1)
         params.t0 = 0
@@ -78,7 +79,7 @@ def one_step(z0, params, steps):
         collision.direction = 0
         
         sol = solve_ivp(
-            single_stance, [params.t0, params.tf], z0, method='RK45', t_eval=t,
+            single_stance, [t0, t1], z0, method='RK45', t_eval=t_span,
             dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
             args=(params,)
         )
@@ -106,9 +107,67 @@ def one_step(z0, params, steps):
         ### foot strike: before to after foot strike ###
         params.P = params.Impulse
         
-        footstrike( t_temp1[-1], z_temp1[-1,:], params )
-        
-        # [zplus,I_LA,I_RA]=footstrike(t_temp1(end),z_temp1(end,:),parms);
+        z_plus, P_LA, P_RA = footstrike( t_temp1[-1], z_temp1[-1,:], params )
         
         ### swap legs ###
+        if params.stance_foot == 'right':
+            params.stance_foot = 'left'
+        elif params.stance_foot == 'left':
+            params.stance_foot = 'right'
+            
+        ### after foot strike to midstance ###
+        z0 = z_plus
         
+        t0, t1 = 0, 2
+        t_span = np.linspace(t0, t1)
+        
+        x, xd, y, yd, z, zd, \
+            phi, phid, theta, thetad, psi, psid, \
+            phi_lh, phi_lhd, theta_lh, theta_lhd, \
+            psi_lh, psi_lhd, theta_lk, theta_lkd, \
+            phi_rh, phi_rhd, theta_rh, theta_rhd, \
+            psi_rh, psi_rhd, theta_rk, theta_rkd = z0
+
+        params.t0 = 0
+        params.tf = 0.2
+        
+        if params.stance_foot == 'right':
+            params.s0 = np.array([phi, theta, psi, phi_lh, theta_lh, psi_lh, theta_lk, theta_rk])
+            params.v0 = np.array([phid, thetad, psid, phi_lhd, theta_lhd, psi_lhd, theta_lkd, theta_rkd])
+            params.sf = np.array([0, 0, 0, 0, 0, 0, params.stepAngle, 0])
+        elif params.stance_foot == 'left':
+            params.s0 = np.array([phi, theta, psi, phi_rh, theta_rh, psi_rh, theta_lk, theta_rk])
+            params.v0 = np.array([phid, thetad, psid, phi_rhd, theta_rhd, psi_rhd, theta_lkd, theta_rkd])
+            params.sf = np.array([0, 0, 0, 0, 0, 0, params.stepAngle, 0])
+        
+        params.vf = np.array([0, 0, 0, 0, 0, 0, 0, 0])
+        params.a0 = np.array([0, 0, 0, 0, 0, 0, 0, 0])
+        params.af = np.array([0, 0, 0, 0, 0, 0, 0, 0])
+        
+        sol = solve_ivp(
+            single_stance, [t0, t1], z0, method='RK45', t_eval=t_span,
+            dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
+            args=(params,)
+        )
+        
+        t_temp2 = sol.t
+        m, n = np.shape(sol.y)
+        z_temp2 = np.zeros((n, m))
+        z_temp2 = sol.y.T
+        
+        ### collect reaction forces ###
+        for i in range(1, len(t_temp1)):
+            _, _, _, P_LA, P_RA, tau = single_stance_helper(t_temp1[i], z_temp1[i,:], params)
+            P_LA_all = np.vstack( (P_LA_all, P_LA) )
+            P_RA_all = np.vstack( (P_RA_all, P_RA) )
+            Torque = np.vstack( (Torque, tau) )
+        
+        t_temp2 = tf + t_temp1
+        tf = t_temp2[-1]
+        
+        z0 = z_temp2[-1,:]
+        
+        t_ode = np.concatenate( (t, t_temp1, t_temp2), axis=0)
+        z_ode = np.concatenate( (z, z_temp1, z_temp2), axis=0)
+        
+    return z_ode, t_ode, P_LA_all, P_RA_all, Torque
