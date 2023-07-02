@@ -6,7 +6,8 @@ setup(
     ext_modules=cythonize(
         [
             'convolve1_wo_optim.pyx',
-            'convolve1.pyx'
+            'convolve1.pyx',
+            'compute_memview.pyx',
         ],                
         annotate=True),      # enables generation of the html annotation file
     include_dirs=[numpy.get_include()],

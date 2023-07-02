@@ -1,11 +1,10 @@
 from matplotlib import pyplot as plt
 import numpy as np
-import time 
 
 from scipy import interpolate
 from scipy.integrate import odeint
 
-from derive_nlink import derive_nlink
+from cython_dynamics import nlink_rhs_cython
 
 class parameters:
     
@@ -45,13 +44,48 @@ def interpolation(t, z, params):
 
     return t_interp, z_interp
 
+def nlink_rhs(z, t, params):
+
+    q_0, u_0 = z[0], z[1] 
+    q_1, u_1 = z[2], z[3] 
+    q_2, u_2 = z[4], z[5] 
+    
+    m_0 = params.m1; I_0 = params.I1
+    c_0 = params.c1; l_0 = params.l1;
+    m_1 = params.m2; I_1 = params.I2
+    c_1 = params.c2; l_1 = params.l2;
+    m_2 = params.m3; I_2 = params.I3
+    c_2 = params.c3; l_2 = params.l3;
+    g = params.g
+    
+    params_arr = np.array([
+        m_0, I_0, c_0, l_0,
+        m_1, I_1, c_1, l_1,
+        m_2, I_2, c_2, l_2,
+        g
+    ])
+    
+    M, C, G = nlink_rhs_cython.nlink_rhs(z, params_arr)
+    
+    x = np.linalg.solve(M, -C-G)
+    
+    print(x)
+
+    output = np.array([
+        u_0, x[0,0],
+        u_1, x[1,0],
+        u_2, x[2,0]
+    ])
+
+    return output 
+    
+
 if __name__=="__main__":
 
     params = parameters()
     # derive_nlink(params.dof, params.method)
     
     from nlink_animate import nlink_animate
-    from nlink_rhs import nlink_rhs
 
     z = None
     total_time = 5
@@ -62,16 +96,13 @@ if __name__=="__main__":
     z0[0] = np.pi/2
     
     try:
-        start = time.time()
         z = odeint(
             nlink_rhs, z0, t, args=(params,),
             rtol=1e-12, atol=1e-12
         )
-        end = time.time()
-        print(f"{end - start:.5f} sec")
     except Exception as e:
         print(e)
     finally:
-        # t_interp, z_interp = interpolation(t, z, params)
-        # nlink_animate(t_interp, z_interp, params)
+        t_interp, z_interp = interpolation(t, z, params)
+        nlink_animate(t_interp, z_interp, params)
         print("done")

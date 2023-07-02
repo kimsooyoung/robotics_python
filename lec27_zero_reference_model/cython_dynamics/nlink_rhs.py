@@ -1,44 +1,37 @@
 import numpy as np 
-from libc.math cimport sin, cos
 
-cimport numpy as cnp
-cnp.import_array()
+def cos(theta):
+    return np.cos(theta)
 
-DTYPE = np.float64
-ctypedef cnp.float64_t DTYPE_t
+def sin(theta):
+    return np.sin(theta)
 
-# z: size 6 ndarray
-# params: size 13 ndarray
+def nlink_rhs(z, params): 
 
-cimport cython
-@cython.boundscheck(False)
-@cython.wraparound(False)
-def nlink_rhs(cnp.ndarray[DTYPE_t, ndim=1] z, cnp.ndarray[DTYPE_t, ndim=1] params): 
-
-    cdef float q_0 = z[0]
-    cdef float u_0 = z[1]
-    cdef float q_1 = z[2]
-    cdef float u_1 = z[3]
-    cdef float q_2 = z[4]
-    cdef float u_2 = z[5]
+    q_0 = z[0]
+    u_0 = z[1]
+    q_1 = z[2]
+    u_1 = z[3]
+    q_2 = z[4]
+    u_2 = z[5]
     
-    cdef float m_0 = params[0]
-    cdef float I_0 = params[1]
-    cdef float c_0 = params[2]
-    cdef float l_0 = params[3]
-    cdef float m_1 = params[4]
-    cdef float I_1 = params[5]
-    cdef float c_1 = params[6]
-    cdef float l_1 = params[7]
-    cdef float m_2 = params[8]
-    cdef float I_2 = params[9]
-    cdef float c_2 = params[10]
-    cdef float l_2 = params[11]
-    cdef float g = params[12]
+    m_0 = params[0]
+    I_0 = params[1]
+    c_0 = params[2]
+    l_0 = params[3]
+    m_1 = params[4]
+    I_1 = params[5]
+    c_1 = params[6]
+    l_1 = params[7]
+    m_2 = params[8]
+    I_2 = params[9]
+    c_2 = params[10]
+    l_2 = params[11]
+    g = params[12]
 
-    cdef cnp.ndarray M = np.zeros([3, 3], dtype=DTYPE)
-    cdef cnp.ndarray C = np.zeros([3, 1], dtype=DTYPE)
-    cdef cnp.ndarray G = np.zeros([3, 1], dtype=DTYPE)
+    M = np.zeros([3, 3], dtype=np.float64)
+    C = np.zeros([3, 1], dtype=np.float64)
+    G = np.zeros([3, 1], dtype=np.float64)
 
     M00 = 1.0*I_0 + 1.0*I_1 + 1.0*I_2 + c_0**2*m_0 + m_1*(c_1**2 + 2*c_1*l_0*cos(q_1) + l_0**2) + m_2*(c_2**2 + 2*c_2*l_0*cos(q_1 + q_2) + 2*c_2*l_1*cos(q_2) + l_0**2 + 2*l_0*l_1*cos(q_1) + l_1**2) 
     M01 = 1.0*I_1 + 1.0*I_2 + c_1*m_1*(c_1 + l_0*cos(q_1)) + m_2*(c_2**2 + c_2*l_0*cos(q_1 + q_2) + 2*c_2*l_1*cos(q_2) + l_0*l_1*cos(q_1) + l_1**2) 
