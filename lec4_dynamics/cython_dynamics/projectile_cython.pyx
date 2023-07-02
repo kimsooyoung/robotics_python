@@ -12,12 +12,12 @@ cimport cython
 @cython.wraparound(False)
 def projectile(cnp.ndarray[DTYPE_t, ndim=1] z, t, float m, float g, float c):
 
-    cdef float x    = z[0]
-    cdef float xdot = z[1]
-    cdef float y    = z[2]
-    cdef float ydot = z[3]
+    cdef DTYPE_t x    = z[0]
+    cdef DTYPE_t xdot = z[1]
+    cdef DTYPE_t y    = z[2]
+    cdef DTYPE_t ydot = z[3]
     
-    cdef float v, dragX, dragY, ax, ay
+    cdef DTYPE_t v, dragX, dragY, ax, ay
 
     cdef cnp.ndarray z_out = np.zeros([4], dtype=DTYPE)
 

@@ -1,6 +1,5 @@
 from matplotlib import pyplot as plt
 import numpy as np
-import time 
 
 from scipy import interpolate
 from scipy.integrate import odeint
@@ -63,13 +62,15 @@ if __name__=="__main__":
     z0[0] = np.pi/2
     
     try:
+        import time 
+        
         start = time.time()
         z = odeint(
             nlink_rhs, z0, t, args=(params,),
             rtol=1e-12, atol=1e-12
         )
         end = time.time()
-        print(f"{end - start:.5f} sec")
+        print(f"{end - start:.5f} sec") # 0.61312 sec
     except Exception as e:
         print(e)
     finally:

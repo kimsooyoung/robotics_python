@@ -64,9 +64,6 @@ def nlink_rhs(z, t, params):
         [C2 + G2],
         [C3 + G3]
     ]) 
-    
-    print(f"A: {A}")
-    print(f"b: {b}")
 
     x = np.linalg.solve(A, b)
 

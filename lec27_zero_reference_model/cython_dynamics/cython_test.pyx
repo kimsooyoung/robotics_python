@@ -20,10 +20,10 @@ def test(cnp.ndarray[DTYPE_t, ndim=1] z, float t, cnp.ndarray[DTYPE_t, ndim=1] p
 
     cdef int vmax = z.shape[0]
 
-    cdef float val1 = z[0]
-    cdef float val2 = z[1]
-    cdef float param1 = params[0]
-    cdef float param2 = params[1]
+    cdef DTYPE_t val1 = z[0]
+    cdef DTYPE_t val2 = z[1]
+    cdef DTYPE_t param1 = params[0]
+    cdef DTYPE_t param2 = params[1]
 
     cdef cnp.ndarray[DTYPE_t, ndim=1] h = np.zeros([vmax], dtype=DTYPE)
 

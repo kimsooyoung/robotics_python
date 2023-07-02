@@ -514,10 +514,10 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
 
 static PyObject *__pyx_pf_11cython_test_test(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_z, CYTHON_UNUSED float __pyx_v_t, PyArrayObject *__pyx_v_params) {
   int __pyx_v_vmax;
-  float __pyx_v_val1;
-  float __pyx_v_val2;
-  float __pyx_v_param1;
-  float __pyx_v_param2;
+  __pyx_t_11cython_test_DTYPE_t __pyx_v_val1;
+  __pyx_t_11cython_test_DTYPE_t __pyx_v_val2;
+  __pyx_t_11cython_test_DTYPE_t __pyx_v_param1;
+  __pyx_t_11cython_test_DTYPE_t __pyx_v_param2;
   PyArrayObject *__pyx_v_h = 0;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_h;
   __Pyx_Buffer __pyx_pybuffer_h;
@@ -593,16 +593,16 @@ static PyObject *__pyx_pf_11cython_test_test(CYTHON_UNUSED PyObject *__pyx_self,
 <pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">21</span>:     <span class="k">cdef</span> <span class="kt">int</span> <span class="nf">vmax</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_vmax = (__pyx_f_5numpy_7ndarray_5shape_shape(((PyArrayObject *)__pyx_v_z))[0]);
 </pre><pre class="cython line score-0">&#xA0;<span class="">22</span>: </pre>
-<pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">23</span>:     <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">val1</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span></pre>
+<pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">23</span>:     <span class="k">cdef</span> <span class="kt">DTYPE_t</span> <span class="nf">val1</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span></pre>
 <pre class='cython code score-0 '>  __pyx_t_1 = 0;
   __pyx_v_val1 = (*__Pyx_BufPtrStrided1d(__pyx_t_11cython_test_DTYPE_t *, __pyx_pybuffernd_z.rcbuffer-&gt;pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_z.diminfo[0].strides));
-</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">24</span>:     <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">val2</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span></pre>
+</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">24</span>:     <span class="k">cdef</span> <span class="kt">DTYPE_t</span> <span class="nf">val2</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span></pre>
 <pre class='cython code score-0 '>  __pyx_t_1 = 1;
   __pyx_v_val2 = (*__Pyx_BufPtrStrided1d(__pyx_t_11cython_test_DTYPE_t *, __pyx_pybuffernd_z.rcbuffer-&gt;pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_z.diminfo[0].strides));
-</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">25</span>:     <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">param1</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span></pre>
+</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">25</span>:     <span class="k">cdef</span> <span class="kt">DTYPE_t</span> <span class="nf">param1</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span></pre>
 <pre class='cython code score-0 '>  __pyx_t_1 = 0;
   __pyx_v_param1 = (*__Pyx_BufPtrStrided1d(__pyx_t_11cython_test_DTYPE_t *, __pyx_pybuffernd_params.rcbuffer-&gt;pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_params.diminfo[0].strides));
-</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">26</span>:     <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">param2</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span></pre>
+</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">26</span>:     <span class="k">cdef</span> <span class="kt">DTYPE_t</span> <span class="nf">param2</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span></pre>
 <pre class='cython code score-0 '>  __pyx_t_1 = 1;
   __pyx_v_param2 = (*__Pyx_BufPtrStrided1d(__pyx_t_11cython_test_DTYPE_t *, __pyx_pybuffernd_params.rcbuffer-&gt;pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_params.diminfo[0].strides));
 </pre><pre class="cython line score-0">&#xA0;<span class="">27</span>: </pre>

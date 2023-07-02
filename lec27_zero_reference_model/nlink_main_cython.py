@@ -23,12 +23,6 @@ class parameters:
         
         self.pause = 0.02
         self.fps = 20
-        
-def cos(angle):
-    return np.cos(angle)
-
-def sin(angle):
-    return np.sin(angle);
 
 def interpolation(t, z, params):
 
@@ -75,7 +69,7 @@ def nlink_rhs(z, t, params):
     
     x = np.linalg.solve(M, b)
     
-    print(f"x = {x}")
+    # print(f"x = {x}")
 
     output = np.array([
         u_0, x[0,0],
@@ -103,10 +97,15 @@ if __name__=="__main__":
     z0[0] = np.pi/2
     
     try:
+        import time 
+        
+        start = time.time()
         z = odeint(
             nlink_rhs, z0, t, args=(params,),
-            rtol=1e-12, atol=1e-12 #, mxstep=5000000
+            rtol=1e-12, atol=1e-12
         )
+        end = time.time()
+        print(f"{end - start:.5f} sec") # 0.11163 sec
     except Exception as e:
         print(e)
     finally:
