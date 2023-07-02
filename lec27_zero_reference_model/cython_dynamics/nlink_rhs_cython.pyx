@@ -74,25 +74,4 @@ def nlink_rhs(cnp.ndarray[DTYPE_t, ndim=1] z, float t, cnp.ndarray[DTYPE_t, ndim
 
     G[2][0] = c_2*g*m_2*sin(q_0 + q_1 + q_2) 
 
-
-    # A = np.array([ 
-    #     [M11, M12, M13],
-    #     [M21, M22, M23],
-    #     [M31, M32, M33]
-    # ]) 
-
-    # b = -np.array([ 
-    #     [C1 + G1],
-    #     [C2 + G2],
-    #     [C3 + G3]
-    # ]) 
-
-    # x = np.linalg.solve(A, b)
-
-    # output = np.array([
-    #     u_0, x[0,0],
-    #     u_1, x[1,0],
-    #     u_2, x[2,0]
-    # ])
-
     return M, C, G

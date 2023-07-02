@@ -7,10 +7,6 @@ def sin(angle):
     return np.sin(angle) 
 
 def nlink_rhs(z, t, params): 
-    
-    print(f"z_type : {type(z)}")
-    print(f"t_type : {type(t)}")
-    print(f"params_type : {type(params)}")
 
     m_0 = params.m1; I_0 = params.I1
     c_0 = params.c1; l_0 = params.l1;

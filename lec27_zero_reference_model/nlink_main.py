@@ -68,6 +68,6 @@ if __name__=="__main__":
     except Exception as e:
         print(e)
     finally:
-        # t_interp, z_interp = interpolation(t, z, params)
-        # nlink_animate(t_interp, z_interp, params)
+        t_interp, z_interp = interpolation(t, z, params)
+        nlink_animate(t_interp, z_interp, params)
         print("done")
