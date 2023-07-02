@@ -51,6 +51,7 @@ if __name__=="__main__":
     # derive_nlink(params.dof, params.method)
     
     from nlink_animate import nlink_animate
+    from nlink_plot import nlink_plot
     from nlink_rhs import nlink_rhs
 
     z = None
@@ -72,6 +73,7 @@ if __name__=="__main__":
     except Exception as e:
         print(e)
     finally:
-        # t_interp, z_interp = interpolation(t, z, params)
+        t_interp, z_interp = interpolation(t, z, params)
         # nlink_animate(t_interp, z_interp, params)
+        nlink_plot(t_interp, z_interp, params)
         print("done")

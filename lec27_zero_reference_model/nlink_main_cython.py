@@ -51,11 +51,11 @@ def nlink_rhs(z, t, params):
     q_2, u_2 = z[4], z[5] 
     
     m_0 = params.m1; I_0 = params.I1
-    c_0 = params.c1; l_0 = params.l1;
+    c_0 = params.c1; l_0 = params.l1
     m_1 = params.m2; I_1 = params.I2
-    c_1 = params.c2; l_1 = params.l2;
+    c_1 = params.c2; l_1 = params.l2
     m_2 = params.m3; I_2 = params.I3
-    c_2 = params.c3; l_2 = params.l3;
+    c_2 = params.c3; l_2 = params.l3
     g = params.g
     
     params_arr = np.array([
@@ -66,10 +66,16 @@ def nlink_rhs(z, t, params):
     ])
     
     M, C, G = nlink_rhs_cython.nlink_rhs(z, params_arr)
+    b = -C - G
     
-    x = np.linalg.solve(M, -C-G)
+    # print(f"M = {M}")
+    # print(f"C = {C}")
+    # print(f"G = {G}")
+    # print(f"b = {b}")
     
-    print(x)
+    x = np.linalg.solve(M, b)
+    
+    print(f"x = {x}")
 
     output = np.array([
         u_0, x[0,0],
@@ -86,6 +92,7 @@ if __name__=="__main__":
     # derive_nlink(params.dof, params.method)
     
     from nlink_animate import nlink_animate
+    from nlink_plot import nlink_plot
 
     z = None
     total_time = 5
@@ -98,11 +105,12 @@ if __name__=="__main__":
     try:
         z = odeint(
             nlink_rhs, z0, t, args=(params,),
-            rtol=1e-12, atol=1e-12
+            rtol=1e-12, atol=1e-12 #, mxstep=5000000
         )
     except Exception as e:
         print(e)
     finally:
         t_interp, z_interp = interpolation(t, z, params)
-        nlink_animate(t_interp, z_interp, params)
+        # nlink_animate(t_interp, z_interp, params)
+        nlink_plot(t_interp, z_interp, params)
         print("done")

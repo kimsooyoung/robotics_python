@@ -82,7 +82,13 @@ if __name__=="__main__":
 
     try:
         # calc states from ode solved
+        import time
+        
+        start = time.time()
         z = odeint(projectile, z0, t, args=(params.m,params.g,params.c))
+        end = time.time()
+        print(f"{end - start:.5f} sec") # 0.00419
+        
     except Exception as e:
         print(e)
     finally:

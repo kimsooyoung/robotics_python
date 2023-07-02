@@ -16,8 +16,8 @@ def nlink_rhs(z, t, params):
     c_2 = params.c3; l_2 = params.l3;
     g = params.g
 
-    q_0, u_0 = z[0], z[1] 
-    q_1, u_1 = z[2], z[3] 
+    q_0, u_0 = z[0], z[1]
+    q_1, u_1 = z[2], z[3]
     q_2, u_2 = z[4], z[5] 
 
     M11 = 1.0*I_0 + 1.0*I_1 + 1.0*I_2 + c_0**2*m_0 + m_1*(c_1**2 + 2*c_1*l_0*cos(q_1) + l_0**2) + m_2*(c_2**2 + 2*c_2*l_0*cos(q_1 + q_2) + 2*c_2*l_1*cos(q_2) + l_0**2 + 2*l_0*l_1*cos(q_1) + l_1**2) 
@@ -64,6 +64,9 @@ def nlink_rhs(z, t, params):
         [C2 + G2],
         [C3 + G3]
     ]) 
+    
+    print(f"A: {A}")
+    print(f"b: {b}")
 
     x = np.linalg.solve(A, b)
 

@@ -2,9 +2,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 import math
 
-from numba import jit
 from scipy import interpolate
 from scipy.integrate import odeint
+from cython_dynamics import projectile_cython
 
 class parameters:
     def __init__(self):
@@ -58,22 +58,7 @@ def animate(t_interp,z_interp,parms):
 
     plt.show()
 
-def projectile(z, t, m,g,c):
-
-    x, xdot, y, ydot = z
-    v = np.sqrt(xdot**2+ydot**2)
-
-    #%%%% drag is prop to v^2
-    dragX = c * v * xdot
-    dragY = c * v * ydot
-
-    #%%%% net acceleration %%%
-    ax =  0 - (dragX / m) #xddot
-    ay = -g - (dragY / m) #yddot
-
-    return np.array([xdot, ax, ydot, ay])
-
-def simulation():
+if __name__=="__main__":
     params = parameters()
     # initial state
     x0, x0dot, y0, y0dot = (0, 100, 0, 100*math.tan(math.pi/3))
@@ -84,29 +69,18 @@ def simulation():
 
     try:
         # calc states from ode solved
+        import time
         
-        # # # case1. ordinary odeint => 0.0031407199999999857
-        # z = odeint(projectile, z0, t, args=(params.m,params.g,params.c)
-        #            ,rtol=1e-3,atol=1e-6)
-        
-        # case2. odeint with numba => 0.22621529699999998
-        projectile_numba = jit(projectile,nopython=True)
-        z = odeint(projectile_numba, z0, t, args=(params.m,params.g,params.c),
-                   rtol=1e-3,atol=1e-6)
+        start = time.time()
+        z = odeint(projectile_cython.projectile, z0, t, args=(params.m,params.g,params.c))
+        end = time.time()
+        print(f"{end - start:.5f} sec") # 0.00141
     except Exception as e:
         print(e)
     finally:
         # interpolation for ploting
-        # t_interp, z_interp = interpolation(t, z, params)
+        t_interp, z_interp = interpolation(t, z, params)
         # Draw plot
-        # animate(t_interp,z_interp,params)
+        animate(t_interp,z_interp,params)
         print("Everything done!")
 
-
-if __name__=="__main__":
-    
-    import timeit
-
-    result = timeit.Timer(simulation).timeit(number=1)
-    
-    print(result)
