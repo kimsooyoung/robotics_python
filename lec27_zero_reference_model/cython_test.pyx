@@ -21,7 +21,7 @@ def test(cnp.ndarray[DTYPE_t, ndim=1] z, float t, cnp.ndarray[DTYPE_t, ndim=1] p
     cdef int vmax = z.shape[0]
 
     cdef float val1 = z[0]
-    cdef float val2 = z[1] 
+    cdef float val2 = z[1]
     cdef float param1 = params[0]
     cdef float param2 = params[1]
 
