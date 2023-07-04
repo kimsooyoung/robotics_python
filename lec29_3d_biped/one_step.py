@@ -2,10 +2,13 @@ import time
 import numpy as np
 from scipy.integrate import solve_ivp
 
-from collision import collision
+# from collision import collision
+from cython_dynamics.collision_cython_helper import collision
+
 from midstance import midstance
 from footstrike import footstrike
-from hip_positions import hip_positions
+# from hip_positions import hip_positions
+from cython_dynamics.hip_positions_cython import hip_positions
 from hip_velocities import hip_velocities
 from single_stance import single_stance, single_stance_helper
 

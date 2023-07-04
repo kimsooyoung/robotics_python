@@ -9,6 +9,9 @@ setup(
     ext_modules=cythonize(
         [
             'humanoid_rhs_cython.pyx',
+            'collision_cython.pyx',
+            'hip_positions_cython.pyx',
+            'hip_velocities_cython.pyx',
         ],
         annotate=True
     ),

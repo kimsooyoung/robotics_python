@@ -52,8 +52,8 @@ def partial_jacobian(z, params):
         z_minus[i] = z[i] - epsilon
         z_plus[i]  = z[i] + epsilon
 
-        z_minus_result, _ = one_step(z_minus, 0, params, False)
-        z_plus_result, _  = one_step(z_plus, 0, params, False)
+        z_minus_result, _ = one_step(z_minus, params, 1)
+        z_plus_result, _  = one_step(z_plus, params, 1)
 
         for j in range(m):
             J[j, i] = (z_plus_result[-1,j] - z_minus_result[-1,j]) / (2 * epsilon)
