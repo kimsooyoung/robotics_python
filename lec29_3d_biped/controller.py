@@ -1,7 +1,8 @@
 import numpy as np
 
 from traj import traj
-from humanoid_rhs import humanoid_rhs
+# from humanoid_rhs import humanoid_rhs
+from cython_dynamics import humanoid_rhs_cython
 
 def controller(z0, t, params):
     
@@ -17,6 +18,15 @@ def controller(z0, t, params):
     Icx, Icy, Icz = params.Icx, params.Icy, params.Icz
     l0, l1, l2 = params.l0, params.l1, params.l2
     w, g = params.w, params.g
+    
+    params_arr = np.array([
+        mb, mt, mc,
+        Ibx, Iby, Ibz,
+        Itx, Ity, Itz,
+        Icx, Icy, Icz,
+        l0, l1, l2,
+        w, g
+    ])
     
     t0 = params.t0
     tf = params.tf
@@ -84,7 +94,7 @@ def controller(z0, t, params):
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0] #theta_rk;
     ])
     
-    M, N, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs(z0, t, params)
+    M, N, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs_cython.humanoid_rhs(z0, t, params_arr)
     
     qdot = np.array([
         xd, yd, zd, phid, thetad, psid,
@@ -133,7 +143,7 @@ def controller(z0, t, params):
         ]).T
         
         v = Xdd_des + Kd*(Xd_des-Xd) + Kp*(X_des-X)
-        print(f"v: {v}")
+        # print(f"v: {v}")
         # print(f"Xd_des-Xd: {Xd_des-Xd}")
         
         SAinvB = S_R @ Ainv @ B
@@ -149,7 +159,7 @@ def controller(z0, t, params):
         ]).T
         
         v = Xdd_des + Kd*(Xd_des-Xd) + Kp*(X_des-X)
-        print(f"v: {v}")
+        # print(f"v: {v}")
         # print(f"Xd_des-Xd: {Xd_des-Xd}")
         
         SAinvB = S_L @ Ainv @ B

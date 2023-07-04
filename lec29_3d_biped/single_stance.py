@@ -1,11 +1,11 @@
 import numpy as np 
 from controller import controller
-from humanoid_rhs import humanoid_rhs
+# from humanoid_rhs import humanoid_rhs
+from cython_dynamics import humanoid_rhs_cython
 
 def single_stance_helper(B, z0, t, params):
     
     tau = controller(z0, t, params)
-    # print(f"tau: {tau}")
     
     x, xd, y, yd, z, zd, phi, phid, theta, thetad, psi, psid, \
         phi_lh, phi_lhd, theta_lh, theta_lhd, \
@@ -20,7 +20,16 @@ def single_stance_helper(B, z0, t, params):
     l0, l1, l2 = params.l0, params.l1, params.l2
     w, g = params.w, params.g
     
-    A, b, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs(z0, t, params) 
+    params_arr = np.array([
+        mb, mt, mc,
+        Ibx, Iby, Ibz,
+        Itx, Ity, Itz,
+        Icx, Icy, Icz,
+        l0, l1, l2,
+        w, g
+    ])
+    
+    A, b, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs_cython.humanoid_rhs(z0, t, params_arr) 
     
     qdot = np.array([
         xd, yd, zd, phid, thetad, psid,
@@ -42,7 +51,7 @@ def single_stance_helper(B, z0, t, params):
         ]) + B @ tau
         
         x = np.linalg.solve(AA, bb)
-        P_RA = np.array([ x[14], x[15], x[16] ])
+        P_RA = np.array([ x[14,0], x[15,0], x[16,0] ])
         P_LA = np.array([ 0, 0, 0 ])
     elif params.stance_foot == 'left':
         AA = np.block([
@@ -56,7 +65,7 @@ def single_stance_helper(B, z0, t, params):
         ]) + B @ tau
         
         x = np.linalg.solve(AA, bb)
-        P_LA = np.array([ x[14], x[15], x[16] ])
+        P_LA = np.array([ x[14,0], x[15,0], x[16,0] ])
         P_RA = np.array([ 0, 0, 0 ])
         
     return x, A, b, P_RA, P_LA, tau
@@ -95,14 +104,14 @@ def single_stance(t, z, params):
     
     x, A, b, P_RA, P_LA, tau = single_stance_helper(B, z, t, params)
     
-    xdd = x[0]; ydd = x[1]; zdd = x[2]; 
-    phidd = x[3]; thetadd = x[4]; psidd = x[5];
+    xdd = x[0,0]; ydd = x[1,0]; zdd = x[2,0]; 
+    phidd = x[3,0]; thetadd = x[4,0]; psidd = x[5,0];
     
-    phi_lhdd = x[6]; theta_lhdd = x[7]; 
-    psi_lhdd = x[8]; theta_lkdd = x[9];
+    phi_lhdd = x[6,0]; theta_lhdd = x[7,0]; 
+    psi_lhdd = x[8,0]; theta_lkdd = x[9,0];
     
-    phi_rhdd = x[10]; theta_rhdd = x[11];
-    psi_rhdd = x[12]; theta_rkdd = x[13];
+    phi_rhdd = x[10,0]; theta_rhdd = x[11,0];
+    psi_rhdd = x[12,0]; theta_rkdd = x[13,0];
     
     zdot = np.array([
         xd, xdd, yd, ydd, zd, zdd, phid, phidd, thetad, thetadd, psid, psidd, \
@@ -112,6 +121,6 @@ def single_stance(t, z, params):
         psi_rhd, psi_rhdd, theta_rkd, theta_rkdd
     ])
     
-    # print(zdot)
+    # print(f"single stance zdot: {zdot}")
     
     return zdot

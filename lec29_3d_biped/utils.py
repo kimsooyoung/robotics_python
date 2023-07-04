@@ -1,4 +1,5 @@
 import numpy as np
+from copy import deepcopy
 from one_step import one_step
 from scipy.optimize import fsolve
 
@@ -7,21 +8,20 @@ def fixedpt(z0, params):
     z_temp = np.hstack(( np.zeros(6), z0 ))
     
     # 22
-    # x, xd, y, yd, z, zd, \
     phi, phid, theta, thetad, psi, psid, \
         phi_lh, phi_lhd, theta_lh, theta_lhd, \
         psi_lh, psi_lhd, theta_lk, theta_lkd, \
         phi_rh, phi_rhd, theta_rh, theta_rhd, \
         psi_rh, psi_rhd, theta_rk, theta_rkd = z0
 
-    z = one_step(z0, params, 1)
+    z_aft = one_step(z0, params, 1)
     
-    x_f, xd_f, y_f, yd_f, z_f, zd_f, \
-        phi_f, phid_f, theta_f, thetad_f, psi_f, psid_f, \
+    # 22
+    phi_f, phid_f, theta_f, thetad_f, psi_f, psid_f, \
         phi_lh_f, phi_lhd_f, theta_lh_f, theta_lhd_f, \
         psi_lh_f, psi_lhd_f, theta_lk_f, theta_lkd_f, \
         phi_rh_f, phi_rhd_f, theta_rh_f, theta_rhd_f, \
-        psi_rh_f, psi_rhd_f, theta_rk_f, theta_rkd_f = z
+        psi_rh_f, psi_rhd_f, theta_rk_f, theta_rkd_f = z_aft
     
     return [
         phi - phi_f, phid - phid_f, 

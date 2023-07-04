@@ -12,6 +12,30 @@ def one_step(z0, params, steps):
     
     l1, l2, w = params.l1, params.l2, params.w
     
+    B = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 0, 0, 0, 0, 0, 0],
+        
+        [0, 0, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0, 1, 0, 0],
+        
+        [0, 0, 0, 0, 0, 0, 1, 0],
+        [0, 0, 0, 0, 0, 0, 0, 1],
+        
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+    ])
+    
     z_temp = np.hstack((np.zeros(6), z0))
     
     x, xd, y, yd, z, zd, \
@@ -54,8 +78,8 @@ def one_step(z0, params, steps):
     tf = 0
     
     P_LA_all = np.zeros( (1,3) )
-    P_RA_all = np.array( (1,3) )
-    Torque = np.zeros( (1,1) )
+    P_RA_all = np.zeros( (1,3) )
+    Torque = np.zeros( (1,8) )
     
     for i in range(steps):
         
@@ -97,19 +121,19 @@ def one_step(z0, params, steps):
         z_temp1 = sol.y.T
         
         t_temp1 = tf + t_temp1
-        tf = t_temp1[-1]
+        t_mid = t_temp1[-1]
         
         ### collect reaction forces ###
         for i in range(len(t_temp1)):
-            _, _, _, P_LA, P_RA, tau = single_stance_helper(t_temp1[i], z_temp1[i,:], params)
+            _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp1[i,:], t_temp1[i], params)
             if i == 0:
                 P_LA_all[0] = P_LA
                 P_RA_all[0] = P_RA
-                Torque[0] = tau
+                Torque[0] = tau[:,0]
             else:
                 P_LA_all = np.vstack( (P_LA_all, P_LA) )
                 P_RA_all = np.vstack( (P_RA_all, P_RA) )
-                Torque = np.vstack( (Torque, tau) )
+                Torque = np.vstack( (Torque, tau[:,0]) )
         
         ### foot strike: before to after foot strike ###
         params.P = params.Impulse
@@ -123,7 +147,7 @@ def one_step(z0, params, steps):
             params.stance_foot = 'right'
             
         ### after foot strike to midstance ###
-        z0 = z_plus
+        z_afs = z_plus
         
         t0, t1 = 0, 2
         t_span = np.linspace(t0, t1)
@@ -133,7 +157,7 @@ def one_step(z0, params, steps):
             phi_lh, phi_lhd, theta_lh, theta_lhd, \
             psi_lh, psi_lhd, theta_lk, theta_lkd, \
             phi_rh, phi_rhd, theta_rh, theta_rhd, \
-            psi_rh, psi_rhd, theta_rk, theta_rkd = z0
+            psi_rh, psi_rhd, theta_rk, theta_rkd = z_afs
 
         params.t0 = 0
         params.tf = 0.2
@@ -155,7 +179,7 @@ def one_step(z0, params, steps):
         midstance.direction = 0
         
         sol = solve_ivp(
-            single_stance, [t0, t1], z0, method='RK45', t_eval=t_span,
+            single_stance, [t0, t1], z_afs, method='RK45', t_eval=t_span,
             dense_output=True, events=midstance, atol = 1e-13, rtol = 1e-13, 
             args=(params,)
         )
@@ -167,19 +191,19 @@ def one_step(z0, params, steps):
         
         ### collect reaction forces ###
         for i in range(1, len(t_temp1)):
-            _, _, _, P_LA, P_RA, tau = single_stance_helper(t_temp1[i], z_temp1[i,:], params)
+            _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp1[i,:], t_temp1[i], params)
             P_LA_all = np.vstack( (P_LA_all, P_LA) )
             P_RA_all = np.vstack( (P_RA_all, P_RA) )
-            Torque = np.vstack( (Torque, tau) )
+            Torque = np.vstack( (Torque, tau[:,0]) )
         
-        t_temp2 = tf + t_temp1
+        t_temp2 = t_mid + t_temp1
+
+        t_ode = np.concatenate( ([tf], t_temp1, t_temp2), axis=0)
+        z_ode = np.concatenate( ([z0], z_temp1, z_temp2), axis=0)
+        
         tf = t_temp2[-1]
-        
         z0 = z_temp2[-1,:]
-        
-        t_ode = np.concatenate( (t, t_temp1, t_temp2), axis=0)
-        z_ode = np.concatenate( (z, z_temp1, z_temp2), axis=0)
-    
+
     if steps == 1:
         return z_ode[-1][6:]
     else:
