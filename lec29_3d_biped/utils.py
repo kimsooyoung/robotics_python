@@ -39,6 +39,7 @@ def fixedpt(z0, params):
 
 def partial_jacobian(z, params):
 
+    # z = np.hstack(( np.zeros(6), z ))
     m = len(z)
     J = np.zeros((m, m))
 
@@ -52,11 +53,11 @@ def partial_jacobian(z, params):
         z_minus[i] = z[i] - epsilon
         z_plus[i]  = z[i] + epsilon
 
-        z_minus_result, _ = one_step(z_minus, params, 1)
-        z_plus_result, _  = one_step(z_plus, params, 1)
+        z_minus_result = one_step(z_minus, params, 1)
+        z_plus_result  = one_step(z_plus, params, 1)
 
         for j in range(m):
-            J[j, i] = (z_plus_result[-1,j] - z_minus_result[-1,j]) / (2 * epsilon)
+            J[j, i] = (z_plus_result[j] - z_minus_result[j]) / (2 * epsilon)
 
     return J
 
@@ -64,13 +65,21 @@ def find_fixed_points(z0, params):
     
     print("\n1) Root finding \n")
     z_star = fsolve(fixedpt, z0, params)
+    # z_star = np.array([ 
+    #     2.22888952e-09, -1.26650525e+07,  1.88792132e-09,  1.78614050e+07,
+    #     -2.03214029e-09, -1.36554075e+07,  1.17056220e-10, -1.22546143e+07,
+    #     -1.01295388e-08,  4.04843489e+07, -1.22697370e-09,  4.19246319e+07,
+    #     2.26995191e-16, -6.29204373e+07, -9.92613036e-09,  2.71109867e+07,
+    #     -4.52665614e-08,  2.39616021e+06,  9.28075583e-08, -7.46752911e+04,
+    #     -1.00000003e+00,  2.14856784e+07
+    # ])
     
     print(f"Fixed point z_star : \n{z_star}")
     J_star = partial_jacobian(z_star, params)
     eig_val, eig_vec = np.linalg.eig(J_star)
     
     print(f"EigenValues for linearized map \n{eig_val}")
-    print(f"EigenVectors for linearized map \n{eig_vec}")
+    # print(f"EigenVectors for linearized map \n{eig_vec}")
     print(f"max(abs(eigVal)) : {max(np.abs(eig_val))}")
     
     # 22
