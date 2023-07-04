@@ -27,7 +27,7 @@ def projectile(cnp.ndarray[DTYPE_t, ndim=1] z, t, float m, float g, float c):
     dragX = c * v * xdot
     dragY = c * v * ydot
 
-    #%%%% net acceleration %%%
+    #%%%% net acceleration 
     ax =  0 - (dragX / m) #xddot
     ay = -g - (dragY / m) #yddot
 

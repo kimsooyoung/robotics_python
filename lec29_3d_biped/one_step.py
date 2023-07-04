@@ -3,6 +3,7 @@ from scipy.integrate import solve_ivp
 
 from collision import collision
 from midstance import midstance
+from footstrike import footstrike
 from hip_positions import hip_positions
 from hip_velocities import hip_velocities
 from single_stance import single_stance, single_stance_helper

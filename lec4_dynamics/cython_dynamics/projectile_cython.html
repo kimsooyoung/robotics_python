@@ -526,15 +526,15 @@ PyObject *__pyx_args, PyObject *__pyx_kwds
 }
 
 static PyObject *__pyx_pf_17projectile_cython_projectile(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_z, CYTHON_UNUSED PyObject *__pyx_v_t, float __pyx_v_m, float __pyx_v_g, float __pyx_v_c) {
-  CYTHON_UNUSED float __pyx_v_x;
-  float __pyx_v_xdot;
-  CYTHON_UNUSED float __pyx_v_y;
-  float __pyx_v_ydot;
-  float __pyx_v_v;
-  float __pyx_v_dragX;
-  float __pyx_v_dragY;
-  float __pyx_v_ax;
-  float __pyx_v_ay;
+  CYTHON_UNUSED __pyx_t_17projectile_cython_DTYPE_t __pyx_v_x;
+  __pyx_t_17projectile_cython_DTYPE_t __pyx_v_xdot;
+  CYTHON_UNUSED __pyx_t_17projectile_cython_DTYPE_t __pyx_v_y;
+  __pyx_t_17projectile_cython_DTYPE_t __pyx_v_ydot;
+  __pyx_t_17projectile_cython_DTYPE_t __pyx_v_v;
+  __pyx_t_17projectile_cython_DTYPE_t __pyx_v_dragX;
+  __pyx_t_17projectile_cython_DTYPE_t __pyx_v_dragY;
+  __pyx_t_17projectile_cython_DTYPE_t __pyx_v_ax;
+  __pyx_t_17projectile_cython_DTYPE_t __pyx_v_ay;
   PyArrayObject *__pyx_v_z_out = 0;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_z;
   __Pyx_Buffer __pyx_pybuffer_z;
@@ -586,20 +586,20 @@ static PyObject *__pyx_pf_17projectile_cython_projectile(CYTHON_UNUSED PyObject 
 </pre><pre class="cython line score-0">&#xA0;<span class="">12</span>: <span class="nd">@cython</span><span class="o">.</span><span class="n">wraparound</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span></pre>
 <pre class="cython line score-0">&#xA0;<span class="">13</span>: <span class="k">def</span> <span class="nf">projectile</span><span class="p">(</span><span class="n">cnp</span><span class="o">.</span><span class="n">ndarray</span><span class="p">[</span><span class="n">DTYPE_t</span><span class="p">,</span> <span class="n">ndim</span><span class="o">=</span><span class="mf">1</span><span class="p">]</span> <span class="n">z</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="nb">float</span> <span class="n">m</span><span class="p">,</span> <span class="nb">float</span> <span class="n">g</span><span class="p">,</span> <span class="nb">float</span> <span class="n">c</span><span class="p">):</span></pre>
 <pre class="cython line score-0">&#xA0;<span class="">14</span>: </pre>
-<pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">15</span>:     <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">x</span>    <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span></pre>
+<pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">15</span>:     <span class="k">cdef</span> <span class="kt">DTYPE_t</span> <span class="nf">x</span>    <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span></pre>
 <pre class='cython code score-0 '>  __pyx_t_1 = 0;
   __pyx_v_x = (*__Pyx_BufPtrStrided1d(__pyx_t_17projectile_cython_DTYPE_t *, __pyx_pybuffernd_z.rcbuffer-&gt;pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_z.diminfo[0].strides));
-</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">16</span>:     <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">xdot</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span></pre>
+</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">16</span>:     <span class="k">cdef</span> <span class="kt">DTYPE_t</span> <span class="nf">xdot</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">1</span><span class="p">]</span></pre>
 <pre class='cython code score-0 '>  __pyx_t_1 = 1;
   __pyx_v_xdot = (*__Pyx_BufPtrStrided1d(__pyx_t_17projectile_cython_DTYPE_t *, __pyx_pybuffernd_z.rcbuffer-&gt;pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_z.diminfo[0].strides));
-</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">17</span>:     <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">y</span>    <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">2</span><span class="p">]</span></pre>
+</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">17</span>:     <span class="k">cdef</span> <span class="kt">DTYPE_t</span> <span class="nf">y</span>    <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">2</span><span class="p">]</span></pre>
 <pre class='cython code score-0 '>  __pyx_t_1 = 2;
   __pyx_v_y = (*__Pyx_BufPtrStrided1d(__pyx_t_17projectile_cython_DTYPE_t *, __pyx_pybuffernd_z.rcbuffer-&gt;pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_z.diminfo[0].strides));
-</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">18</span>:     <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">ydot</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">3</span><span class="p">]</span></pre>
+</pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">18</span>:     <span class="k">cdef</span> <span class="kt">DTYPE_t</span> <span class="nf">ydot</span> <span class="o">=</span> <span class="n">z</span><span class="p">[</span><span class="mf">3</span><span class="p">]</span></pre>
 <pre class='cython code score-0 '>  __pyx_t_1 = 3;
   __pyx_v_ydot = (*__Pyx_BufPtrStrided1d(__pyx_t_17projectile_cython_DTYPE_t *, __pyx_pybuffernd_z.rcbuffer-&gt;pybuffer.buf, __pyx_t_1, __pyx_pybuffernd_z.diminfo[0].strides));
 </pre><pre class="cython line score-0">&#xA0;<span class="">19</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">20</span>:     <span class="k">cdef</span> <span class="kt">float</span> <span class="nf">v</span><span class="p">,</span> <span class="nf">dragX</span><span class="p">,</span> <span class="nf">dragY</span><span class="p">,</span> <span class="nf">ax</span><span class="p">,</span> <span class="nf">ay</span></pre>
+<pre class="cython line score-0">&#xA0;<span class="">20</span>:     <span class="k">cdef</span> <span class="kt">DTYPE_t</span> <span class="nf">v</span><span class="p">,</span> <span class="nf">dragX</span><span class="p">,</span> <span class="nf">dragY</span><span class="p">,</span> <span class="nf">ax</span><span class="p">,</span> <span class="nf">ay</span></pre>
 <pre class="cython line score-0">&#xA0;<span class="">21</span>: </pre>
 <pre class="cython line score-35" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">22</span>:     <span class="k">cdef</span> <span class="kt">cnp</span>.<span class="kt">ndarray</span> <span class="nf">z_out</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mf">4</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">DTYPE</span><span class="p">)</span></pre>
 <pre class='cython code score-35 '>  <span class='pyx_c_api'>__Pyx_GetModuleGlobalName</span>(__pyx_t_2, __pyx_n_s_np);<span class='error_goto'> if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 22, __pyx_L1_error)</span>
@@ -633,7 +633,7 @@ static PyObject *__pyx_pf_17projectile_cython_projectile(CYTHON_UNUSED PyObject 
   __pyx_t_5 = 0;
 </pre><pre class="cython line score-0">&#xA0;<span class="">23</span>: </pre>
 <pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">24</span>:     <span class="n">v</span> <span class="o">=</span> <span class="n">sqrt</span><span class="p">(</span><span class="n">xdot</span><span class="o">**</span><span class="mf">2</span><span class="o">+</span><span class="n">ydot</span><span class="o">**</span><span class="mf">2</span><span class="p">)</span></pre>
-<pre class='cython code score-0 '>  __pyx_v_v = sqrt((powf(__pyx_v_xdot, 2.0) + powf(__pyx_v_ydot, 2.0)));
+<pre class='cython code score-0 '>  __pyx_v_v = sqrt((pow(__pyx_v_xdot, 2.0) + pow(__pyx_v_ydot, 2.0)));
 </pre><pre class="cython line score-0">&#xA0;<span class="">25</span>: </pre>
 <pre class="cython line score-0">&#xA0;<span class="">26</span>:     <span class="c">#%%%% drag is prop to v^2</span></pre>
 <pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">27</span>:     <span class="n">dragX</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">xdot</span></pre>
@@ -641,19 +641,19 @@ static PyObject *__pyx_pf_17projectile_cython_projectile(CYTHON_UNUSED PyObject 
 </pre><pre class="cython line score-0" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">28</span>:     <span class="n">dragY</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">v</span> <span class="o">*</span> <span class="n">ydot</span></pre>
 <pre class='cython code score-0 '>  __pyx_v_dragY = ((__pyx_v_c * __pyx_v_v) * __pyx_v_ydot);
 </pre><pre class="cython line score-0">&#xA0;<span class="">29</span>: </pre>
-<pre class="cython line score-0">&#xA0;<span class="">30</span>:     <span class="c">#%%%% net acceleration %%%</span></pre>
+<pre class="cython line score-0">&#xA0;<span class="">30</span>:     <span class="c">#%%%% net acceleration </span></pre>
 <pre class="cython line score-5" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">31</span>:     <span class="n">ax</span> <span class="o">=</span>  <span class="mf">0</span> <span class="o">-</span> <span class="p">(</span><span class="n">dragX</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span> <span class="c">#xddot</span></pre>
 <pre class='cython code score-5 '>  if (unlikely(__pyx_v_m == 0)) {
     <span class='py_c_api'>PyErr_SetString</span>(PyExc_ZeroDivisionError, "float division");
     <span class='error_goto'>__PYX_ERR(0, 31, __pyx_L1_error)</span>
   }
-  __pyx_v_ax = (0.0 - (__pyx_v_dragX / __pyx_v_m));
+  __pyx_v_ax = (0.0 - (__pyx_v_dragX / ((__pyx_t_17projectile_cython_DTYPE_t)__pyx_v_m)));
 </pre><pre class="cython line score-5" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">32</span>:     <span class="n">ay</span> <span class="o">=</span> <span class="o">-</span><span class="n">g</span> <span class="o">-</span> <span class="p">(</span><span class="n">dragY</span> <span class="o">/</span> <span class="n">m</span><span class="p">)</span> <span class="c">#yddot</span></pre>
 <pre class='cython code score-5 '>  if (unlikely(__pyx_v_m == 0)) {
     <span class='py_c_api'>PyErr_SetString</span>(PyExc_ZeroDivisionError, "float division");
     <span class='error_goto'>__PYX_ERR(0, 32, __pyx_L1_error)</span>
   }
-  __pyx_v_ay = ((-__pyx_v_g) - (__pyx_v_dragY / __pyx_v_m));
+  __pyx_v_ay = ((-__pyx_v_g) - (__pyx_v_dragY / ((__pyx_t_17projectile_cython_DTYPE_t)__pyx_v_m)));
 </pre><pre class="cython line score-0">&#xA0;<span class="">33</span>: </pre>
 <pre class="cython line score-8" onclick="(function(s){s.display=s.display==='block'?'none':'block'})(this.nextElementSibling.style)">+<span class="">34</span>:     <span class="n">z_out</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">xdot</span></pre>
 <pre class='cython code score-8 '>  __pyx_t_5 = <span class='py_c_api'>PyFloat_FromDouble</span>(__pyx_v_xdot);<span class='error_goto'> if (unlikely(!__pyx_t_5)) __PYX_ERR(0, 34, __pyx_L1_error)</span>

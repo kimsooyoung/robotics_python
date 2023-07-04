@@ -112,4 +112,6 @@ def single_stance(t, z, params):
         psi_rhd, psi_rhdd, theta_rkd, theta_rkdd
     ])
     
+    # print(zdot)
+    
     return zdot
