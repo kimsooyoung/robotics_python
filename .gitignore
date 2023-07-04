@@ -1,4 +1,5 @@
 # Byte-compiled / optimized / DLL files
+**/humanoid_rhs_cython.html
 */build/*
 *.c
 
