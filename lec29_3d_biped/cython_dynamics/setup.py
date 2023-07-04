@@ -15,4 +15,8 @@ setup(
     include_dirs=[numpy.get_include()],
 )
 
+# MacOS & Windows
 # python setup.py build_ext --inplace
+
+# Ubuntu
+# python3 setup.py build_ext --inplace

@@ -1,3 +1,4 @@
+import time
 import numpy as np
 from scipy.integrate import solve_ivp
 
@@ -10,6 +11,9 @@ from single_stance import single_stance, single_stance_helper
 
 def one_step(z0, params, steps):
     
+    print("one_step")
+    # start = time.time()
+
     l1, l2, w = params.l1, params.l2, params.w
     
     B = np.array([
@@ -80,7 +84,7 @@ def one_step(z0, params, steps):
     P_LA_all = np.zeros( (1,3) )
     P_RA_all = np.zeros( (1,3) )
     Torque = np.zeros( (1,8) )
-    
+
     for i in range(steps):
         
         t0, t1 = 0, 2
@@ -106,6 +110,9 @@ def one_step(z0, params, steps):
         params.a0 = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         params.af = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         
+        # end = time.time()
+        # print(f"mid1 time : {end - start:.5f} sec")
+
         collision.terminal = True
         collision.direction = 0
         
@@ -115,6 +122,10 @@ def one_step(z0, params, steps):
             args=(params,)
         )
         
+        # end = time.time()
+        # print(f"mid2 time : {end - start:.5f} sec")
+
+
         t_temp1 = sol.t
         m, n = np.shape(sol.y)
         z_temp1 = np.zeros((n, m))
@@ -203,6 +214,9 @@ def one_step(z0, params, steps):
         
         tf = t_temp2[-1]
         z0 = z_temp2[-1,:]
+
+    # end = time.time()
+    # print(f"end time : {end - start:.5f} sec")
 
     if steps == 1:
         return z_ode[-1][6:]

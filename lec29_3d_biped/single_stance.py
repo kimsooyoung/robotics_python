@@ -1,3 +1,4 @@
+import time
 import numpy as np 
 from controller import controller
 # from humanoid_rhs import humanoid_rhs
@@ -5,8 +6,13 @@ from cython_dynamics import humanoid_rhs_cython
 
 def single_stance_helper(B, z0, t, params):
     
+    # start = time.time()
+
     tau = controller(z0, t, params)
     
+    # end = time.time()
+    # print(f"mid1 time : {end - start:.5f} sec")
+
     x, xd, y, yd, z, zd, phi, phid, theta, thetad, psi, psid, \
         phi_lh, phi_lhd, theta_lh, theta_lhd, \
         psi_lh, psi_lhd, theta_lk, theta_lkd, \
@@ -31,6 +37,9 @@ def single_stance_helper(B, z0, t, params):
     
     A, b, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs_cython.humanoid_rhs(z0, t, params_arr) 
     
+    # end = time.time()
+    # print(f"mid2 time : {end - start:.5f} sec")
+
     qdot = np.array([
         xd, yd, zd, phid, thetad, psid,
         phi_lhd, theta_lhd, psi_lhd, theta_lkd,
@@ -67,7 +76,11 @@ def single_stance_helper(B, z0, t, params):
         x = np.linalg.solve(AA, bb)
         P_LA = np.array([ x[14,0], x[15,0], x[16,0] ])
         P_RA = np.array([ 0, 0, 0 ])
-        
+
+    # end = time.time()
+    # print(f"mid3 time : {end - start:.5f} sec")
+
+
     return x, A, b, P_RA, P_LA, tau
 
 def single_stance(t, z, params):
@@ -102,6 +115,10 @@ def single_stance(t, z, params):
         [0, 0, 0, 0, 0, 0, 0, 0],
     ])
     
+    # end = time.time()
+    # print(f"mid1 time : {end - start:.5f} sec")
+
+
     x, A, b, P_RA, P_LA, tau = single_stance_helper(B, z, t, params)
     
     xdd = x[0,0]; ydd = x[1,0]; zdd = x[2,0]; 

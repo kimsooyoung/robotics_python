@@ -21,7 +21,7 @@ print(f"size(b_ss) : {b_ss.shape} ")
 print(f"size(J_l) : {J_l.shape} ")
 print(f"size(J_r) : {J_r.shape} ")
 print(f"size(Jdot_l) : {Jdot_l.shape} ")
-print(f"size(Jdot_r) : {Jdot_r.shape} ")
+print(f"size(Jdot_r) : {Jdot_r.shape} \n")
 
 def cython_main():
     

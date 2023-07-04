@@ -1,3 +1,4 @@
+import time
 import numpy as np
 
 from traj import traj
@@ -6,6 +7,8 @@ from cython_dynamics import humanoid_rhs_cython
 
 def controller(z0, t, params):
     
+    # start = time.time()
+
     x, xd, y, yd, z, zd, phi, phid, theta, thetad, psi, psid, \
         phi_lh, phi_lhd, theta_lh, theta_lhd, \
         psi_lh, psi_lhd, theta_lk, theta_lkd, \
@@ -96,6 +99,9 @@ def controller(z0, t, params):
     
     M, N, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs_cython.humanoid_rhs(z0, t, params_arr)
     
+    # end = time.time()
+    # print(f"controller mid1 time : {end - start:.5f} sec")
+
     qdot = np.array([
         xd, yd, zd, phid, thetad, psid,
         phi_lhd, theta_lhd, psi_lhd, theta_lkd,
@@ -124,6 +130,10 @@ def controller(z0, t, params):
             [ np.reshape(-Jdot_l @ qdot.T, (3, 1)) ]
         ])
 
+    # end = time.time()
+    # print(f"controller mid2 time : {end - start:.5f} sec")
+
+
     ########### AX = b + B*tau  (with control) #######
     ### Reduced X_c = S X = S*inv(A) (b+B*tau) = v ###
     ### Solving for tau gives,                     ###
@@ -131,6 +141,7 @@ def controller(z0, t, params):
     ##################################################
     Kp = params.Kp
     Kd = params.Kd
+
     Ainv = np.linalg.inv(AA)
     
     if params.stance_foot == 'right':
@@ -165,5 +176,9 @@ def controller(z0, t, params):
         SAinvB = S_L @ Ainv @ B
         SAinvB_inv = np.linalg.inv(SAinvB)
         tau = SAinvB_inv @ (v - S_L @ Ainv @ bb)
-    
+
+    # end = time.time()
+    # print(f"controller mid3 time : {end - start:.5f} sec")
+
+
     return tau
