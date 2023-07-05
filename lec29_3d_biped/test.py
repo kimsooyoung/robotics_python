@@ -53,20 +53,26 @@ M = np.array([
 print(M.shape)
 
 
-# fig = plt.figure(1)
+fig = plt.figure(1)
 
 # # For MacOS Users
 # ax = p3.Axes3D(fig)
 
-# loc1 = np.array([0,0,0])
-# loc2 = np.array([1,1,1])
+# For Windows/Linux Users
 
-# k1, = ax.plot([loc1[0], loc2[0]], [loc1[1], loc2[1]], [loc1[2], loc2[2]],linewidth=5, color='r')
+for i in range(11):
+    ax = fig.add_subplot(111, projection='3d')
 
-# pt = np.array([0.5,0.5,0.5])
-# k8, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=20, markerfacecolor='k')
+    loc1 = np.array([0,0,0])
+    loc2 = np.array([1,1,1])
 
-# plt.show()
+    k1, = ax.plot([loc1[0], loc2[0]], [loc1[1], loc2[1]], [loc1[2], loc2[2]],linewidth=5, color='r')
 
-a, b, c, \
-    d, e, f = [1,2,3,4,5,6]
+    pt = np.array([i*0.1,i*0.1,i*0.1])
+    k8, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=20, markerfacecolor='k')
+
+    plt.pause(0.1)
+
+plt.pause(10)
+
+# plt.close()

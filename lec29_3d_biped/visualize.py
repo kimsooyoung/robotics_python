@@ -11,31 +11,38 @@ def animate(t_all, z_all, params, view):
     w = params.w
     
     m, n = z_all.shape
-    print(m, n)
+    print(f"m: {m}, n: {n}")
+    n_state = int(n/2)
     
-    z_all_plot = np.zeros((m, n/2))
+    z_all_plot = np.zeros((m, n_state ))
     for i in range(0, n, 2):
-        z_all_plot[:, i/2] = z_all[:, i]
+        z_all_plot[:, int(i/2)] = z_all[:, i]
     
-    total_frames = round(t_all[-1] * params.fps)
-    zz = np.zeros((total_frames, n/2))
+    total_frames = 100
+    # total_frames = round(t_all[-1] * params.fps)
+    zz = np.zeros((total_frames, n_state))
     t = np.arange(0, t_all[-1], total_frames)
     
-    for i in range(n/2):
+    for i in range(n_state):
         f = interpolate.interp1d(t_all, z_all_plot[:, i])
         zz[:, i] = f(t)
     
     mm, nn = zz.shape
+    print(f"mm: {mm}, nn: {nn}")
     
     fig = plt.figure(1)
     
-    # For MacOS Users
-    ax = p3.Axes3D(fig)
-
-    # For Windows/Linux Users
-    # ax = fig.add_subplot(111, projection='3d')
-    
     for i in range(mm):
+
+        # For MacOS Users
+        # ax = p3.Axes3D(fig)
+
+        # For Windows/Linux Users
+        ax = fig.add_subplot(111, projection='3d')
+        
+        azim, elev = view
+        ax.view_init(azim=azim,elev=elev)
+
         j = 0
         x = zz[i, j]; j += 1
         y = zz[i, j]; j += 1
@@ -94,20 +101,18 @@ def animate(t_all, z_all, params, view):
         ax.set_ylim([-2.0, 2.0])
         ax.set_zlim([0.0, 2.0])
         
-        azim, elev = view
-        ax.view_init(azim=azim,elev=elev)
-        
         plt.pause(params.pause)
         
-        if (i < (mm-1)):
-            k1.remove(); k2.remove();
-            k3.remove(); k4.remove();
-            k5.remove(); k6.remove()
-            k7.remove(); k8.remove()
-            k9.remove(); k10.remove()
-            k11.remove(); k12.remove()
+        # if (i < (mm-1)):
+        # k1.remove(); k2.remove();
+        # k3.remove(); k4.remove();
+        # k5.remove(); k6.remove()
+        # k7.remove(); k8.remove()
+        # k9.remove(); k10.remove()
+        # k11.remove(); k12.remove()
 
-    plt.show()
+    # plt.show()
+    plt.pause(10)
 
 def plot():
     
