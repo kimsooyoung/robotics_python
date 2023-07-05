@@ -108,6 +108,7 @@ if __name__=="__main__":
     # print(f"z_star: {z_star}")
     # print(f"Z[-1, 7:]: {Z[-1, 6:]}")
     print(np.hstack((z_star.reshape(-1, 1), Z[-1, 6:].reshape(-1, 1))))
+    print(Z)
 
     # 3) plotting and animation
     view = (60, 54)
