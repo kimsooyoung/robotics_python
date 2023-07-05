@@ -1,21 +1,23 @@
 import mpl_toolkits.mplot3d.axes3d as p3
 from matplotlib import pyplot as plt
 from scipy import interpolate
+import numpy as np
 
 from joint_locations import joint_locations
 
-def animate(t_all, z_all, params, fps, view):
+def animate(t_all, z_all, params, view):
     
     l0, l1, l2 = params.l0, params.l1, params.l2
     w = params.w
     
     m, n = z_all.shape
+    print(m, n)
     
     z_all_plot = np.zeros((m, n/2))
     for i in range(0, n, 2):
         z_all_plot[:, i/2] = z_all[:, i]
     
-    total_frames = round(t_all[-1] * fps)
+    total_frames = round(t_all[-1] * params.fps)
     zz = np.zeros((total_frames, n/2))
     t = np.arange(0, t_all[-1], total_frames)
     
@@ -91,6 +93,9 @@ def animate(t_all, z_all, params, fps, view):
         ax.set_xlim([0.0, 4.0])
         ax.set_ylim([-2.0, 2.0])
         ax.set_zlim([0.0, 2.0])
+        
+        azim, elev = view
+        ax.view_init(azim=azim,elev=elev)
         
         plt.pause(params.pause)
         

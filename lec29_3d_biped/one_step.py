@@ -98,14 +98,15 @@ def one_step(z0, params, steps):
             phi_rh, phi_rhd, theta_rh, theta_rhd, \
             psi_rh, psi_rhd, theta_rk, theta_rkd = z0 #28
             
-        t_span = np.linspace(t0, t1)
+        t_span = np.linspace(t0, t1, 100)
         params.t0 = 0
         params.tf = 0.2
         
-        if params.stance_foot_init == 'right':
+        print(f"params.stance_foot: {params.stance_foot}")
+        if params.stance_foot == 'right':
             params.s0 = np.array([phi, theta, psi, phi_lh, theta_lh, psi_lh, theta_lk, theta_rk])
             params.v0 = np.array([phid, thetad, psid, phi_lhd, theta_lhd, psi_lhd, theta_lkd, theta_rkd])
-        elif params.stance_foot_init == 'left':
+        elif params.stance_foot == 'left':
             params.s0 = np.array([phi, theta, psi, phi_rh, theta_rh, psi_rh, theta_lk, theta_rk])
             params.v0 = np.array([phid, thetad, psid, phi_rhd, theta_rhd, psi_rhd, theta_lkd, theta_rkd])
         params.sf = np.array([0, 0, 0, 0, params.stepAngle, 0, 0, 0])
@@ -137,6 +138,8 @@ def one_step(z0, params, steps):
         t_temp1 = tf + t_temp1
         t_mid = t_temp1[-1]
         
+        print(z_temp1.shape)
+        
         ### collect reaction forces ###
         for i in range(len(t_temp1)):
             _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp1[i,:], t_temp1[i], params)
@@ -164,7 +167,7 @@ def one_step(z0, params, steps):
         z_afs = z_plus
         
         t0, t1 = 0, 2
-        t_span = np.linspace(t0, t1)
+        t_span = np.linspace(t0, t1, 100)
         
         x, xd, y, yd, z, zd, \
             phi, phid, theta, thetad, psi, psid, \
@@ -212,8 +215,15 @@ def one_step(z0, params, steps):
         
         t_temp2 = t_mid + t_temp1
 
-        t_ode = np.concatenate( ([tf], t_temp1, t_temp2), axis=0)
-        z_ode = np.concatenate( ([z0], z_temp1, z_temp2), axis=0)
+        print(f"i : {i}")
+        if i == 0:
+            t_ode = np.concatenate( ([tf], t_temp1, t_temp2), axis=0)
+            z_ode = np.concatenate( ([z0], z_temp1, z_temp2), axis=0)
+        else:
+            t_ode = np.concatenate( (t_ode, t_temp1, t_temp2), axis=0)
+            z_ode = np.concatenate( (z_ode, z_temp1, z_temp2), axis=0)
+            
+        print(t_ode)
         
         tf = t_temp2[-1]
         z0 = z_temp2[-1,:]
