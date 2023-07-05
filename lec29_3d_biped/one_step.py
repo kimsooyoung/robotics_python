@@ -211,13 +211,13 @@ def one_step(z0, params, steps):
         print(f"z_temp2.shape: {z_temp2.shape}")
         
         ### collect reaction forces ###
-        for j in range(1, len(t_temp1)):
-            _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp1[j,:], t_temp1[j], params)
+        for j in range(1, len(t_temp2)):
+            _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp2[j,:], t_temp2[j], params)
             P_LA_all = np.vstack( (P_LA_all, P_LA) )
             P_RA_all = np.vstack( (P_RA_all, P_RA) )
             Torque = np.vstack( (Torque, tau[:,0]) )
         
-        t_temp2 = t_mid + t_temp1
+        t_temp2 = t_mid + t_temp2
 
         print(f"step : {step}")
         if step == 0:
