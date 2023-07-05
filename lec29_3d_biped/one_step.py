@@ -88,7 +88,7 @@ def one_step(z0, params, steps):
     P_RA_all = np.zeros( (1,3) )
     Torque = np.zeros( (1,8) )
 
-    for i in range(steps):
+    for step in range(steps):
         
         t0, t1 = 0, 2
         x, xd, y, yd, z, zd, \
@@ -138,7 +138,8 @@ def one_step(z0, params, steps):
         t_temp1 = tf + t_temp1
         t_mid = t_temp1[-1]
         
-        print(z_temp1.shape)
+        print(f"t_temp1.shape: {t_temp1.shape}")
+        print(f"z_temp1.shape: {z_temp1.shape}")
         
         ### collect reaction forces ###
         for i in range(len(t_temp1)):
@@ -195,35 +196,39 @@ def one_step(z0, params, steps):
         midstance.terminal = True
         midstance.direction = 0
         
-        sol = solve_ivp(
+        sol2 = solve_ivp(
             single_stance, [t0, t1], z_afs, method='RK45', t_eval=t_span,
             dense_output=True, events=midstance, atol = 1e-13, rtol = 1e-13, 
             args=(params,)
         )
         
-        t_temp2 = sol.t
-        m, n = np.shape(sol.y)
+        t_temp2 = sol2.t
+        m, n = np.shape(sol2.y)
         z_temp2 = np.zeros((n, m))
-        z_temp2 = sol.y.T
+        z_temp2 = sol2.y.T
+
+        print(f"t_temp2.shape: {t_temp2.shape}")
+        print(f"z_temp2.shape: {z_temp2.shape}")
         
         ### collect reaction forces ###
-        for i in range(1, len(t_temp1)):
-            _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp1[i,:], t_temp1[i], params)
+        for j in range(1, len(t_temp1)):
+            _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp1[j,:], t_temp1[j], params)
             P_LA_all = np.vstack( (P_LA_all, P_LA) )
             P_RA_all = np.vstack( (P_RA_all, P_RA) )
             Torque = np.vstack( (Torque, tau[:,0]) )
         
         t_temp2 = t_mid + t_temp1
 
-        print(f"i : {i}")
-        if i == 0:
+        print(f"step : {step}")
+        if step == 0:
             t_ode = np.concatenate( ([tf], t_temp1, t_temp2), axis=0)
             z_ode = np.concatenate( ([z0], z_temp1, z_temp2), axis=0)
         else:
             t_ode = np.concatenate( (t_ode, t_temp1, t_temp2), axis=0)
             z_ode = np.concatenate( (z_ode, z_temp1, z_temp2), axis=0)
-            
-        print(t_ode)
+
+        print(f"t_ode.shape : {t_ode.shape}")
+        print(f"z_ode.shape : {z_ode.shape}")
         
         tf = t_temp2[-1]
         z0 = z_temp2[-1,:]
