@@ -116,7 +116,7 @@ if __name__=="__main__":
     # view = (60, 54)
     # fps = 10
     # animate(t, Z, params, view)
-    plot(t, Z, Torque, params)
+    # plot(t, Z, Torque, params)
     
     
     # [Z,t,P_LA_all,P_RA_all,Torque] = onestep(zstar,parms,steps);

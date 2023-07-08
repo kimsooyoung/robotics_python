@@ -45,12 +45,16 @@ def controller(z0, t, params):
     X_des = np.zeros((8,1))
     
     for i in range(8):
-        Xdd_des[i], Xd_des[i], X_des[i] = traj(
+        X_des[i], Xd_des[i], Xdd_des[i] = traj(
             t, t0, tf, 
             s0[i], sf[i], 
             v0[i], vf[i], 
             a0[i], af[i]
         )
+
+    # print(f"Xdd_des: {Xdd_des}")
+    # print(f"Xd_des: {Xd_des}")
+    # print(f"X_des: {X_des}")
     
     B = np.array([
         [0, 0, 0, 0, 0, 0, 0, 0],
@@ -109,6 +113,7 @@ def controller(z0, t, params):
     ])
     
     ### AX = b (without control) ###
+    # print(f"params.stance_foot : {params.stance_foot}")
     if params.stance_foot == 'right':
         AA = np.block([
             [M, -J_r.T], 

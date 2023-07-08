@@ -35,6 +35,8 @@ def single_stance_helper(B, z0, t, params):
         w, g
     ])
     
+    # print(f"params_arr: {params_arr}")
+    
     A, b, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs_cython.humanoid_rhs(z0, t, params_arr) 
     
     # end = time.time()
