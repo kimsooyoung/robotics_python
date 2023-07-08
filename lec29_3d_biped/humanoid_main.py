@@ -5,7 +5,7 @@ from scipy import interpolate
 from scipy.integrate import odeint
 
 from one_step import one_step
-from visualize import animate
+from visualize import animate, plot
 from utils import find_fixed_points
 
 class Parameters:
@@ -108,12 +108,16 @@ if __name__=="__main__":
     # print(f"z_star: {z_star}")
     # print(f"Z[-1, 7:]: {Z[-1, 6:]}")
     print(np.hstack((z_star.reshape(-1, 1), Z[-1, 6:].reshape(-1, 1))))
-    print(Z)
+    print(Z.shape)
+    print(Torque.shape)
 
-    # 3) plotting and animation
-    view = (60, 54)
-    fps = 10
-    animate(t, Z, params, view)
+    # TODO: plot torque
+    # # 3) plotting and animation
+    # view = (60, 54)
+    # fps = 10
+    # animate(t, Z, params, view)
+    plot(t, Z, Torque, params)
+    
     
     # [Z,t,P_LA_all,P_RA_all,Torque] = onestep(zstar,parms,steps);
 

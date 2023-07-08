@@ -9,7 +9,8 @@ from midstance import midstance
 from footstrike import footstrike
 # from hip_positions import hip_positions
 from cython_dynamics.hip_positions_cython import hip_positions
-from hip_velocities import hip_velocities
+# from hip_velocities import hip_velocities
+from cython_dynamics.hip_velocities_cython import hip_velocities
 from single_stance import single_stance, single_stance_helper
 
 def one_step(z0, params, steps):
@@ -144,7 +145,7 @@ def one_step(z0, params, steps):
         ### collect reaction forces ###
         for i in range(len(t_temp1)):
             _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp1[i,:], t_temp1[i], params)
-            if i == 0:
+            if (i == 0) and (step == 0):
                 P_LA_all[0] = P_LA
                 P_RA_all[0] = P_RA
                 Torque[0] = tau[:,0]
@@ -152,6 +153,7 @@ def one_step(z0, params, steps):
                 P_LA_all = np.vstack( (P_LA_all, P_LA) )
                 P_RA_all = np.vstack( (P_RA_all, P_RA) )
                 Torque = np.vstack( (Torque, tau[:,0]) )
+        print(f"Torque.shape: {Torque.shape}")
         
         ### foot strike: before to after foot strike ###
         params.P = params.Impulse
@@ -210,28 +212,31 @@ def one_step(z0, params, steps):
         print(f"t_temp2.shape: {t_temp2.shape}")
         print(f"z_temp2.shape: {z_temp2.shape}")
         
+        t_temp2 = t_mid + t_temp2
+
         ### collect reaction forces ###
         for j in range(1, len(t_temp2)):
             _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp2[j,:], t_temp2[j], params)
             P_LA_all = np.vstack( (P_LA_all, P_LA) )
             P_RA_all = np.vstack( (P_RA_all, P_RA) )
             Torque = np.vstack( (Torque, tau[:,0]) )
-        
-        t_temp2 = t_mid + t_temp2
+        print(f"Torque.shape: {Torque.shape}")
 
         print(f"step : {step}")
         if step == 0:
-            t_ode = np.concatenate( ([tf], t_temp1, t_temp2), axis=0)
-            z_ode = np.concatenate( ([z0], z_temp1, z_temp2), axis=0)
+            t_ode = np.concatenate( ([tf], t_temp1[1:], t_temp2[1:]), axis=0)
+            z_ode = np.concatenate( ([z0], z_temp1[1:], z_temp2[1:]), axis=0)
         else:
-            t_ode = np.concatenate( (t_ode, t_temp1, t_temp2), axis=0)
-            z_ode = np.concatenate( (z_ode, z_temp1, z_temp2), axis=0)
+            t_ode = np.concatenate( (t_ode, t_temp1[1:], t_temp2[1:]), axis=0)
+            z_ode = np.concatenate( (z_ode, z_temp1[1:], z_temp2[1:]), axis=0)
 
         print(f"t_ode.shape : {t_ode.shape}")
         print(f"z_ode.shape : {z_ode.shape}")
         
         tf = t_temp2[-1]
         z0 = z_temp2[-1,:]
+        
+        print(f"Torque.shape: {Torque.shape}")
 
     # end = time.time()
     # print(f"end time : {end - start:.5f} sec")
