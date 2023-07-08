@@ -114,6 +114,137 @@ def animate(t_all, z_all, params, view):
     # plt.show()
     plt.pause(10)
 
-def plot():
+def plot(t, z, Torque, params):
+    
+    #  [x, xd, y, yd, z, zd, phi, phid, theta, thetad, psi, psid, ....
+    #  phi_lh, phi_lhd, theta_lh, theta_lhd, psi_lh, psi_lhd, theta_lk, theta_lkd, ...
+    #  phi_rh, phi_rhd, theta_rh, theta_rhd, psi_rh, psi_rhd, theta_rk, theta_rkd]= getstate(Z);
+    
+    plt.figure(2)
+    plt.subplot(2,1,1)
+
+    plt.plot(t, z[:,0], 'r', label=r'$x$')
+    plt.plot(t, z[:,2], 'b', label=r'$y$')
+    plt.plot(t, z[:,4], 'g', label=r'$z$')
+    plt.ylabel("body absolute positions")
+    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
+    
+    plt.subplot(2,1,2)
+    plt.plot(t,z[:,1],'r', label=r'$\dot{x}$')
+    plt.plot(t,z[:,3],'b', label=r'$\dot{y}$')
+    plt.plot(t,z[:,5],'g', label=r'$\dot{z}$')
+    plt.ylabel("body absolute rates")
+    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
+    plt.xlabel('time')
+    
+    plt.figure(3)
+    plt.subplot(2,1,1)
+    plt.plot(t,Torque[:,0],'r', label=r'$hip_{\phi}$')
+    plt.plot(t,Torque[:,1],'g', label=r'$hip_{\theta}$')
+    plt.plot(t,Torque[:,2],'b', label=r'$hip_{\psi}$')
+    plt.plot(t,Torque[:,3],'k', label=r'$knee_{\theta}$')
+    plt.title('left leg')
+    plt.ylabel("Torque")
+    
+    plt.subplot(2,1,2)
+    plt.plot(t,Torque[:,4],'r', label=r'$hip_{\phi}$')
+    plt.plot(t,Torque[:,5],'g', label=r'$hip_{\theta}$')
+    plt.plot(t,Torque[:,6],'b', label=r'$hip_{\psi}$')
+    plt.plot(t,Torque[:,7],'k', label=r'$knee_{\theta}$')
+    plt.title('right leg')
+    plt.ylabel("Torque")
+    
+    plt.show()
+    
+    
+    # figure(7)
+    # subplot(2,1,2);
+    # plot(t,Torque(:,5),'r'); hold on;
+    # plot(t,Torque(:,6),'g'); 
+    # plot(t,Torque(:,7),'b'); 
+    # plot(t,Torque(:,8),'k'); 
+    # title('right leg')
+    # ylabel('Torque');
+    # legend('hip-phi','hip-theta','hip-psi','knee-theta');
+    # xlabel('time');
+    
+    # % figure(2)
+    # % subplot(2,1,1)
+    # % plot(t,x,'r'); hold on;
+    # % plot(t,y,'b');
+    # % plot(t,z,'g');
+    # % title('body absolute positions');
+    # % subplot(2,1,2)
+    # % plot(t,xd,'r'); hold on;
+    # % plot(t,yd,'b');
+    # % plot(t,zd,'g');
+    # % title('body absolute rates');
+    # % xlabel('time');
+    # % legend('x','y','z');
+    # % 
+    # % figure(3)
+    # % subplot(2,1,1)
+    # % plot(t,phi,'r'); hold on;
+    # % plot(t,theta,'b');
+    # % plot(t,psi,'g');
+    # % title('body absolute angles');
+    # % subplot(2,1,2)
+    # % plot(t,phid,'r'); hold on;
+    # % plot(t,thetad,'b');
+    # % plot(t,psid,'g');
+    # % legend('phi','theta','psi');
+    # % xlabel('time');
+    # % title('body absolute rates');
+    # % 
+    # % figure(4)
+    # % subplot(2,1,1)
+    # % plot(t,phi_lh,'r'); hold on;
+    # % plot(t,theta_lh,'b');
+    # % plot(t,psi_lh,'g');
+    # % plot(t,theta_lk,'k');
+    # % title('left angles');
+    # % subplot(2,1,2)
+    # % plot(t,phi_lhd,'r'); hold on;
+    # % plot(t,theta_lhd,'b');
+    # % plot(t,psi_lhd,'g');
+    # % plot(t,theta_lkd,'k');
+    # % xlabel('time');
+    # % legend('phi-hip','theta-hip','psi-hip','theta-knee');
+    # % title('left rates');
+    # % 
+    # % figure(5)
+    # % subplot(2,1,1)
+    # % plot(t,phi_rh,'r'); hold on;
+    # % plot(t,theta_rh,'b');
+    # % plot(t,psi_rh,'g');
+    # % plot(t,theta_rk,'k');
+    # % title('right angles');
+    # % subplot(2,1,2)
+    # % plot(t,phi_rhd,'r'); hold on;
+    # % plot(t,theta_rhd,'b');
+    # % plot(t,psi_rhd,'g');
+    # % plot(t,theta_rkd,'k');
+    # % legend('phi-hip','theta-hip','psi-hip','theta-knee');
+    # % title('right rates');
+    # % xlabel('time');
+    # % 
+    # % figure(6)
+    # % subplot(2,1,2)
+    # % plot(t,P_RA_all(:,1),'r'); hold on
+    # % plot(t,P_RA_all(:,2),'g'); 
+    # % plot(t,P_RA_all(:,3),'b');
+    # % title('right leg')
+    # % ylabel('reaction force');
+    # % subplot(2,1,1)
+    # % plot(t,P_LA_all(:,1),'r'); hold on
+    # % plot(t,P_LA_all(:,2),'g'); 
+    # % plot(t,P_LA_all(:,3),'b'); 
+    # % ylabel('reaction force');
+    # % title('left leg')
+    # % legend('x','y','z');
+    # % xlabel('time');
+    # % 
+
+
     
     return None
