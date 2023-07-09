@@ -2,8 +2,8 @@ import time
 import numpy as np
 from scipy.integrate import solve_ivp
 
-# from collision import collision
-from cython_dynamics.collision_cython_helper import collision
+from collision import collision
+# from cython_dynamics.collision_cython_helper import collision
 
 from midstance import midstance
 from footstrike import footstrike
@@ -91,7 +91,7 @@ def one_step(z0, params, steps):
 
     for step in range(steps):
         
-        t0, t1 = 0, 2
+        t0, t1 = 0.0, 2.0
         x, xd, y, yd, z, zd, \
             phi, phid, theta, thetad, psi, psid, \
             phi_lh, phi_lhd, theta_lh, theta_lhd, \
@@ -99,7 +99,7 @@ def one_step(z0, params, steps):
             phi_rh, phi_rhd, theta_rh, theta_rhd, \
             psi_rh, psi_rhd, theta_rk, theta_rkd = z0 #28
             
-        t_span = np.linspace(t0, t1, 100)
+        t_span = np.linspace(t0, t1, 1000)
         params.t0 = 0
         params.tf = 0.2
         
@@ -119,7 +119,7 @@ def one_step(z0, params, steps):
         # print(f"mid1 time : {end - start:.5f} sec")
 
         collision.terminal = True
-        collision.direction = 0
+        collision.direction = -1
         
         sol = solve_ivp(
             single_stance, [t0, t1], z0, method='RK45', t_eval=t_span,
@@ -129,7 +129,6 @@ def one_step(z0, params, steps):
         
         # end = time.time()
         # print(f"mid2 time : {end - start:.5f} sec")
-
 
         t_temp1 = sol.t
         m, n = np.shape(sol.y)
@@ -141,6 +140,8 @@ def one_step(z0, params, steps):
         
         print(f"t_temp1.shape: {t_temp1.shape}")
         print(f"z_temp1.shape: {z_temp1.shape}")
+        print(f"t_temp1: {t_temp1}")
+        print(f"z_temp1[-1]: {z_temp1[-1]}")
         
         ### collect reaction forces ###
         for i in range(len(t_temp1)):
@@ -158,6 +159,7 @@ def one_step(z0, params, steps):
         ### foot strike: before to after foot strike ###
         params.P = params.Impulse
         
+        print(f"z_temp1[-1,:]: {z_temp1[-1,:]}")
         z_plus, P_LA, P_RA = footstrike( t_temp1[-1], z_temp1[-1,:], params )
         
         ### swap legs ###
@@ -200,7 +202,7 @@ def one_step(z0, params, steps):
         
         sol2 = solve_ivp(
             single_stance, [t0, t1], z_afs, method='RK45', t_eval=t_span,
-            dense_output=True, events=midstance, atol = 1e-13, rtol = 1e-13, 
+            dense_output=True, events=midstance, atol = 1e-14, rtol = 1e-14, 
             args=(params,)
         )
         
@@ -224,11 +226,15 @@ def one_step(z0, params, steps):
 
         print(f"step : {step}")
         if step == 0:
-            t_ode = np.concatenate( ([tf], t_temp1[1:], t_temp2[1:]), axis=0)
-            z_ode = np.concatenate( ([z0], z_temp1[1:], z_temp2[1:]), axis=0)
+            # t_ode = np.concatenate( ([tf], t_temp1[1:], t_temp2[1:]), axis=0)
+            # z_ode = np.concatenate( ([z0], z_temp1[1:], z_temp2[1:]), axis=0)
+
+            t_ode = np.concatenate( ([tf], t_temp1[1:]), axis=0)
+            z_ode = np.concatenate( ([z0], z_temp1[1:]), axis=0)
         else:
-            t_ode = np.concatenate( (t_ode, t_temp1[1:], t_temp2[1:]), axis=0)
-            z_ode = np.concatenate( (z_ode, z_temp1[1:], z_temp2[1:]), axis=0)
+            pass
+            # t_ode = np.concatenate( (t_ode, t_temp1[1:], t_temp2[1:]), axis=0)
+            # z_ode = np.concatenate( (z_ode, z_temp1[1:], z_temp2[1:]), axis=0)
 
         print(f"t_ode.shape : {t_ode.shape}")
         print(f"z_ode.shape : {z_ode.shape}")

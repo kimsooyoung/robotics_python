@@ -107,15 +107,19 @@ if __name__=="__main__":
     print('----- start state --------- end state ----')
     # print(f"z_star: {z_star}")
     # print(f"Z[-1, 7:]: {Z[-1, 6:]}")
+    
+    # TODO: collision dbg
     print(np.hstack((z_star.reshape(-1, 1), Z[-1, 6:].reshape(-1, 1))))
     print(Z.shape)
     print(Torque.shape)
 
+    print(f"Z[:,0]: {Z[:,0]}")
+
     # TODO: plot torque
-    # # 3) plotting and animation
-    # view = (60, 54)
-    # fps = 10
-    # animate(t, Z, params, view)
+    # 3) plotting and animation
+    view = (60, 54)
+    fps = 10
+    animate(t, Z, params, view)
     # plot(t, Z, Torque, params)
     
     

@@ -52,9 +52,10 @@ def controller(z0, t, params):
             a0[i], af[i]
         )
 
-    # print(f"Xdd_des: {Xdd_des}")
-    # print(f"Xd_des: {Xd_des}")
-    # print(f"X_des: {X_des}")
+    # if t == 0.0:
+    #     print(f"Xdd_des: {Xdd_des}")
+    #     print(f"Xd_des: {Xd_des}")
+    #     print(f"X_des: {X_des}")
     
     B = np.array([
         [0, 0, 0, 0, 0, 0, 0, 0],
@@ -112,6 +113,9 @@ def controller(z0, t, params):
         phi_rhd, theta_rhd, psi_rhd, theta_rkd
     ])
     
+    # if t == 0.0:
+    #     print(f"qdot: {qdot}")
+    
     ### AX = b (without control) ###
     # print(f"params.stance_foot : {params.stance_foot}")
     if params.stance_foot == 'right':
@@ -134,10 +138,9 @@ def controller(z0, t, params):
             [N],
             [ np.reshape(-Jdot_l @ qdot.T, (3, 1)) ]
         ])
-
+    
     # end = time.time()
     # print(f"controller mid2 time : {end - start:.5f} sec")
-
 
     ########### AX = b + B*tau  (with control) #######
     ### Reduced X_c = S X = S*inv(A) (b+B*tau) = v ###
@@ -181,7 +184,7 @@ def controller(z0, t, params):
         SAinvB = S_L @ Ainv @ B
         SAinvB_inv = np.linalg.inv(SAinvB)
         tau = SAinvB_inv @ (v - S_L @ Ainv @ bb)
-
+        
     # end = time.time()
     # print(f"controller mid3 time : {end - start:.5f} sec")
 

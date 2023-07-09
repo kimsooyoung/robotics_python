@@ -41,15 +41,15 @@ def single_stance_helper(B, z0, t, params):
     
     # end = time.time()
     # print(f"mid2 time : {end - start:.5f} sec")
-
+    
+    # P: impact force
+    x, P_RA, P_LA = None, None, None
     qdot = np.array([
         xd, yd, zd, phid, thetad, psid,
         phi_lhd, theta_lhd, psi_lhd, theta_lkd,
         phi_rhd, theta_rhd, psi_rhd, theta_rkd
-    ]) 
+    ])
     
-    # P: impact force
-    x, P_RA, P_LA = None, None, None
     if params.stance_foot == 'right':
         AA = np.block([
             [A, -J_r.T], 
@@ -61,7 +61,10 @@ def single_stance_helper(B, z0, t, params):
             [ np.reshape(-Jdot_r @ qdot.T, (3, 1)) ]
         ]) + B @ tau
         
-        x = np.linalg.solve(AA, bb)
+        # x = np.linalg.solve(AA, bb)
+        AA_inv = np.linalg.inv(AA)
+        x = AA_inv @ bb
+        
         P_RA = np.array([ x[14,0], x[15,0], x[16,0] ])
         P_LA = np.array([ 0, 0, 0 ])
     elif params.stance_foot == 'left':
@@ -120,7 +123,6 @@ def single_stance(t, z, params):
     # end = time.time()
     # print(f"mid1 time : {end - start:.5f} sec")
 
-
     x, A, b, P_RA, P_LA, tau = single_stance_helper(B, z, t, params)
     
     xdd = x[0,0]; ydd = x[1,0]; zdd = x[2,0]; 
@@ -131,6 +133,9 @@ def single_stance(t, z, params):
     
     phi_rhdd = x[10,0]; theta_rhdd = x[11,0];
     psi_rhdd = x[12,0]; theta_rkdd = x[13,0];
+    
+    if t == 0.0:
+        print(f"x: {x}")
     
     zdot = np.array([
         xd, xdd, yd, ydd, zd, zdd, phid, phidd, thetad, thetadd, psid, psidd, \

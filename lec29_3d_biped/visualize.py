@@ -3,7 +3,8 @@ from matplotlib import pyplot as plt
 from scipy import interpolate
 import numpy as np
 
-from joint_locations import joint_locations
+# from joint_locations import joint_locations
+from cython_dynamics.joint_locations_cython import joint_locations
 
 def animate(t_all, z_all, params, view):
     
@@ -18,14 +19,16 @@ def animate(t_all, z_all, params, view):
     for i in range(0, n, 2):
         z_all_plot[:, int(i/2)] = z_all[:, i]
     
-    total_frames = 100
+    total_frames = 50
     # total_frames = round(t_all[-1] * params.fps)
     zz = np.zeros((total_frames, n_state))
-    t = np.arange(0, t_all[-1], total_frames)
-    
+    t = np.linspace(0, t_all[-1], total_frames)
+
     for i in range(n_state):
         f = interpolate.interp1d(t_all, z_all_plot[:, i])
         zz[:, i] = f(t)
+    
+    print(f"zz[:,0] : {zz[:,0]}")
     
     mm, nn = zz.shape
     print(f"mm: {mm}, nn: {nn}")
@@ -33,7 +36,7 @@ def animate(t_all, z_all, params, view):
     fig = plt.figure(1)
     
     for i in range(mm):
-
+        print(f"i: {i}")
         # For MacOS Users
         # ax = p3.Axes3D(fig)
 
@@ -64,54 +67,53 @@ def animate(t_all, z_all, params, view):
         loc1 = B; loc2 = H;
         k1, = ax.plot([loc1[0], loc2[0]], [loc1[1], loc2[1]], [loc1[2], loc2[2]],linewidth=5, color='r')
         
-        loc1 = B; loc2 = LH;
-        k2, = ax.plot([loc1[0], loc2[0]], [loc1[1], loc2[1]], [loc1[2], loc2[2]],linewidth=5, color='b')
+        loc3 = B; loc4 = LH;
+        k2, = ax.plot([loc3[0], loc4[0]], [loc3[1], loc4[1]], [loc3[2], loc4[2]],linewidth=5, color='b')
 
-        loc1 = LH; loc2 = RH;
-        k3, = ax.plot([loc1[0], loc2[0]], [loc1[1], loc2[1]], [loc1[2], loc2[2]],linewidth=5, color='b')
+        loc5 = LH; loc6 = RH;
+        k3, = ax.plot([loc5[0], loc6[0]], [loc5[1], loc6[1]], [loc5[2], loc6[2]],linewidth=5, color='b')
     
-        loc1 = LH; loc2 = LK;
-        k4, = ax.plot([loc1[0], loc2[0]], [loc1[1], loc2[1]], [loc1[2], loc2[2]],linewidth=5, color='c')
+        loc7 = LH; loc8 = LK;
+        k4, = ax.plot([loc7[0], loc8[0]], [loc7[1], loc8[1]], [loc7[2], loc8[2]],linewidth=5, color='c')
         
-        loc1 = RH; loc2 = RK;
-        k5, = ax.plot([loc1[0], loc2[0]], [loc1[1], loc2[1]], [loc1[2], loc2[2]],linewidth=5, color='c')
+        loc9 = RH; loc10 = RK;
+        k5, = ax.plot([loc9[0], loc10[0]], [loc9[1], loc10[1]], [loc9[2], loc10[2]],linewidth=5, color='c')
         
-        loc1 = LK; loc2 = LA;
-        k6, = ax.plot([loc1[0], loc2[0]], [loc1[1], loc2[1]], [loc1[2], loc2[2]],linewidth=5, color='m')
+        loc11 = LK; loc12 = LA;
+        k6, = ax.plot([loc11[0], loc12[0]], [loc11[1], loc12[1]], [loc11[2], loc12[2]],linewidth=5, color='m')
         
-        loc1 = RK; loc2 = RA;
-        k7, = ax.plot([loc1[0], loc2[0]], [loc1[1], loc2[1]], [loc1[2], loc2[2]],linewidth=5, color='m')
+        loc13 = RK; loc14 = RA;
+        k7, = ax.plot([loc13[0], loc14[0]], [loc13[1], loc14[1]], [loc13[2], loc14[2]],linewidth=5, color='m')
         
         pt = b
-        k8, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=20, markerfacecolor='k')
+        k8, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=5, markerfacecolor='k')
         
         pt = rt
-        k9, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=10, markerfacecolor='k')
+        k9, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=5, markerfacecolor='k')
         
         pt = rc
-        k10, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=10, markerfacecolor='k')
+        k10, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=5, markerfacecolor='k')
         
         pt = lt
-        k11, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=10, markerfacecolor='k')
+        k11, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=5, markerfacecolor='k')
         
         pt = lc
-        k12, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=10, markerfacecolor='k')
+        k12, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=5, markerfacecolor='k')
         
         ax.set_xlim([0.0, 4.0])
         ax.set_ylim([-2.0, 2.0])
         ax.set_zlim([0.0, 2.0])
         
-        plt.pause(params.pause)
+        plt.pause(0.001)
         
         # if (i < (mm-1)):
-        # k1.remove(); k2.remove();
-        # k3.remove(); k4.remove();
-        # k5.remove(); k6.remove()
-        # k7.remove(); k8.remove()
-        # k9.remove(); k10.remove()
-        # k11.remove(); k12.remove()
+        k1.remove(); k2.remove();
+        k3.remove(); k4.remove();
+        k5.remove(); k6.remove()
+        k7.remove(); k8.remove()
+        k9.remove(); k10.remove()
+        k11.remove(); k12.remove()
 
-    # plt.show()
     plt.pause(10)
 
 def plot(t, z, Torque, params):

@@ -12,6 +12,7 @@ setup(
             'collision_cython.pyx',
             'hip_positions_cython.pyx',
             'hip_velocities_cython.pyx',
+            'joint_locations_cython.pyx',
         ],
         annotate=True
     ),

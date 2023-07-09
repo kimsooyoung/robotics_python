@@ -71,7 +71,14 @@ for i in range(11):
     pt = np.array([i*0.1,i*0.1,i*0.1])
     k8, = ax.plot([pt[0]], [pt[1]], [pt[2]], 'ko', markersize=20, markerfacecolor='k')
 
-    plt.pause(0.1)
+    # Ubuntu and Windows
+    # plt.pause(0.01)
+    
+    # MacOS
+    plt.pause(0.01)
+    
+    k1.remove()
+    k8.remove()
 
 plt.pause(10)
 
