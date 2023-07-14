@@ -19,8 +19,7 @@ def animate(t_all, z_all, params, view):
     for i in range(0, n, 2):
         z_all_plot[:, int(i/2)] = z_all[:, i]
     
-    total_frames = 50
-    # total_frames = round(t_all[-1] * params.fps)
+    total_frames = round(t_all[-1] * params.fps)
     zz = np.zeros((total_frames, n_state))
     t = np.linspace(0, t_all[-1], total_frames)
 
@@ -104,7 +103,7 @@ def animate(t_all, z_all, params, view):
         ax.set_ylim([-2.0, 2.0])
         ax.set_zlim([0.0, 2.0])
         
-        plt.pause(0.001)
+        plt.pause(params.pause)
         
         # if (i < (mm-1)):
         k1.remove(); k2.remove();
