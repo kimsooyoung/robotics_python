@@ -28,15 +28,15 @@ def animate(t_all, z_all, params, view):
         f = interpolate.interp1d(t_all, z_all_plot[:, i])
         zz[:, i] = f(t)
     
-    print(f"zz[:,0] : {zz[:,0]}")
+    # print(f"zz[:,0] : {zz[:,0]}")
     
     mm, nn = zz.shape
-    print(f"mm: {mm}, nn: {nn}")
+    # print(f"mm: {mm}, nn: {nn}")
     
     fig = plt.figure(1)
     
     for i in range(mm):
-        print(f"i: {i}")
+        
         # For MacOS Users
         # ax = p3.Axes3D(fig)
 
@@ -122,37 +122,44 @@ def plot(t, z, Torque, params):
     #  phi_lh, phi_lhd, theta_lh, theta_lhd, psi_lh, psi_lhd, theta_lk, theta_lkd, ...
     #  phi_rh, phi_rhd, theta_rh, theta_rhd, psi_rh, psi_rhd, theta_rk, theta_rkd]= getstate(Z);
     
-    plt.figure(2)
-    plt.subplot(2,1,1)
-
-    plt.plot(t, z[:,0], 'r', label=r'$x$')
-    plt.plot(t, z[:,2], 'b', label=r'$y$')
-    plt.plot(t, z[:,4], 'g', label=r'$z$')
-    plt.ylabel("body absolute positions")
-    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
+    # plt.figure(2)
+    # plt.subplot(2,1,1)
+    # plt.plot(t, z[:,0], 'r', label=r'$x$')
+    # plt.plot(t, z[:,2], 'b', label=r'$y$')
+    # plt.plot(t, z[:,4], 'g', label=r'$z$')
+    # plt.ylabel("body absolute positions")
+    # plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
     
-    plt.subplot(2,1,2)
-    plt.plot(t,z[:,1],'r', label=r'$\dot{x}$')
-    plt.plot(t,z[:,3],'b', label=r'$\dot{y}$')
-    plt.plot(t,z[:,5],'g', label=r'$\dot{z}$')
-    plt.ylabel("body absolute rates")
-    plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
-    plt.xlabel('time')
+    # plt.subplot(2,1,2)
+    # plt.plot(t,z[:,1],'r', label=r'$\dot{x}$')
+    # plt.plot(t,z[:,3],'b', label=r'$\dot{y}$')
+    # plt.plot(t,z[:,5],'g', label=r'$\dot{z}$')
+    # plt.ylabel("body absolute rates")
+    # plt.legend(loc=(1.0, 1.0), ncol=1, fontsize=7)
+    # plt.xlabel('time')
     
     plt.figure(3)
     plt.subplot(2,1,1)
-    plt.plot(t,Torque[:,0],'r', label=r'$hip_{\phi}$')
-    plt.plot(t,Torque[:,1],'g', label=r'$hip_{\theta}$')
-    plt.plot(t,Torque[:,2],'b', label=r'$hip_{\psi}$')
-    plt.plot(t,Torque[:,3],'k', label=r'$knee_{\theta}$')
+    # plt.plot(t,Torque[:,0],'r', label=r'$hip_{\phi}$')
+    # plt.plot(t,Torque[:,1],'g', label=r'$hip_{\theta}$')
+    # plt.plot(t,Torque[:,2],'b', label=r'$hip_{\psi}$')
+    # plt.plot(t,Torque[:,3],'k', label=r'$knee_{\theta}$')
+    plt.plot(Torque[:,0],'r', label=r'$hip_{\phi}$')
+    plt.plot(Torque[:,1],'g', label=r'$hip_{\theta}$')
+    plt.plot(Torque[:,2],'b', label=r'$hip_{\psi}$')
+    plt.plot(Torque[:,3],'k', label=r'$knee_{\theta}$')
     plt.title('left leg')
     plt.ylabel("Torque")
     
     plt.subplot(2,1,2)
-    plt.plot(t,Torque[:,4],'r', label=r'$hip_{\phi}$')
-    plt.plot(t,Torque[:,5],'g', label=r'$hip_{\theta}$')
-    plt.plot(t,Torque[:,6],'b', label=r'$hip_{\psi}$')
-    plt.plot(t,Torque[:,7],'k', label=r'$knee_{\theta}$')
+    # plt.plot(t,Torque[:,4],'r', label=r'$hip_{\phi}$')
+    # plt.plot(t,Torque[:,5],'g', label=r'$hip_{\theta}$')
+    # plt.plot(t,Torque[:,6],'b', label=r'$hip_{\psi}$')
+    # plt.plot(t,Torque[:,7],'k', label=r'$knee_{\theta}$')
+    plt.plot(Torque[:,4],'r', label=r'$hip_{\phi}$')
+    plt.plot(Torque[:,5],'g', label=r'$hip_{\theta}$')
+    plt.plot(Torque[:,6],'b', label=r'$hip_{\psi}$')
+    plt.plot(Torque[:,7],'k', label=r'$knee_{\theta}$')
     plt.title('right leg')
     plt.ylabel("Torque")
     
