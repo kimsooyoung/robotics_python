@@ -16,7 +16,6 @@ from single_stance import single_stance, single_stance_helper
 def one_step(z0, params, steps):
     
     print("one_step")
-    # start = time.time()
 
     l1, l2, w = params.l1, params.l2, params.w
     
@@ -103,7 +102,7 @@ def one_step(z0, params, steps):
         params.t0 = 0
         params.tf = 0.2
         
-        print(f"params.stance_foot: {params.stance_foot}")
+        # print(f"params.stance_foot: {params.stance_foot}")
         if params.stance_foot == 'right':
             params.s0 = np.array([phi, theta, psi, phi_lh, theta_lh, psi_lh, theta_lk, theta_rk])
             params.v0 = np.array([phid, thetad, psid, phi_lhd, theta_lhd, psi_lhd, theta_lkd, theta_rkd])
@@ -115,9 +114,6 @@ def one_step(z0, params, steps):
         params.a0 = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         params.af = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         
-        # end = time.time()
-        # print(f"mid1 time : {end - start:.5f} sec")
-
         collision.terminal = True
         collision.direction = -1
         
@@ -126,9 +122,6 @@ def one_step(z0, params, steps):
             dense_output=True, events=collision, atol = 1e-13, rtol = 1e-13, 
             args=(params,)
         )
-        
-        # end = time.time()
-        # print(f"mid2 time : {end - start:.5f} sec")
 
         t_temp1 = sol.t
         m, n = np.shape(sol.y)
@@ -138,10 +131,10 @@ def one_step(z0, params, steps):
         t_temp1 = tf + t_temp1
         t_mid = t_temp1[-1]
         
-        print(f"t_temp1.shape: {t_temp1.shape}")
-        print(f"z_temp1.shape: {z_temp1.shape}")
-        print(f"t_temp1: {t_temp1}")
-        print(f"z_temp1[-1]: {z_temp1[-1]}")
+        # print(f"t_temp1.shape: {t_temp1.shape}")
+        # print(f"z_temp1.shape: {z_temp1.shape}")
+        # print(f"t_temp1: {t_temp1}")
+        # print(f"z_temp1[-1]: {z_temp1[-1]}")
         
         ### collect reaction forces ###
         for i in range(len(t_temp1)):
@@ -154,12 +147,12 @@ def one_step(z0, params, steps):
                 P_LA_all = np.vstack( (P_LA_all, P_LA) )
                 P_RA_all = np.vstack( (P_RA_all, P_RA) )
                 Torque = np.vstack( (Torque, tau[:,0]) )
-        print(f"Torque.shape: {Torque.shape}")
+        # print(f"Torque.shape: {Torque.shape}")
         
         ### foot strike: before to after foot strike ###
         params.P = params.Impulse
         
-        print(f"z_temp1[-1,:]: {z_temp1[-1,:]}")
+        # print(f"z_temp1[-1,:]: {z_temp1[-1,:]}")
         z_plus, P_LA, P_RA = footstrike( t_temp1[-1], z_temp1[-1,:], params )
         
         ### swap legs ###
@@ -211,8 +204,8 @@ def one_step(z0, params, steps):
         z_temp2 = np.zeros((n, m))
         z_temp2 = sol2.y.T
 
-        print(f"t_temp2.shape: {t_temp2.shape}")
-        print(f"z_temp2.shape: {z_temp2.shape}")
+        # print(f"t_temp2.shape: {t_temp2.shape}")
+        # print(f"z_temp2.shape: {z_temp2.shape}")
         
         t_temp2 = t_mid + t_temp2
 
@@ -222,27 +215,26 @@ def one_step(z0, params, steps):
             P_LA_all = np.vstack( (P_LA_all, P_LA) )
             P_RA_all = np.vstack( (P_RA_all, P_RA) )
             Torque = np.vstack( (Torque, tau[:,0]) )
-        print(f"Torque.shape: {Torque.shape}")
+        # print(f"Torque.shape: {Torque.shape}")
 
-        print(f"step : {step}")
         if step == 0:
-            # t_ode = np.concatenate( ([tf], t_temp1[1:], t_temp2[1:]), axis=0)
-            # z_ode = np.concatenate( ([z0], z_temp1[1:], z_temp2[1:]), axis=0)
+            t_ode = np.concatenate( ([tf], t_temp1[1:], t_temp2[1:]), axis=0)
+            z_ode = np.concatenate( ([z0], z_temp1[1:], z_temp2[1:]), axis=0)
 
-            t_ode = np.concatenate( ([tf], t_temp1[1:]), axis=0)
-            z_ode = np.concatenate( ([z0], z_temp1[1:]), axis=0)
+            # t_ode = np.concatenate( ([tf], t_temp1[1:]), axis=0)
+            # z_ode = np.concatenate( ([z0], z_temp1[1:]), axis=0)
         else:
-            pass
-            # t_ode = np.concatenate( (t_ode, t_temp1[1:], t_temp2[1:]), axis=0)
-            # z_ode = np.concatenate( (z_ode, z_temp1[1:], z_temp2[1:]), axis=0)
+            # pass
+            t_ode = np.concatenate( (t_ode, t_temp1[1:], t_temp2[1:]), axis=0)
+            z_ode = np.concatenate( (z_ode, z_temp1[1:], z_temp2[1:]), axis=0)
 
-        print(f"t_ode.shape : {t_ode.shape}")
-        print(f"z_ode.shape : {z_ode.shape}")
+        # print(f"t_ode.shape : {t_ode.shape}")
+        # print(f"z_ode.shape : {z_ode.shape}")
         
         tf = t_temp2[-1]
         z0 = z_temp2[-1,:]
         
-        print(f"Torque.shape: {Torque.shape}")
+        # print(f"Torque.shape: {Torque.shape}")
 
     # end = time.time()
     # print(f"end time : {end - start:.5f} sec")
