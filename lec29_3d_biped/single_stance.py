@@ -134,8 +134,8 @@ def single_stance(t, z, params):
     phi_rhdd = x[10,0]; theta_rhdd = x[11,0];
     psi_rhdd = x[12,0]; theta_rkdd = x[13,0];
     
-    if t == 0.0:
-        print(f"x: {x}")
+    # if t == 0.0:
+    #     print(f"x: {x}")
     
     zdot = np.array([
         xd, xdd, yd, ydd, zd, zdd, phid, phidd, thetad, thetadd, psid, psidd, \
@@ -144,7 +144,7 @@ def single_stance(t, z, params):
         phi_rhd, phi_rhdd, theta_rhd, theta_rhdd, \
         psi_rhd, psi_rhdd, theta_rkd, theta_rkdd
     ])
-    
+
     # print(f"single stance zdot: {zdot}")
     
     return zdot

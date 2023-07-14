@@ -34,6 +34,7 @@ class Parameters:
         self.stepAngle = 0.375 # #step length
         self.Impulse = 0.18 * self.M * np.sqrt(self.g * self.L) #push-off impulse
         self.kneeAngle = -1 #Knee bending to avoid scuffing
+        
         self.Kp = 100 #gain for partial feedback linearization
         self.Kd = np.sqrt(self.Kp) 
         
@@ -41,7 +42,7 @@ class Parameters:
         self.stance_foot = self.stance_foot_init
         
         self.fps = 10
-        self.pause = 0.01
+        self.pause = 0.005
 
 if __name__=="__main__":
 
@@ -63,9 +64,10 @@ if __name__=="__main__":
                      phi_lh, phi_lhd, theta_lh, theta_lhd, psi_lh, psi_lhd, theta_lk, theta_lkd, \
                          phi_rh, phi_rhd, theta_rh, theta_rhd, psi_rh, psi_rhd, theta_rk, theta_rkd])
     
-    # 1) find fixed points and check stability
+    # # 1) find fixed points and check stability
     # z_star = find_fixed_points(z0, params)
     # print(f"z_star: {z_star}")
+    # pass
     
     # Fixed point z_star : 
     # [-3.62077919e-10 -1.26645439e+07 -8.15710858e-10  1.78608084e+07
@@ -105,23 +107,20 @@ if __name__=="__main__":
     params.stance_foot = params.stance_foot_init
     Z, t, P_LA_all, P_RA_all, Torque = one_step(z_star, params, steps)
     print('----- start state --------- end state ----')
-    # print(f"z_star: {z_star}")
-    # print(f"Z[-1, 7:]: {Z[-1, 6:]}")
     
     # TODO: collision dbg
     print(np.hstack((z_star.reshape(-1, 1), Z[-1, 6:].reshape(-1, 1))))
     print(Z.shape)
     print(Torque.shape)
 
-    print(f"Z[:,0]: {Z[:,0]}")
+    # print(f"Z[:,0]: {Z[:,0]}")
 
     # TODO: plot torque
     # 3) plotting and animation
-    view = (60, 54)
+    view = (90, 0)
     fps = 10
     animate(t, Z, params, view)
     # plot(t, Z, Torque, params)
-    
     
     # [Z,t,P_LA_all,P_RA_all,Torque] = onestep(zstar,parms,steps);
 
