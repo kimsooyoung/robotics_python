@@ -40,22 +40,25 @@ def controller(z0, t, params):
     a0 = params.a0
     af = params.af
     
+    # with open("traj_log.txt", "a") as f:
+    #     f.write(f"{t0}, {tf}, {s0}, {sf}, {v0}, {vf}, {a0}, {af}\n")
+    
     Xdd_des = np.zeros((8,1))
     Xd_des = np.zeros((8,1))
     X_des = np.zeros((8,1))
     
     for i in range(8):
+        
+        # 0714 editted
+        if t > tf:
+            t = tf
+
         X_des[i], Xd_des[i], Xdd_des[i] = traj(
             t, t0, tf, 
             s0[i], sf[i], 
             v0[i], vf[i], 
             a0[i], af[i]
         )
-
-    # if t == 0.0:
-    #     print(f"Xdd_des: {Xdd_des}")
-    #     print(f"Xd_des: {Xd_des}")
-    #     print(f"X_des: {X_des}")
     
     B = np.array([
         [0, 0, 0, 0, 0, 0, 0, 0],
@@ -103,10 +106,17 @@ def controller(z0, t, params):
     ])
     
     M, N, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs_cython.humanoid_rhs(z0, t, params_arr)
-    
-    # end = time.time()
-    # print(f"controller mid1 time : {end - start:.5f} sec")
-
+    # with open("humanoid_rhs_log.txt", "a") as f:
+    #     f.write("z0: [")
+    #     for elem in z0:
+    #         f.write(f"{elem} ")
+    #     f.write("]\n")
+        
+    #     f.write("b: [")
+    #     for elem in N:
+    #         f.write(f"{elem} ")
+    #     f.write("]\n")
+        
     qdot = np.array([
         xd, yd, zd, phid, thetad, psid,
         phi_lhd, theta_lhd, psi_lhd, theta_lkd,
@@ -184,9 +194,12 @@ def controller(z0, t, params):
         SAinvB = S_L @ Ainv @ B
         SAinvB_inv = np.linalg.inv(SAinvB)
         tau = SAinvB_inv @ (v - S_L @ Ainv @ bb)
-        
-    # end = time.time()
-    # print(f"controller mid3 time : {end - start:.5f} sec")
-
+    
+    # print(f"t: {t}")
+    # print(f"z0: {z0}")
+    # print(f"tau: {tau}")
+    
+    # with open("tau_log.txt", "a") as f:
+    #     f.write(f"t, {t} / tau, {tau[0]}, {tau[1]}, {tau[2]}, {tau[3]}, {tau[4]}, {tau[5]}, {tau[6]}, {tau[7]}\n")
 
     return tau
