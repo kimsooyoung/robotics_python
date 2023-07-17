@@ -13,4 +13,7 @@ def midstance(t, z_in, params):
         
     g_stop = zd # l1*cos(theta0 + theta1) - l1*cos(theta0 + theta2) + l2*cos(theta0 + theta1 + theta3) - l2*cos(theta0 + theta2 + theta4)   
 
+    # with open("md_log.txt", "a") as f:
+    #     f.write(f"{t} / {g_stop}\n")
+
     return g_stop

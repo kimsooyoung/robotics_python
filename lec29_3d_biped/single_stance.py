@@ -78,7 +78,10 @@ def single_stance_helper(B, z0, t, params):
             [ np.reshape(-Jdot_l @ qdot.T, (3, 1)) ]
         ]) + B @ tau
         
-        x = np.linalg.solve(AA, bb)
+        # x = np.linalg.solve(AA, bb)
+        AA_inv = np.linalg.inv(AA)
+        x = AA_inv @ bb
+        
         P_LA = np.array([ x[14,0], x[15,0], x[16,0] ])
         P_RA = np.array([ 0, 0, 0 ])
 

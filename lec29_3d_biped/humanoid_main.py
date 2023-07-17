@@ -117,9 +117,9 @@ if __name__=="__main__":
 
     # TODO: plot torque
     # 3) plotting and animation
-    view = (90, 0)
-    fps = 10
-    animate(t, Z, params, view)
+    # view = (90, 0)
+    # fps = 10
+    # animate(t, Z, params, view)
     # plot(t, Z, Torque, params)
     
     # [Z,t,P_LA_all,P_RA_all,Torque] = onestep(zstar,parms,steps);

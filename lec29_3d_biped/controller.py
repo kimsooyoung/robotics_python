@@ -8,13 +8,13 @@ from cython_dynamics import humanoid_rhs_cython
 def controller(z0, t, params):
     
     # start = time.time()
-
+    
     x, xd, y, yd, z, zd, phi, phid, theta, thetad, psi, psid, \
         phi_lh, phi_lhd, theta_lh, theta_lhd, \
         psi_lh, psi_lhd, theta_lk, theta_lkd, \
         phi_rh, phi_rhd, theta_rh, theta_rhd, \
         psi_rh, psi_rhd, theta_rk, theta_rkd = z0
-        
+    
     mb, mt, mc = params.mb, params.mt, params.mc
     Ibx, Iby, Ibz = params.Ibx, params.Iby, params.Ibz
     Itx, Ity, Itz = params.Itx, params.Ity, params.Itz
@@ -106,28 +106,26 @@ def controller(z0, t, params):
     ])
     
     M, N, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs_cython.humanoid_rhs(z0, t, params_arr)
-    # with open("humanoid_rhs_log.txt", "a") as f:
-    #     f.write("z0: [")
-    #     for elem in z0:
-    #         f.write(f"{elem} ")
-    #     f.write("]\n")
-        
-    #     f.write("b: [")
-    #     for elem in N:
-    #         f.write(f"{elem} ")
-    #     f.write("]\n")
+    
+    if params.stance_foot == 'left':
+        with open("N_log.txt", "a") as f:
+            f.write(f"z: ")
+            for elem in z0:
+                f.write(f"{elem} ")
+            f.write("\n")
+            
+            f.write(f"t: {t}, ")
+            f.write("b: ")
+            for elem in N:
+                f.write(f"{elem} ")
+            f.write("\n")
         
     qdot = np.array([
         xd, yd, zd, phid, thetad, psid,
         phi_lhd, theta_lhd, psi_lhd, theta_lkd,
         phi_rhd, theta_rhd, psi_rhd, theta_rkd
     ])
-    
-    # if t == 0.0:
-    #     print(f"qdot: {qdot}")
-    
-    ### AX = b (without control) ###
-    # print(f"params.stance_foot : {params.stance_foot}")
+
     if params.stance_foot == 'right':
         AA = np.block([
             [M, -J_r.T], 
@@ -172,8 +170,6 @@ def controller(z0, t, params):
         ]).T
         
         v = Xdd_des + Kd*(Xd_des-Xd) + Kp*(X_des-X)
-        # print(f"v: {v}")
-        # print(f"Xd_des-Xd: {Xd_des-Xd}")
         
         SAinvB = S_R @ Ainv @ B
         SAinvB_inv = np.linalg.inv(SAinvB)
@@ -199,7 +195,8 @@ def controller(z0, t, params):
     # print(f"z0: {z0}")
     # print(f"tau: {tau}")
     
-    # with open("tau_log.txt", "a") as f:
-    #     f.write(f"t, {t} / tau, {tau[0]}, {tau[1]}, {tau[2]}, {tau[3]}, {tau[4]}, {tau[5]}, {tau[6]}, {tau[7]}\n")
+    # if (params.stance_foot == 'left'):
+    #     with open("tau_log.txt", "a") as f:
+    #         f.write(f"t, {t} / tau, {tau[0]}, {tau[1]}, {tau[2]}, {tau[3]}, {tau[4]}, {tau[5]}, {tau[6]}, {tau[7]}\n")
 
     return tau
