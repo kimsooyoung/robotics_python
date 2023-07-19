@@ -42,7 +42,7 @@ class Parameters:
         self.stance_foot = self.stance_foot_init
         
         self.fps = 10
-        self.pause = 0.005
+        self.pause = 0.01
 
 if __name__=="__main__":
 
@@ -103,7 +103,7 @@ if __name__=="__main__":
     ])
     
     # 2) forward simulation
-    steps = 2
+    steps = 4
     params.stance_foot = params.stance_foot_init
     Z, t, P_LA_all, P_RA_all, Torque = one_step(z_star, params, steps)
     print('----- start state --------- end state ----')
@@ -117,9 +117,8 @@ if __name__=="__main__":
 
     # TODO: plot torque
     # 3) plotting and animation
-    # view = (90, 0)
-    # fps = 10
-    # animate(t, Z, params, view)
+    view = (-15, 30)
+    animate(t, Z, params, view)
     # plot(t, Z, Torque, params)
     
     # [Z,t,P_LA_all,P_RA_all,Torque] = onestep(zstar,parms,steps);
