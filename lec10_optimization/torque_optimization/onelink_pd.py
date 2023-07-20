@@ -4,28 +4,11 @@ import math
 from scipy.integrate import odeint
 from scipy import interpolate
 
-# x0, x_min(-120), x_max(120) 설정
-# t, z0, z_end, u
-# limits
-# constraint => pendulum_constraint 함수 생성
-#    => 데이터 파싱 x (t, z0, z_end, u)
-#    => simulator에 x 전달 / simulator는 z_aft 밷는다.
-# pendulum_constraint에서 z_end - z_aft 리턴 (이걸 최적화)
-# 
-# opt.minimize / opt_state = result.x
-# print()
-# animate
-# plot
-
 def cos(angle):
     return np.cos(angle)
 
 def sin(angle):
-    return np.sin(angle)
-
-class OptParams:
-    def __init__(self):
-        self.N = 4
+    return np.sin(angle);
 
 class parameters:
     def __init__(self):
@@ -56,6 +39,8 @@ def animate(t,z,parms):
 
     l1 = parms.l1
 
+    plt.figure(1)
+    
     plt.xlim(-2,2)
     plt.ylim(-2,2)
     plt.gca().set_aspect('equal')
@@ -79,8 +64,8 @@ def control(theta1,theta1ref,theta1dot,kp1,kd1):
 
 def onelink_rhs(z,t,m1,I1,l1,g,kp1,kd1,theta1ref,T1_disturb):
 
-    theta1 = z[0];
-    theta1dot = z[1];
+    theta1 = z[0]
+    theta1dot = z[1]
 
     T1 = control(theta1,theta1ref,theta1dot,kp1,kd1)-T1_disturb
     theta1ddot = (1/( I1+(m1*l1*l1/4) ))*(T1 - 0.5*m1*g*l1*cos(theta1));
@@ -91,7 +76,7 @@ def onelink_rhs(z,t,m1,I1,l1,g,kp1,kd1,theta1ref,T1_disturb):
 
 def plot(t,z,T,parms):
 
-    plt.figure(1)
+    plt.figure(2)
 
     plt.subplot(3,1,1)
     plt.plot(t, parms.theta_des * np.ones(len(t)), 'r-.');
@@ -149,6 +134,9 @@ if __name__=="__main__":
         t_temp = np.array([t[i], t[i+1]])
         z_temp = odeint(onelink_rhs, z0, t_temp, args=all_parms)
         
+        # 실제 노이즈는 odeint단에서 추가된다.
+        # 우리가 로봇을 실제 움직일 때도 
+        # 토크는 제대로 주는데 로봇이 그대로 안움직이니까
         tau_temp = control(
             z0[0], parms.theta_des, 
             z0[1], parms.kp1, parms.kd1
