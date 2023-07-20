@@ -117,7 +117,7 @@ if __name__=="__main__":
 
     # TODO: plot torque
     # 3) plotting and animation
-    view = (-15, 30)
+    view = (-55, 30)
     animate(t, Z, params, view)
     # plot(t, Z, Torque, params)
     

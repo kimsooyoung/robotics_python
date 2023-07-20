@@ -160,6 +160,12 @@ Check Observability and learn how Kalman Filter works
     <img src="./images/lec20_slip.gif" height="300">
 </p>
 
+* Lecture 29 - Humanoid Biped Robot
+
+<p align="center">
+    <img src="./images/biped_walking.gif" height="300">
+</p>
+
 ---
 
 ### Ongoing tasks
