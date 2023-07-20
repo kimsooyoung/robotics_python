@@ -2,11 +2,12 @@ import time
 import numpy as np
 from scipy.integrate import solve_ivp
 
-from collision import collision
-# from cython_dynamics.collision_cython_helper import collision
+# from collision import collision
+from cython_dynamics.collision_cython_helper import collision
 
 from midstance import midstance
 from footstrike import footstrike
+
 # from hip_positions import hip_positions
 from cython_dynamics.hip_positions_cython import hip_positions
 # from hip_velocities import hip_velocities
@@ -98,11 +99,9 @@ def one_step(z0, params, steps):
             phi_rh, phi_rhd, theta_rh, theta_rhd, \
             psi_rh, psi_rhd, theta_rk, theta_rkd = z0 #28
             
-        t_span = np.linspace(t0, t1, 1000)
+        t_span = np.linspace(t0, t1, 2000)
         params.t0 = 0
         params.tf = 0.2
-        
-        # print(f"params.stance_foot: {params.stance_foot}")
         if params.stance_foot == 'right':
             params.s0 = np.array([phi, theta, psi, phi_lh, theta_lh, psi_lh, theta_lk, theta_rk])
             params.v0 = np.array([phid, thetad, psid, phi_lhd, theta_lhd, psi_lhd, theta_lkd, theta_rkd])
@@ -115,9 +114,7 @@ def one_step(z0, params, steps):
         params.af = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         
         collision.terminal = True
-        collision.direction = -1
-        
-        print(t0, t1)
+        collision.direction = 0
         
         sol = solve_ivp(
             single_stance, [t0, t1], z0, method='RK45', t_eval=t_span,
@@ -130,13 +127,9 @@ def one_step(z0, params, steps):
         z_temp1 = np.zeros((n, m))
         z_temp1 = sol.y.T
         
+        print(f"t_temp1: {t_temp1[-1]}")
         t_temp1 = tf + t_temp1
         t_mid = t_temp1[-1]
-        
-        # print(f"t_temp1.shape: {t_temp1.shape}")
-        # print(f"z_temp1.shape: {z_temp1.shape}")
-        # print(f"t_temp1: {t_temp1[-1]}")
-        # print(f"z_temp1[-1]: {z_temp1[-1]}")
         
         ### collect reaction forces ###
         for i in range(len(t_temp1)):
@@ -164,11 +157,9 @@ def one_step(z0, params, steps):
         
         ### after foot strike to midstance ###
         z_afs = z_plus
-        if (step == 0):
-            z_afs = np.array([0.363605058, 1.42242678, 0.098335387, 0.164638481, 0.931551755, 0.501918357, 2.34470963e-18, -0.0204406197, -1.27924489e-17, -0.065308963, -4.45902601e-18, 1.52506691, -1.08000436e-18, -0.132756742, 0.375, -0.487665808, 5.02761326e-18, -1.58536946, -4.64514364e-13, -1.8848074, 0.022340702, 0.425956589, -0.371498984, -1.02697903, 0.0618548839, 1.98234888, -5.53376543e-18, -0.63337832])
         
         t0, t1 = 0, 2
-        t_span = np.linspace(t0, t1, 100)
+        t_span = np.linspace(t0, t1, 1000)
         
         x, xd, y, yd, z, zd, \
             phi, phid, theta, thetad, psi, psid, \
@@ -179,16 +170,14 @@ def one_step(z0, params, steps):
 
         params.t0 = 0
         params.tf = 0.2
-        
         if params.stance_foot == 'right':
             params.s0 = np.array([phi, theta, psi, phi_lh, theta_lh, psi_lh, theta_lk, theta_rk])
             params.v0 = np.array([phid, thetad, psid, phi_lhd, theta_lhd, psi_lhd, theta_lkd, theta_rkd])
-            params.sf = np.array([0, 0, 0, 0, 0, 0, params.stepAngle, 0])
+            params.sf = np.array([0, 0, 0, 0, 0, 0, params.kneeAngle, 0])
         elif params.stance_foot == 'left':
             params.s0 = np.array([phi, theta, psi, phi_rh, theta_rh, psi_rh, theta_lk, theta_rk])
             params.v0 = np.array([phid, thetad, psid, phi_rhd, theta_rhd, psi_rhd, theta_lkd, theta_rkd])
-            params.sf = np.array([0, 0, 0, 0, 0, 0, params.stepAngle, 0])
-        
+            params.sf = np.array([0, 0, 0, 0, 0, 0, 0, params.kneeAngle])
         params.vf = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         params.a0 = np.array([0, 0, 0, 0, 0, 0, 0, 0])
         params.af = np.array([0, 0, 0, 0, 0, 0, 0, 0])
@@ -209,14 +198,11 @@ def one_step(z0, params, steps):
         z_temp2 = np.zeros((n, m))
         z_temp2 = sol2.y.T
 
-        print(f"params.stance_foot: {params.stance_foot}")
-        # print(f"t_temp2.shape: {t_temp2.shape}")
-        # print(f"z_temp2.shape: {z_temp2.shape}")
-        # print(f"t_temp2: {t_temp2[-1]}")
-        # print(f"z_temp2[-1]: {z_temp2[-1]}")
+        print(f"t_temp2: {t_temp2[-1]}")
+        print(f"z_temp2[-1]: {z_temp2[-1]}")
         
         t_temp2 = t_mid + t_temp2
-
+        
         ### collect reaction forces ###
         for j in range(1, len(t_temp2)):
             _, _, _, P_LA, P_RA, tau = single_stance_helper(B, z_temp2[j,:], t_temp2[j], params)
@@ -227,15 +213,9 @@ def one_step(z0, params, steps):
         if step == 0:
             t_ode = np.concatenate( ([tf], t_temp1[1:], t_temp2[1:]), axis=0)
             z_ode = np.concatenate( ([z0], z_temp1[1:], z_temp2[1:]), axis=0)
-
-            # t_ode = np.concatenate( ([tf], t_temp1[1:]), axis=0)
-            # z_ode = np.concatenate( ([z0], z_temp1[1:]), axis=0)
         else:
             t_ode = np.concatenate( (t_ode, t_temp1[1:], t_temp2[1:]), axis=0)
             z_ode = np.concatenate( (z_ode, z_temp1[1:], z_temp2[1:]), axis=0)
-
-        # print(f"t_ode.shape : {t_ode.shape}")
-        # print(f"z_ode.shape : {z_ode.shape}")
         
         tf = t_temp2[-1]
         z0 = z_temp2[-1,:]

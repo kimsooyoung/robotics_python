@@ -39,10 +39,7 @@ def controller(z0, t, params):
     vf = params.vf
     a0 = params.a0
     af = params.af
-    
-    # with open("traj_log.txt", "a") as f:
-    #     f.write(f"{t0}, {tf}, {s0}, {sf}, {v0}, {vf}, {a0}, {af}\n")
-    
+
     Xdd_des = np.zeros((8,1))
     Xd_des = np.zeros((8,1))
     X_des = np.zeros((8,1))
@@ -107,18 +104,18 @@ def controller(z0, t, params):
     
     M, N, J_l, J_r, Jdot_l, Jdot_r = humanoid_rhs_cython.humanoid_rhs(z0, t, params_arr)
     
-    if params.stance_foot == 'left':
-        with open("N_log.txt", "a") as f:
-            f.write(f"z: ")
-            for elem in z0:
-                f.write(f"{elem} ")
-            f.write("\n")
+    # if params.stance_foot == 'left':
+    #     with open("N_log.txt", "a") as f:
+    #         f.write(f"z: ")
+    #         for elem in z0:
+    #             f.write(f"{elem} ")
+    #         f.write("\n")
             
-            f.write(f"t: {t}, ")
-            f.write("b: ")
-            for elem in N:
-                f.write(f"{elem} ")
-            f.write("\n")
+    #         f.write(f"t: {t}, ")
+    #         f.write("b: ")
+    #         for elem in N:
+    #             f.write(f"{elem} ")
+    #         f.write("\n")
         
     qdot = np.array([
         xd, yd, zd, phid, thetad, psid,
@@ -195,8 +192,19 @@ def controller(z0, t, params):
     # print(f"z0: {z0}")
     # print(f"tau: {tau}")
     
-    # if (params.stance_foot == 'left'):
-    #     with open("tau_log.txt", "a") as f:
-    #         f.write(f"t, {t} / tau, {tau[0]}, {tau[1]}, {tau[2]}, {tau[3]}, {tau[4]}, {tau[5]}, {tau[6]}, {tau[7]}\n")
+    if (params.stance_foot == 'left'):
+            
+        with open("traj_log.txt", "a") as f:
+            # X_des[i], Xd_des[i], Xdd_des[i]
+            f.write(f"t, {t}\n")
+            f.write(f"{X_des[0]}, {X_des[1]}, {X_des[2]}, {X_des[3]}, {X_des[4]}, {X_des[5]}, {X_des[6]}, {X_des[7]}\n")
+        
+        # with open("tau_log.txt", "a") as f:
+        #     f.write(f"z: ")
+        #     for elem in z0:
+        #         f.write(f"{elem} ")
+        #     f.write("\n")
+            
+        #     f.write(f"t, {t} / tau, {tau[0]}, {tau[1]}, {tau[2]}, {tau[3]}, {tau[4]}, {tau[5]}, {tau[6]}, {tau[7]}\n")
 
     return tau
