@@ -1,7 +1,8 @@
-import scipy.optimize as opt
 import numpy as np
+import scipy.optimize as opt
 
 inf = np.inf
+
 
 def cost(x):
     x1, x2, x3, x4, x5 = x
