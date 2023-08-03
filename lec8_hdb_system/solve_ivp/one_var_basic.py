@@ -1,10 +1,12 @@
-from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.integrate import solve_ivp
+
 
 # differential equation
 def dydt(t, y):
     return -y + 2*np.sin(t)
+
 
 ts = np.linspace(0, 10, 100)
 initial_state = (1, 1)
