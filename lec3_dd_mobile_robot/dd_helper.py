@@ -1,8 +1,11 @@
 import math
+
 import numpy as np
 from scipy import interpolate
 
-def euler_integration(tspan,z0,u):
+
+def euler_integration(tspan, z0, u):
+
     v = u[0]
     omega = u[1]
     h = tspan[1]-tspan[0]
@@ -22,75 +25,53 @@ def euler_integration(tspan,z0,u):
     z1 = [x1, y1, theta1]
     return z1
 
-# offset이 적용되는 함수
-def ptP_to_ptC(state, params):
-    # x_p, y_p : 로봇이 도달해야 할 좌표
-    # params.px,params.py : 로봇이 회전 후 가져야 할 offset
-    # 실제 해당 offset 만큼은 이동을 해야 하므로 -np.matmul이 되었다.
-    x_p, y_p, theta = state
 
+def world_to_robot(state, params):
+    x_p, y_p, theta = state
     cos = np.cos(theta)
     sin = np.sin(theta)
-    R = np.array([[cos, -sin],
-                  [sin, cos]])
-    r = np.array([params.px,params.py])
-    p = np.array([x_p,y_p])
-    c = -np.matmul(R,np.transpose(r)) + np.transpose(p)
-    return c
 
-# ptP_to_ptC를 복원하는 함수
-def ptC_to_ptP(state, params):
+    H_robot_world = np.array([
+        [cos, -sin, x_p],
+        [sin, cos, y_p],
+        [0, 0, 1]
+    ])
+
+    c = np.array([-params.px, -params.py, 1])
+
+    return np.matmul(H_robot_world, c)
+
+
+# world frame point after robot frame movement "p"
+def robot_to_world(state, params):
     x_c, y_c, theta = state
     cos = np.cos(theta)
     sin = np.sin(theta)
-    R = np.array([[cos, -sin],
-                  [sin, cos]])
-    r = np.array([params.px,params.py])
-    c = np.array([x_c,y_c])
-    p = np.matmul(R,np.transpose(r)) + np.transpose(c)
-    return p
+
+    H_world_robot = np.array([
+        [cos, -sin, x_c],
+        [sin, cos, y_c],
+        [0, 0, 1]
+    ])
+
+    p = np.array([params.px, params.py, 1])
+
+    return np.matmul(H_world_robot, p)
 
 
-def interpolation(params, z, traj):
+def interpolation(params, z):
 
-    #interpolation
-    t = np.arange(0, params.t_length, 0.01)
-    t_interp = np.arange(0 , params.t_length , 1/params.fps)
-    f_z1 = interpolate.interp1d(t, z[:,0])
-    f_z2 = interpolate.interp1d(t, z[:,1])
-    f_z3 = interpolate.interp1d(t, z[:,2])
-    shape = (len(t_interp),3)
-    z_interp = np.zeros(shape)
-    z_interp[:,0] = f_z1(t_interp)
-    z_interp[:,1] = f_z2(t_interp)
-    z_interp[:,2] = f_z3(t_interp)
+    # interpolation
+    t = np.arange(0, params.t_end, 0.01)
 
-    f_p1 = interpolate.interp1d(t, traj[:,0])
-    f_p2 = interpolate.interp1d(t, traj[:,1])
-    shape = (len(t_interp),2)
-    p_interp = np.zeros(shape)
-    p_interp[:,0] = f_p1(t_interp)
-    p_interp[:,1] = f_p2(t_interp)
+    t_interp = np.arange(0, params.t_end, 1/params.fps)
+    f_z1 = interpolate.interp1d(t, z[:, 0])
+    f_z2 = interpolate.interp1d(t, z[:, 1])
+    f_z3 = interpolate.interp1d(t, z[:, 2])
 
-    return t_interp, z_interp, p_interp
+    z_interp = np.zeros((len(t_interp), 3))
+    z_interp[:, 0] = f_z1(t_interp)
+    z_interp[:, 1] = f_z2(t_interp)
+    z_interp[:, 2] = f_z3(t_interp)
 
-
-import matplotlib.pyplot as plt
-import numpy as np
-
-# x = np.arange(5)
-# y = np.exp(x)
-# fig1, ax1 = plt.subplots()
-# ax1.plot(x, y)
-# ax1.set_title("Axis 1 title")
-# ax1.set_xlabel("X-label for axis 1")
-
-# z = np.sin(x)
-# fig2, (ax2, ax3) = plt.subplots(nrows=2, ncols=1) # two axes on figure
-# ax2.plot(x, z)
-# ax3.plot(x, -z)
-
-# w = np.cos(x)
-# ax1.plot(x, w) # can continue plotting on the first axis
-
-# plt.show()
+    return t_interp, z_interp

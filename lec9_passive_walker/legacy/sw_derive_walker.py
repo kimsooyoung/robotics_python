@@ -34,7 +34,7 @@ sin = sy.sin
 
 angle_1 = pi/2 + theta1
 
-# floating base => x, y, 1 
+# floating base => x, y, 1
 H_01 = sy.Matrix([
     [cos(angle_1), -sin(angle_1), x],
     [sin(angle_1), cos(angle_1), y],

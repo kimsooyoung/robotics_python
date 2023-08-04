@@ -1,13 +1,16 @@
-from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.integrate import solve_ivp
+
 
 # differential equation
 def dydt(t, y):
     return -y + 2*np.sin(t)
 
+
 def event(t, y):
     return y[0] - 1
+
 
 event.terminal = False
 event.direction = -1
@@ -22,5 +25,5 @@ events = sol.t_events[0]
 
 plt.plot(t, y)
 for point in events:
-    plt.plot(point, 1, color="green", marker="o", markersize=10)
+    plt.plot(point, 1, color='green', marker='o', markersize=10)
 plt.show()
