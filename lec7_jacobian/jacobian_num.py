@@ -1,7 +1,9 @@
 import numpy as np
 
+
 def func(x, y):
     return np.array([[x**2+y**2], [2*x+3*y+5]])
+
 
 z = np.array([1, 2])
 f = func(z[0], z[1])

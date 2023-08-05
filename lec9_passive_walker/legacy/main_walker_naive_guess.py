@@ -6,8 +6,11 @@ from scipy.integrate import odeint
 from scipy.integrate import solve_ivp
 from scipy.optimize import fsolve
 
+
 class parameters:
+
     def __init__(self):
+
         self.g = 1
         self.m = 0.5
         self.M = 1
@@ -18,61 +21,68 @@ class parameters:
         self.pause = 0.01
         self.fps = 10
 
+
 def sin(angle):
     return np.sin(angle)
+
 
 def cos(angle):
     return np.cos(angle)
 
-def animate(t,z,parms):
-    #interpolation
+
+def animate(t, z, parms):
+    # interpolation
     data_pts = 1/parms.fps
-    t_interp = np.arange(t[0],t[len(t)-1],data_pts)
-    [m,n] = np.shape(z)
-    shape = (len(t_interp),n)
+    t_interp = np.arange(t[0], t[len(t)-1], data_pts)
+    [m, n] = np.shape(z)
+    shape = (len(t_interp), n)
     z_interp = np.zeros(shape)
 
-    for i in range(0,n):
-        f = interpolate.interp1d(t, z[:,i])
-        z_interp[:,i] = f(t_interp)
+    for i in range(0, n):
+        f = interpolate.interp1d(t, z[:, i])
+        z_interp[:, i] = f(t_interp)
 
     l = parms.l
     c = parms.c
 
-    min_xh = min(z[:,4]); max_xh = max(z[:,4]);
-    dist_travelled = max_xh - min_xh;
-    camera_rate = dist_travelled/len(t_interp);
+    min_xh = min(z[:, 4])
+    max_xh = max(z[:, 4])
+    dist_travelled = max_xh - min_xh
+    camera_rate = dist_travelled/len(t_interp)
 
-    window_xmin = -1*l; window_xmax = 1*l;
-    window_ymin = -0.1; window_ymax = 1.1*l;
+    window_xmin = -1*l
+    window_xmax = 1*l
+    window_ymin = -0.1
+    window_ymax = 1.1*l
 
-    R1 = np.array([min_xh-l,0])
-    R2 = np.array([max_xh+l,0])
+    R1 = np.array([min_xh - l, 0])
+    R2 = np.array([max_xh + l, 0])
 
-    ramp, = plt.plot([R1[0], R2[0]],[R1[1], R2[1]],linewidth=5, color='black')
-    #plot
-    for i in range(0,len(t_interp)):
-        theta1 = z_interp[i,0];
-        theta2 = z_interp[i,2];
-        xh = z_interp[i,4];
-        yh = z_interp[i,5];
+    ramp, = plt.plot([R1[0], R2[0]], [R1[1], R2[1]], linewidth=5, color='black')
+
+    # plot
+    for i in range(0, len(t_interp)):
+        theta1 = z_interp[i, 0]
+        theta2 = z_interp[i, 2]
+        xh = z_interp[i, 4]
+        yh = z_interp[i, 5]
 
         H = np.array([xh, yh])
         C1 = np.array([xh+l*sin(theta1), yh-l*cos(theta1)])
         G1 = np.array([xh+c*sin(theta1), yh-c*cos(theta1)])
-        C2 = np.array([xh+l*sin(theta1+theta2),yh-l*cos(theta1+theta2)])
-        G2 = np.array([xh+c*sin(theta1+theta2),yh-c*cos(theta1+theta2)])
+        C2 = np.array([xh+l*sin(theta1+theta2), yh-l*cos(theta1+theta2)])
+        G2 = np.array([xh+c*sin(theta1+theta2), yh-c*cos(theta1+theta2)])
 
-        hip, = plt.plot(H[0],H[1],color='black',marker='o',markersize=10)
-        leg1, = plt.plot([H[0], C1[0]],[H[1], C1[1]],linewidth=5, color='red')
-        leg2, = plt.plot([H[0], C2[0]],[H[1], C2[1]],linewidth=5, color='red')
-        com1, = plt.plot(G1[0],G1[1],color='black',marker='o',markersize=5)
-        com2, = plt.plot(G2[0],G2[1],color='black',marker='o',markersize=5)
+        hip, = plt.plot(H[0], H[1], color='black', marker='o', markersize=10)
+        leg1, = plt.plot([H[0], C1[0]], [H[1], C1[1]], linewidth=5, color='red')
+        leg2, = plt.plot([H[0], C2[0]], [H[1], C2[1]], linewidth=5, color='red')
+        com1, = plt.plot(G1[0], G1[1], color='black', marker='o', markersize=5)
+        com2, = plt.plot(G2[0], G2[1], color='black', marker='o', markersize=5)
 
-        window_xmin = window_xmin + camera_rate;
-        window_xmax = window_xmax + camera_rate;
-        plt.xlim(window_xmin,window_xmax)
-        plt.ylim(window_ymin,window_ymax)
+        window_xmin = window_xmin + camera_rate
+        window_xmax = window_xmax + camera_rate
+        plt.xlim(window_xmin, window_xmax)
+        plt.ylim(window_ymin, window_ymax)
         plt.gca().set_aspect('equal')
 
         plt.pause(parms.pause)
@@ -85,107 +95,118 @@ def animate(t,z,parms):
     plt.close()
 
 
-def n_steps(t0,z0,parms,steps):
+def n_steps(t0, z0, parms, steps):
 
     z = z0
     t = t0
 
-    theta1 = z0[0];
+    theta1 = z0[0]
+    
     l = parms.l
+
     xh = 0
     yh = l*cos(theta1)
     xh_start = xh
-    zz = np.append(z0,np.array([xh,yh]))
-    for i in range(0,steps):
-        [z_temp,t_temp] = one_step(t0,z0,parms)
-        [mm,nn] = np.shape(z_temp)
-        zz_temp = np.zeros( (mm,6))
-        for j in range(0,mm):
-            xh = xh_start + l*sin(z_temp[0,0])-l*sin(z_temp[j,0]);
-            yh = l*cos(z_temp[j,0]);
-            zz_temp[j,:] = np.append(z_temp[j,:],np.array([xh,yh]))
-        xh_start = zz_temp[mm-2,4]
-        if i==0:
-            #z = np.concatenate(([z], z_temp[1:mm-1,:]), axis=0)
+    zz = np.append(z0,np.array([xh, yh]))
+
+    for i in range(0, steps):
+        [z_temp, t_temp] = one_step(t0, z0, parms)
+        [mm, nn] = np.shape(z_temp)
+        zz_temp = np.zeros((mm, 6))
+        for j in range(0, mm):
+            xh = xh_start + l*sin(z_temp[0, 0]) - l*sin(z_temp[j, 0])
+            yh = l*cos(z_temp[j, 0])
+            zz_temp[j, :] = np.append(z_temp[j,:],np.array([xh, yh]))
+
+        xh_start = zz_temp[mm-2, 4]
+
+        if i == 0:
+            # z = np.concatenate(([z], z_temp[1:mm-1,:]), axis=0)
             t = np.concatenate(([t], t_temp[1:mm-1]), axis=0)
-            zz = np.concatenate(([zz], zz_temp[1:mm-1,:]), axis=0)
+            zz = np.concatenate(([zz], zz_temp[1:mm-1, :]), axis=0)
         else:
-            #z = np.concatenate((z, z_temp[1:mm-1,:]), axis=0)
+            # z = np.concatenate((z, z_temp[1:mm-1,:]), axis=0)
             t = np.concatenate((t, t_temp[1:mm-1]), axis=0)
-            zz = np.concatenate((zz, zz_temp[1:mm-1,:]), axis=0)
-        theta1 = z_temp[mm-1,0]
-        omega1 = z_temp[mm-1,1]
-        theta2 = z_temp[mm-1,2]
-        omega2 = z_temp[mm-1,3]
+            zz = np.concatenate((zz, zz_temp[1:mm-1, :]), axis=0)
+
+        theta1 = z_temp[mm-1, 0]
+        omega1 = z_temp[mm-1, 1]
+        theta2 = z_temp[mm-1, 2]
+        omega2 = z_temp[mm-1, 3]
+
         z0 = np.array([theta1, omega1, theta2, omega2])
         t0 = t_temp[mm-1]
 
-    return zz,t
+    return zz, t
 
-def one_step(t0,z0,parms):
 
-    tf = t0+4;
+def one_step(t0, z0, parms):
+
+    tf = t0 + 4
     t = np.linspace(t0, tf, 1001)
     collision.terminal = True
     # contact.direction = -1
-    # sol = solve_ivp(single_stance,[t0, tf],z0,method='RK45', t_eval=t, dense_output=True, \
-    #         args=(parms.M,parms.m,parms.I,parms.l,parms.c,parms.g,parms.gam))
-    #
-    # error correction을 위해 RK45를 사용했다고 한다. 
-    sol = solve_ivp(single_stance,[t0, tf],z0,method='RK45', t_eval=t, dense_output=True, \
-                    events=collision, atol = 1e-13,rtol = 1e-12, args=(parms.M,parms.m,parms.I,parms.l,parms.c,parms.g,parms.gam))
 
+    # error correction을 위해 RK45를 사용
+    sol = solve_ivp(
+        single_stance, [t0, tf], z0, method='RK45', t_eval=t,
+        dense_output=True, events=collision, atol=1e-13, rtol=1e-12,
+        args=(parms.M,parms.m,parms.I,parms.l,parms.c,parms.g,parms.gam)
+    )
 
-    #get solution at different time steps from sol.y
-    [m,n] = np.shape(sol.y)
-    shape = (n,m)
+    # get solution at different time steps from sol.y
+    [m, n] = np.shape(sol.y)
+    shape = (n, m)
     t = sol.t
     z = np.zeros(shape)
 
-    #get event from sol.y_events and exact time sol.t_events
-    [mm,nn,pp] = np.shape(sol.y_events)
+    # get event from sol.y_events and exact time sol.t_events
+    [mm, nn, pp] = np.shape(sol.y_events)
     tt_last_event = sol.t_events[mm-1]
     yy_last_event = sol.y_events[mm-1]
 
-    #save data in z
-    for i in range(0,m):
-        z[:,i] = sol.y[i,:]
+    # save data in z
+    for i in range(0, m):
+        z[:, i] = sol.y[i, :]
 
     #get state before footstrike using events
     t_end = tt_last_event[0]
-    theta1 = yy_last_event[0,0]
-    omega1 = yy_last_event[0,1]
-    theta2 = yy_last_event[0,2]
-    omega2 = yy_last_event[0,3]
+    theta1 = yy_last_event[0, 0]
+    omega1 = yy_last_event[0, 1]
+    theta2 = yy_last_event[0, 2]
+    omega2 = yy_last_event[0, 3]
 
-    zminus = np.array([theta1, omega1, theta2, omega2 ])
+    zminus = np.array([theta1, omega1, theta2, omega2])
 
-    #return state after footstrike
-    zplus = footstrike(t_end,zminus,parms)
+    # return state after footstrike
+    zplus = footstrike(t_end, zminus, parms)
 
-    #replace last entry in z and t
+    # replace last entry in z and t
     t[n-1] = t_end
-    z[n-1,0] = zplus[0];
-    z[n-1,1] = zplus[1];
-    z[n-1,2] = zplus[2];
-    z[n-1,3] = zplus[3];
+    z[n-1, 0] = zplus[0]
+    z[n-1, 1] = zplus[1]
+    z[n-1, 2] = zplus[2]
+    z[n-1, 3] = zplus[3]
+
+    return z, t
 
 
-    return z,t
+def collision(t, z, M, m, I, l, c, g, gam):
 
+    theta1, omega1, theta2, omega2 = z
 
-def collision(t, z, M,m,I,l,c,g,gam):
-
-    theta1,omega1,theta2,omega2 = z
-
-    if (theta1>-0.05): #allow legs to pass through for small hip angles (taken care in real walker using stepping stones)
+    # allow legs to pass through for small hip angles
+    # (taken care in real walker using stepping stones)
+    if (theta1 > -0.05):
         gstop = 1
     else:
         gstop = theta2 + 2*theta1
 
     return gstop
 
+
 def footstrike(t, z, parms):
+
     theta1_n,omega1_n,theta2_n,omega2_n = z
 
     theta1 = theta1_n + theta2_n;

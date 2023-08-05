@@ -1,7 +1,8 @@
 import sympy as sy
 
 x, x_d, x_dd = sy.symbols('x x_d x_dd', real=True)
-# ex1 
+
+# ex1
 f1 = sy.sin(x)
 df1dx = sy.diff(f1, x) * x_d
 print(df1dx)
