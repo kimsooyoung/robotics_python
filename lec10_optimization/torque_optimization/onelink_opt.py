@@ -8,15 +8,15 @@ import scipy.optimize as opt
 # x0, x_min(-120), x_max(120) 설정
 # t, z0, z_end, u
 # limits
-# constraint => pendulum_constraint 함수 생성
-#    => 데이터 파싱 x (t, z0, z_end, u)
-#    => simulator에 x 전달 / simulator는 z_aft 밷는다.
-# pendulum_constraint에서 z_end - z_aft 리턴 (이걸 최적화)
-#
-# opt.minimize / opt_state = result.x
-# print()
-# animate
-# plot
+# constraint 
+#    => pendulum_constraint 
+#       => simulator
+#    => mimize simulator output & desire result 
+#    => this will be constraint
+#    => cost (u_opt * u_opt) 
+# simulator
+#    => onelink_rhs
+#       => controller (heuristic controller)
 
 
 def cos(angle):

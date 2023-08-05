@@ -67,7 +67,9 @@ def animate(t, z, parms):
 
 
 def control(theta1, theta1ref, theta1dot, kp1, kd1):
-    T1 = -kp1*(theta1-theta1ref)-kd1*theta1dot
+    
+    T1 = -kp1 * (theta1 - theta1ref) - kd1 * theta1dot
+    
     return T1
 
 
@@ -145,9 +147,6 @@ if __name__ == '__main__':
         t_temp = np.array([t[i], t[i+1]])
         z_temp = odeint(onelink_rhs, z0, t_temp, args=all_parms)
 
-        # 실제 노이즈는 odeint단에서 추가된다.
-        # 우리가 로봇을 실제 움직일 때도
-        # 토크는 제대로 주는데 로봇이 그대로 안움직이니까
         tau_temp = control(
             z0[0], parms.theta_des,
             z0[1], parms.kp1, parms.kd1
