@@ -146,13 +146,12 @@ def controller(x,y,phi,xdot,ydot,phidot, \
              x2dot_ref,y2dot_ref, \
              m,I,g,l):
 
-
     kd_x = 2*np.sqrt(kp_x);
     kd_y = 2*np.sqrt(kp_y);
 
-    us = m*(g+y2dot_ref+kp_y*(y_ref - y) + kd_y*(ydot_ref - ydot));
-    phi_ref = -(1/g)*(x2dot_ref + kp_x*(x_ref - x) + kd_x*(xdot_ref - xdot));
-    ud = kp_phi*(phi_ref-phi)+kd_phi*(-phidot);
+    us = m*(g + y2dot_ref - kp_y*(y - y_ref) - kd_y*(ydot - ydot_ref));
+    phi_ref = -(1/g)*(x2dot_ref - kp_x*(x - x_ref) - kd_x*(xdot - xdot_ref));
+    ud = -kp_phi*(phi - phi_ref) - kd_phi*(phidot);
 
     return us,ud
 

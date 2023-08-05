@@ -75,6 +75,7 @@ print("x_dd = ", (sy.solve(EOM_control[0],x_dd)[0]) )
 print("y_dd = ", (sy.solve(EOM_control[1],y_dd)[0]) )
 print("phi_dd = ", (sy.solve(EOM_control[2],phi_dd)[0]) )
 
+# TODO: LQR controller
 EOM = sy.Matrix([EOM[0],EOM[1], EOM[2]])
 M = EOM.jacobian(q_dd)
 N1 = EOM[0].subs([ (x_dd,0), (y_dd,0), (phi_dd,0) ])

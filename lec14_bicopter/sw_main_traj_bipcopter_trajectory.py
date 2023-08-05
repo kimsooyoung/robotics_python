@@ -130,7 +130,7 @@ def animate(t,z,parms):
     plt.close()
 
 def generate_traj8(t, x0, y0):
-
+    
     # print(len(t))
     T = t[N-1];
     A = 0.5;
