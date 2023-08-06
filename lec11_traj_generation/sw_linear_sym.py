@@ -10,7 +10,7 @@ q0, qf = sy.symbols('q0 qf')
 t0, tf = sy.symbols('t0 tf')
 
 A = sy.Matrix([
-    [1, t0], 
+    [1, t0],
     [1, tf]
 ])
 

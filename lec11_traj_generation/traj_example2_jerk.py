@@ -19,52 +19,57 @@ A = np.matrix('1 0 0 0 0 0 0 0 0 0; \
            0 1 2 3 4 0 -1 -2 -3 -4; \
            0 0 2 6 12 0 0 -2 -6 -12; \
            0 0 0 0 0 0 1 6 27 108; \
-           0 0 0 6 24 0 0 0 -6 -24'
-)    
+           0 0 0 6 24 0 0 0 -6 -24')
 
 b = np.matrix('0; 0.5; 0.5; 1; 0; 0; 0; 0; 0')
-# print(A.getI())
-x = A.getI()*b
-# print(x)
+x = A.getI() * b
 
-a10 = x[0,0]; a11 = x[1,0]; a12 = x[2,0]; a13 = x[3,0]; a14 = x[4,0];
-a20 = x[5,0]; a21 = x[6,0]; a22 = x[7,0]; a23 = x[8,0]; a24 = x[9,0];
+a10 = x[0, 0]
+a11 = x[1, 0]
+a12 = x[2, 0]
+a13 = x[3, 0]
+a14 = x[4, 0]
+a20 = x[5, 0]
+a21 = x[6, 0]
+a22 = x[7, 0]
+a23 = x[8, 0]
+a24 = x[9, 0]
 
 t1 = np.linspace(0, 1, 101)
 t2 = np.linspace(1, 3, 101)
 
-q1 = a10 + a11*t1 + a12*t1**2 + a13*t1**3 + a14*t1**4;
-q2 = a20 + a21*t2 + a22*t2**2 + a23*t2**3 + a24*t2**4;
+q1 = a10 + a11*t1 + a12*t1**2 + a13*t1**3 + a14*t1**4
+q2 = a20 + a21*t2 + a22*t2**2 + a23*t2**3 + a24*t2**4
 
-q1dot = a11 + 2*a12*t1 + 3*a13*t1**2 + 4*a14*t1**3;
-q2dot = a21 + 2*a22*t2 + 3*a23*t2**2 + 4*a24*t2**3;
+q1dot = a11 + 2*a12*t1 + 3*a13*t1**2 + 4*a14*t1**3
+q2dot = a21 + 2*a22*t2 + 3*a23*t2**2 + 4*a24*t2**3
 
-q1ddot = 2*a12 + 6*a13*t1 + 12*a14*t1**2;
-q2ddot = 2*a22 + 6*a23*t2 + 12*a24*t2**2;
+q1ddot = 2*a12 + 6*a13*t1 + 12*a14*t1**2
+q2ddot = 2*a22 + 6*a23*t2 + 12*a24*t2**2
 
-q1dddot = 6*a13 + 24*a14*t1;
-q2dddot = 6*a23 + 24*a24*t2; 
+q1dddot = 6*a13 + 24*a14*t1
+q2dddot = 6*a23 + 24*a24*t2
 
 plt.figure(1)
 
 plt.subplot(4, 1, 1)
-plt.plot(t1,q1,'b-')
-plt.plot(t2,q2,'r--')
-plt.ylabel("q");
+plt.plot(t1, q1, 'b-')
+plt.plot(t2, q2, 'r--')
+plt.ylabel('q')
 
 plt.subplot(4, 1, 2)
-plt.plot(t1,q1dot,'b-')
-plt.plot(t2,q2dot,'r--')
-plt.ylabel('qdot');
+plt.plot(t1, q1dot, 'b-')
+plt.plot(t2, q2dot, 'r--')
+plt.ylabel('qdot')
 
 plt.subplot(4, 1, 3)
-plt.plot(t1,q1ddot,'b-')
-plt.plot(t2,q2ddot,'r--')
-plt.ylabel('qddot');
+plt.plot(t1, q1ddot, 'b-')
+plt.plot(t2, q2ddot, 'r--')
+plt.ylabel('qddot')
 
 plt.subplot(4, 1, 4)
-plt.plot(t1,q1dddot,'b-')
-plt.plot(t2,q2dddot,'r--')
-plt.ylabel('qdddot');
+plt.plot(t1, q1dddot, 'b-')
+plt.plot(t2, q2dddot, 'r--')
+plt.ylabel('qdddot')
 
 plt.show()

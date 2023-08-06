@@ -22,18 +22,18 @@ plt.figure(1)
 
 plt.subplot(4, 1, 1)
 plt.plot(t, q_t)
-plt.ylabel("q")
+plt.ylabel('q')
 
 plt.subplot(4, 1, 2)
 plt.plot(t, qdot_t)
-plt.ylabel("q_d")
+plt.ylabel('q_d')
 
 plt.subplot(4, 1, 3)
 plt.plot(t, qdotdot_t)
-plt.ylabel("q_dd")
+plt.ylabel('q_dd')
 
 plt.subplot(4, 1, 4)
 plt.plot(t, qdotdotdot_t)
-plt.ylabel("q_ddd")
+plt.ylabel('q_ddd')
 
 plt.show()

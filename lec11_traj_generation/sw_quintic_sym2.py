@@ -21,15 +21,15 @@ equ = sy.Matrix([equ0, equ1, equ2, equ3, equ4, equ5])
 
 A = equ.jacobian(q)
 b = -equ.subs([
-    (a0, 0), (a1, 0), (a2, 0), 
+    (a0, 0), (a1, 0), (a2, 0),
     (a3, 0), (a4, 0), (a5, 0)
 ])
 
 ans = A.inv() * b
 
-print(f"a0 = {ans[0]}")
-print(f"a1 = {ans[1]}")
-print(f"a2 = {ans[2]}")
-print(f"a3 = {ans[3]}")
-print(f"a4 = {ans[4]}")
-print(f"a5 = {ans[5]}")
+print(f'a0 = {ans[0]}')
+print(f'a1 = {ans[1]}')
+print(f'a2 = {ans[2]}')
+print(f'a3 = {ans[3]}')
+print(f'a4 = {ans[4]}')
+print(f'a5 = {ans[5]}')

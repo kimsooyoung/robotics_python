@@ -1,5 +1,5 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 t0, tf = 0, 1
 q0, qf = 10, 20
@@ -20,14 +20,14 @@ plt.figure(1)
 
 plt.subplot(3, 1, 1)
 plt.plot(t, q_t)
-plt.ylabel("q")
+plt.ylabel('q')
 
 plt.subplot(3, 1, 2)
 plt.plot(t, qdot_t)
-plt.ylabel("qdot")
+plt.ylabel('qdot')
 
 plt.subplot(3, 1, 3)
 plt.plot(t, qdotdot_t)
-plt.ylabel("qdotdot")
+plt.ylabel('qdotdot')
 
 plt.show()
