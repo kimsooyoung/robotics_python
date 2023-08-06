@@ -1,57 +1,60 @@
-from matplotlib import pyplot as plt
 from scipy.integrate import odeint
+from matplotlib import pyplot as plt
 
 import numpy as np
 
-class parameters:
+
+class Parameters():
+
     def __init__(self):
         # system parameters
         self.m = 1
         self.c = 1
         self.k = 1
-        
+
         # control gains
-        self.kp = 10
-        self.kd = 1*(-self.c+2*np.sqrt(self.m*(self.k+self.kp)));
+        self.kp = 0.1
+        self.kd = -self.c + 2 * np.sqrt((self.k + self.kp) * self.m)
 
-def smd_rhs(z,t, m, c, k, kp, kd):
 
-    x = z[0];
-    xdot = z[1];
+def smd_rhs(z, t, m, c, k, kp, kd):
 
-    #orginal system
-    #xddot = -k*x/m - c*xdot/m;
+    x, xdot = z[0], z[1]
 
-    #with control
-    xddot = -( (k+kp)/m)*x-((c+kd)/m)*xdot;
+    # w/o control
+    # xdotdot = -(c*xdot + k*x)/m
 
-    zdot = np.array([xdot, xddot]);
+    # with pd control - feedback linearization
+    xdotdot = -((c+kd)*xdot + (k+kp)*x)/m
 
-    return zdot
+    return [xdot, xdotdot]
+
 
 def plot(t, z):
-    
-    plt.figure(1)
-    
-    plt.plot(t,z[:,0])
-    plt.xlabel("t")
-    plt.ylabel("position")
-    plt.title("Plot of position vs time")
-    
-    plt.show()
-    
 
-if __name__ == "__main__":
-    params = parameters()
-    
+    plt.figure(1)
+
+    plt.plot(t, z[:, 0])
+
+    plt.xlabel('t')
+    plt.ylabel('position')
+    plt.title('Plot of position vs time')
+
+    plt.show()
+
+
+if __name__ == '__main__':
+
+    params = Parameters()
+    m, c, k, kp, kd = params.m, params.c, params.k, params.kp, params.kd
+
+    # let's assume mass object initially located in 0.5 point
     x0, xdot0 = 0.5, 0
     t0, tend = 0, 20
-    
-    t = np.linspace(t0, tend, 101)
-    z0 = np.array([x0, xdot0])
-    
-    # Extra arguments must be in a tuple.
-    z = odeint(smd_rhs, z0, t, args=(params.m,params.c,params.k,params.kp,params.kd))
 
-    plot(t, z)
-    
+    t = np.linspace(t0, tend)
+    z0 = np.array([x0, xdot0])
+
+    result = odeint(smd_rhs, z0, t, args=(m, c, k, kp, kd))
+
+    plot(t, result)
