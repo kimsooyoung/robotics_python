@@ -1,7 +1,7 @@
-from scipy.integrate import odeint
 from matplotlib import pyplot as plt
-
 import numpy as np
+
+from scipy.integrate import odeint
 
 
 class Parameters():

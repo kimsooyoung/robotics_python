@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 import numpy as np
 
-from scipy.integrate import odeint
 from scipy import interpolate
+from scipy.integrate import odeint
 
 
 class Parameters():
@@ -16,9 +16,6 @@ class Parameters():
         self.I = 1/12 * (self.m * self.l**2)
 
         self.kp = 200
-        # kd는 운동 방정식 구한 후에 계산
-        # 그런데 운동방정식이 비선형이라... 근의 공식이 안됨
-        # cos을 테일러 전개하면 첫 항이 1이므로, k=0이라고 해보자.
         self.kd = 2 * np.sqrt(self.kp)
 
         self.q_des = np.pi / 2

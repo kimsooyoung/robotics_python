@@ -1,50 +1,78 @@
-from matplotlib import pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
-import math
-from scipy.integrate import odeint
+
 from scipy import interpolate
+from scipy.integrate import odeint
 
-def cos(angle):
-    return np.cos(angle)
 
-def sin(angle):
-    return np.sin(angle);
+class Parameters:
 
-class parameters:
     def __init__(self):
+
         self.m1 = 1
-        self.I1 = 0.5
-        self.g = 10
+        self.g = 9.81
         self.l1 = 1
+        self.I1 = (self.m1 / 12) * (self.l1 ** 2)
         self.pause = 0.01
-        self.fps =20
+        self.fps = 20
 
         self.kp1 = 200
         self.kd1 = 2*np.sqrt(self.kp1)
 
-def animate(t,z,parms):
-    #interpolation
-    t_interp = np.arange(t[0],t[len(t)-1],1/parms.fps)
-    [m,n] = np.shape(z)
-    shape = (len(t_interp),n)
-    z_interp = np.zeros(shape)
 
-    for i in range(0,n-1):
-        f = interpolate.interp1d(t, z[:,i])
-        z_interp[:,i] = f(t_interp)
+def get_dynamics(theta, m, I, g, l):
+
+    M = m*l**2/4 + I
+    C = 0
+    G = m*g*l/2*np.cos(theta)
+
+    return M, C, G
+
+
+def get_tau(theta, omega, m, I, g, l, q_ref, qd_ref, qdd_ref, kp, kd):
+
+    M, C, G = get_dynamics(theta, m, I, g, l)
+
+    return M*(qdd_ref - kp*(theta-q_ref) - kd*(omega-qd_ref)) + C + G
+
+
+def one_link_eom(
+        z, t, m, I, g, l, kp, kd,
+        theta_ref, omega_ref, ang_acc_ref, tau_noise):
+
+    theta, omega = z
+
+    M, C, G = get_dynamics(theta, m, I, g, l)
+
+    tau = get_tau(theta, omega, m, I, g, l, theta_ref, omega_ref, ang_acc_ref, kp, kd) - tau_noise
+    ang_acc = (tau - C - G)/M
+
+    return np.array([omega, ang_acc])
+
+
+def animate(t, z, parms):
+
+    # interpolation
+    t_interp = np.arange(t[0], t[len(t)-1], 1/parms.fps)
+    m, n = np.shape(z)
+    z_interp = np.zeros((len(t_interp), n))
+
+    for i in range(0, n-1):
+        f = interpolate.interp1d(t, z[:, i])
+        z_interp[:, i] = f(t_interp)
 
     l1 = parms.l1
 
-    #plot
-    for i in range(0,len(t_interp)):
-        theta1 = z_interp[i,0];
+    # plot
+    for i in range(0, len(t_interp)):
+        theta1 = z_interp[i, 0]
         O = np.array([0, 0])
-        P = np.array([l1*cos(theta1), l1*sin(theta1)])
+        P = np.array([l1*np.cos(theta1), l1*np.sin(theta1)])
 
-        pend1, = plt.plot([O[0], P[0]],[O[1], P[1]],linewidth=5, color='red')
+        pend1, = plt.plot([O[0], P[0]], [O[1], P[1]], linewidth=5, color='red')
 
-        plt.xlim(-2,2)
-        plt.ylim(-2,2)
+        plt.xlim(-2, 2)
+        plt.ylim(-2, 2)
         plt.gca().set_aspect('equal')
 
         plt.pause(parms.pause)
@@ -52,117 +80,89 @@ def animate(t,z,parms):
 
     plt.close()
 
-def control(theta1,theta1dot,kp1,kd1,theta1_ref,theta1dot_ref,theta1ddot_ref,m1,g,l1,I1):
-    T1 = (I1+m1*l1*l1/4)*(theta1ddot_ref-kp1*(theta1-theta1_ref)-kd1*(theta1dot-theta1dot_ref)) + 0.5*m1*g*l1*cos(theta1)
-    return T1
 
-def onelink_rhs(z,t,m1,I1,l1,g,kp1,kd1,theta1_ref,theta1dot_ref,theta1ddot_ref,T1_disturb):
-
-    theta1 = z[0];
-    theta1dot = z[1];
-
-    T1 = control(theta1,theta1dot,kp1,kd1,theta1_ref,theta1dot_ref,theta1ddot_ref,m1,g,l1,I1)-T1_disturb
-    theta1ddot = (1/( I1+(m1*l1*l1/4) ))*(T1 - 0.5*m1*g*l1*cos(theta1));
-
-    zdot = np.array([theta1dot, theta1ddot]);
-
-    return zdot
-
-def plot(t, z, theta_ref, thetadot_ref, T):
+def plot(t, z, theta_ref, omega_ref, T):
 
     plt.figure(1)
 
-    plt.subplot(3,1,1)
-    plt.plot(t,z[:,0])
-    plt.plot(t,theta_ref,'r+');
-    plt.ylabel("theta1")
-    plt.title("Plot of position, velocity, and Torque vs. time")
-    
-    plt.subplot(3,1,2)
-    plt.plot(t,z[:,1])
-    plt.plot(t,thetadot_ref,'r+');
-    plt.ylabel("theta1dot")
-    
-    plt.subplot(3,1,3)
-    plt.plot(t,T[:,0])
-    plt.xlabel("t")
-    plt.ylabel("Torque")
+    plt.subplot(3, 1, 1)
+    plt.plot(t, z[:, 0])
+    plt.plot(t, theta_ref, 'r')
+    plt.ylabel('theta1')
+    plt.title('Plot of position, velocity, and Torque vs. time')
+
+    plt.subplot(3, 1, 2)
+    plt.plot(t, z[:, 1])
+    plt.plot(t, omega_ref, 'r')
+    plt.ylabel('theta1dot')
+
+    plt.subplot(3, 1, 3)
+    plt.plot(t, T[:, 0])
+    plt.xlabel('t')
+    plt.ylabel('Torque')
 
     plt.show()
 
-if __name__=="__main__":
-#parameters
-    parms = parameters()
 
-    #initialization
-    theta1, theta1dot = 0, 0
+if __name__ == '__main__':
 
-    # disturbances
-    T1_mean, T1_dev = 0.0, 40 * 0
-    theta1_mean, theta1_dev = 0.0, 0.1 * 0.0
-    theta1dot_mean, theta1dot_dev = 0.0, 0.5 * 0.0
+    params = Parameters()
+    m, I, g, l, kp, kd = params.m1, params.I1, params.g, params.l1, \
+        params.kp1, params.kd1
 
-    #set the time
-    t1_0, t1_N = 0, 1.5
-    t2_0, t2_N = 1.5, 3
+    t0, t1, t2 = 0, 1.5, 3
 
-    #time
-    h = 0.005;
-    N1 = int((t1_N-t1_0)/h) + 1;
-    time1 = np.linspace(t1_0, t1_N,N1)
-    N2 = int((t2_N-t2_0)/h) + 1;
-    time2 = np.linspace(t2_0, t2_N,N2)
-    
-    t = np.concatenate((time1,time2[1:]))
+    ts1 = np.linspace(t0, t1, 100)
+    ts2 = np.linspace(t1, t2, 100)
 
-    pi = np.pi;
+    ts = np.concatenate((ts1, ts2[1:]))
 
-    a10 =  0
-    a11 =  0
-    a12 =  0.666666666666667*pi
-    a13 =  -0.296296296296296*pi
-    a20 =  -2.0*pi
-    a21 =  4.0*pi
-    a22 =  -2.0*pi
-    a23 =  0.296296296296296*pi
+    pi = np.pi
+    a10 = 0
+    a11 = 0
+    a12 = 0.666666666666667*pi
+    a13 = -0.296296296296296*pi
+    a20 = -2.0*pi
+    a21 = 4.0*pi
+    a22 = -2.0*pi
+    a23 = 0.296296296296296*pi
 
-    thetaA = a10 + a11*time1 + a12*time1**2 + a13*time1**3;
-    thetaAdot = a11 + 2*a12*time1 + 3*a13*time1**2;
-    thetaAddot = 2*a12 + 6*a13*time1;
+    theta1 = a10 + a11*ts1 + a12*ts1**2 + a13*ts1**3
+    omega1 = a11 + 2*a12*ts1 + 3*a13*ts1**2
+    ang_acc1 = 2*a12 + 6*a13*ts1
 
-    thetaB = a20 + a21*time2 + a22*time2**2 + a23*time2**3;
-    thetaBdot = a21 + 2*a22*time2 + 3*a23*time2**2;
-    thetaBddot = 2*a22 + 6*a23*time2;
+    theta2 = a20 + a21*ts2 + a22*ts2**2 + a23*ts2**3
+    omega2 = a21 + 2*a22*ts2 + 3*a23*ts2**2
+    ang_acc2 = 2*a22 + 6*a23*ts2
 
-    theta_ref = np.concatenate((thetaA,thetaB[1:]))
-    thetadot_ref = np.concatenate((thetaAdot,thetaBdot[1:]))
-    thetaddot_ref = np.concatenate((thetaAddot,thetaBddot[1:]))
+    theta_ref = np.concatenate((theta1, theta2[1:]))
+    omega_ref = np.concatenate((omega1, omega2[1:]))
+    ang_acc_ref = np.concatenate((ang_acc1, ang_acc2[1:]))
 
-    #state
-    z = np.zeros( (len(t), 2) )
-    T = np.zeros( (len(t),1) )
+    # initial conditions
+    z0, tau0 = np.array([0, 0]), np.array([0])
 
-    z0 = np.array([theta1, theta1dot])
-    z[0] = z0
+    z = np.zeros((len(ts), 2))
+    tau = np.zeros((len(ts), 1))
+    z[0], tau[0] = z0, tau0
 
-    for i in range(len(t)-1):
-        theta1_ref, theta1dot_ref, theta1ddot_ref = theta_ref[i], thetadot_ref[i], thetaddot_ref[i]
-        physical_parms = (parms.m1,parms.I1,parms.l1,parms.g)
-        T1_disturb = np.random.normal(T1_mean,T1_dev)
+    for i in range(len(ts)-1):
 
-        control_parms = (parms.kp1,parms.kd1,theta1_ref,theta1dot_ref,theta1ddot_ref, T1_disturb)
-        all_parms = physical_parms + control_parms
+        args = m, I, g, l, kp, kd, \
+            theta_ref[i], omega_ref[i], ang_acc_ref[i]
 
-        t_temp = np.array([t[i], t[i+1]])
-        z_temp = odeint(onelink_rhs, z0, t_temp, args=all_parms)
-        T_temp  = control(z0[0],z0[1],parms.kp1,parms.kd1,theta1_ref,theta1dot_ref,theta1ddot_ref,parms.m1,parms.g,parms.l1,parms.I1)
+        temp_ts = np.array([ts[i], ts[i+1]])
+        result = odeint(one_link_eom, z0, temp_ts, args=args)
+        temp_tau = get_tau(
+            z0[0], z0[1], m, I, g, l,
+            theta_ref[i], omega_ref[i], ang_acc_ref[i], kp, kd
+        )
 
-        z0 = np.array([z_temp[1,0]+np.random.normal(theta1_mean,theta1_dev), \
-                    z_temp[1,1]+np.random.normal(theta1dot_mean,theta1dot_dev)])
+        # 만약 실제 로봇이었다면, 여기가 sensor로부터 받은 값이 될 것이다.
+        z0 = result[1]
 
         z[i+1] = z0
-        T[i+1] = T_temp
+        tau[i+1] = temp_tau
 
-
-    animate(t,z,parms)
-    plot(t, z, theta_ref, thetadot_ref, T)
+    animate(ts, z, params)
+    plot(ts, z, theta_ref, omega_ref, tau)

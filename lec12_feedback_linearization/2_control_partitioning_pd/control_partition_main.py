@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
-from scipy.integrate import odeint
 import numpy as np
+from scipy.integrate import odeint
 
 
 class Parameter():
@@ -12,8 +12,8 @@ class Parameter():
 
         # self.Kp = 100 * np.identity(2)
         self.Kp = 10 * np.identity(2)
+        
         # self.Kp = 1 * np.identity(2)
-
         self.Kd = 2 * np.sqrt(self.Kp)
 
         self.q_des = np.array([0.5, 1.0])

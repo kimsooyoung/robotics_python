@@ -1,8 +1,8 @@
 from matplotlib import pyplot as plt
 import numpy as np
 
-from scipy.integrate import odeint
 from scipy import interpolate
+from scipy.integrate import odeint
 
 
 class Parameters():
@@ -136,5 +136,5 @@ if __name__ == '__main__':
         z[i+1] = z0
         tau[i+1] = get_tau(z0[0], z0[1], kp, kd, q_des, m, l, g, I)
 
-    # animate(t, z, params)
+    animate(t, z, params)
     plot(t, z, tau, params)
