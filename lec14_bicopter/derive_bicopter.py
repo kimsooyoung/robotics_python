@@ -1,63 +1,98 @@
 import sympy as sy
 
-x,y,phi  = sy.symbols('x y phi', real=True)
-xdot,ydot,phidot  = sy.symbols('xdot ydot phidot', real=True)
-xddot,yddot,phiddot  = sy.symbols('xddot yddot phiddot', real=True)
-m,I,g,l  = sy.symbols('m I g l', real=True)
-u1, u2 = sy.symbols('u1 u2', real=True)
-#1) position and velocity
-#positions are x and y
-#velocities are xdot and yddot
-
-#2) Kinetic and potential energy
-T = 0.5*m*(xdot*xdot + ydot*ydot) + 0.5*I*phidot*phidot
-V = m*g*y
-L = T-V
-# print(type(T))
-# print(type(V))
-# print(type(L))
-
-f1 = sy.Matrix([x+0.5*l*sy.cos(phi),y+0.5*l*sy.sin(phi)])
-z1 = sy.Matrix([x, y, phi])
-J1 = f1.jacobian(z1)
-#print(J1)
-
-f2 = sy.Matrix([x-0.5*l*sy.cos(phi),y-0.5*l*sy.sin(phi)])
-z2 = sy.Matrix([x, y, phi])
-J2 = f2.jacobian(z2)
-#print(J2)
-
-F1 = sy.Matrix([-u1*sy.sin(phi),u1*sy.cos(phi)])
-F2 = sy.Matrix([-u2*sy.sin(phi),u2*sy.cos(phi)])
-
-F = sy.simplify(sy.Transpose(J1)*F1+sy.Transpose(J2)*F2)
-print(F)
-
-# #3) Euler-Lagrange equations
-Fx = F[0]
-Fy = F[1]
-tau = F[2]
+m, g, l, I = sy.symbols('m g l I')
+u1, u2 = sy.symbols('u1 u2')
+x, y, phi = sy.symbols('x y phi')
+x_d, y_d, phi_d = sy.symbols('x_d y_d phi_d')
+x_dd, y_dd, phi_dd = sy.symbols('x_dd y_dd phi_dd')
 
 
-#4 EOM: Using loops to automate equation generation
-q = [x, y, phi]
-qdot = [xdot, ydot, phidot]
-qddot = [xddot, yddot, phiddot]
-F = [Fx, Fy, tau]
-dLdqdot = []
-ddt_dLdqdot = []
-dLdq = []
+T = (x_d**2 + y_d**2) * (m / 2) + (phi_d**2) * (I / 2)
+V = m * g * y
+L = T - V
+
+H_g0 = sy.Matrix([[1, 0, x], [0, 1, y], [0, 0, 1]])
+
+H_01 = sy.Matrix(
+    [[sy.cos(phi), -sy.sin(phi), 0], [sy.sin(phi), sy.cos(phi), 0], [0, 0, 1]]
+)
+
+H_g1 = H_g0 * H_01
+
+P = sy.Matrix([l / 2, 0, 1])
+R = sy.Matrix([-l / 2, 0, 1])
+
+P_0 = H_g1 * P
+R_0 = H_g1 * R
+
+P_0 = sy.Matrix([P_0[0], P_0[1]])
+R_0 = sy.Matrix([R_0[0], R_0[1]])
+
+R_op = sy.Matrix([[sy.cos(phi), -sy.sin(phi)], [sy.sin(phi), sy.cos(phi)]])
+
+F_op = R_op * sy.Matrix([0, u1])
+F_or = R_op * sy.Matrix([0, u2])
+
+q = sy.Matrix([x, y, phi])
+
+J_p = P_0.jacobian(q)
+J_r = R_0.jacobian(q)
+
+Q = sy.simplify(J_p.T * F_op + J_r.T * F_or)
+
+# EOM
+q_d = sy.Matrix([x_d, y_d, phi_d])
+q_dd = sy.Matrix([x_dd, y_dd, phi_dd])
+
 EOM = []
-mm = len(qddot)
-for i in range(0,mm):
-    dLdqdot.append(sy.diff(L,qdot[i]))
-    tmp = 0;
-    for j in range(0,mm):
-        tmp += sy.diff(dLdqdot[i],q[j])*qdot[j]+ sy.diff(dLdqdot[i],qdot[j])*qddot[j]
-    ddt_dLdqdot.append(tmp)
-    dLdq.append(sy.diff(L,q[i]));
-    EOM.append(ddt_dLdqdot[i] - dLdq[i] - F[i])
+EOM_control = []
+dLdq = []
+dLdqd = []
+dt_dLdqd = []
 
-print(sy.solve(EOM[0],xddot))
-print(sy.solve(EOM[1],yddot))
-print(sy.solve(EOM[2],phiddot))
+for i in range(len(q)):
+    dLdq.append(sy.diff(L, q[i]))
+    dLdqd.append(sy.diff(L, q_d[i]))
+
+    temp = 0
+    for j in range(len(q)):
+        temp += sy.diff(dLdqd[i], q[j]) * q_d[j] + sy.diff(dLdqd[i], q_d[j]) * q_dd[j]
+    dt_dLdqd.append(temp)
+
+    EOM.append(dt_dLdqd[i] - dLdq[i])
+    EOM_control.append(dt_dLdqd[i] - dLdq[i] - Q[i])
+
+print('x_dd = ', (sy.solve(EOM_control[0], x_dd)[0]))
+print('y_dd = ', (sy.solve(EOM_control[1], y_dd)[0]))
+print('phi_dd = ', (sy.solve(EOM_control[2], phi_dd)[0]))
+
+# TODO: LQR controller
+EOM = sy.Matrix([EOM[0], EOM[1], EOM[2]])
+M = EOM.jacobian(q_dd)
+N1 = EOM[0].subs([(x_dd, 0), (y_dd, 0), (phi_dd, 0)])
+N2 = EOM[1].subs([(x_dd, 0), (y_dd, 0), (phi_dd, 0)])
+N3 = EOM[2].subs([(x_dd, 0), (y_dd, 0), (phi_dd, 0)])
+G1 = N1.subs([(x_d, 0), (y_d, 0), (phi_d, 0)])
+G2 = N2.subs([(x_d, 0), (y_d, 0), (phi_d, 0)])
+G3 = N3.subs([(x_d, 0), (y_d, 0), (phi_d, 0)])
+C1 = N1 - G1
+C2 = N2 - G2
+C3 = N3 - G3
+
+print('M11 = ', sy.simplify(M[0, 0]))
+print('M12 = ', sy.simplify(M[0, 1]))
+print('M13 = ', sy.simplify(M[0, 2]))
+print('M21 = ', sy.simplify(M[1, 0]))
+print('M22 = ', sy.simplify(M[1, 1]))
+print('M23 = ', sy.simplify(M[1, 2]))
+print('M31 = ', sy.simplify(M[2, 0]))
+print('M32 = ', sy.simplify(M[2, 1]))
+print('M33 = ', sy.simplify(M[2, 2]), '\n')
+
+print('C1 = ', sy.simplify(C1))
+print('C2 = ', sy.simplify(C2))
+print('C3 = ', sy.simplify(C3), '\n')
+
+print('G1 = ', sy.simplify(G1))
+print('G2 = ', sy.simplify(G2))
+print('G3 = ', sy.simplify(G3), '\n')

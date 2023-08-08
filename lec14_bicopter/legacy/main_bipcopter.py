@@ -1,38 +1,26 @@
 from matplotlib import pyplot as plt
+import numpy as np
+import math
 from scipy.integrate import odeint
 from scipy import interpolate
-import numpy as np
+from scipy.optimize import fsolve
 
-class Parameters():
-    
+def cos(angle):
+    return np.cos(angle)
+
+def sin(angle):
+    return np.sin(angle);
+
+class parameters:
     def __init__(self):
-        
         self.m = 1
         self.g = 9.81
         self.l = 0.2
         self.r = 0.05
-        self.I = self.m*self.l**2/12
         
+        self.I = self.m*self.l**2/12
         self.pause = 0.01
         self.fps =30
-        
-def controller(m, g, l, r, I):
-    
-    us = m*g + 0.01
-    ud = 0.0
-    
-    return us, ud
-        
-def bicopter_dynamics(z,t, m, g, l, r, I):
-    
-    x, y, phi, x_d, y_d, phi_d = z
-    us, ud = controller(m, g, l, r, I)
-    
-    x_dd = -(us)*np.sin(phi)/m
-    y_dd = -g + us*np.cos(phi)/m
-    phi_dd = (l*ud)/(2*I)
-    
-    return x_d, y_d, phi_d, x_dd, y_dd, phi_dd
 
 def animate(t,z,parms):
     #interpolation
@@ -59,8 +47,8 @@ def animate(t,z,parms):
         y = z_interp[i,1];
         phi = z_interp[i,2]
 
-        R = np.array([[np.cos(phi), -np.sin(phi)],
-                     [np.sin(phi), np.cos(phi)]])
+        R = np.array([[cos(phi), -sin(phi)],
+                     [sin(phi), cos(phi)]])
         middle = np.array([x,y])
 
         drone_left = np.add(middle,R.dot(np.array([-0.5*l,0])))
@@ -114,26 +102,70 @@ def animate(t,z,parms):
         prop_right.remove()
 
     plt.close()
-        
+
+def controller(x,y,phi,xdot,ydot,phidot, \
+             m,I,g,l):
+
+    us = m*g+0.01
+    ud = 0
+
+    # phi_ref = -50*(x-0)
+    # ud = -100*(phi-0.2)-10*phidot
+
+    return us,ud
+
+def bicopter_rhs(z,t,m,I,g,l):
+    
+    x, y, phi, xdot, ydot, phidot = z
+    
+    [us,ud] = controller(x,y,phi,xdot,ydot,phidot, m,I,g,l)
+
+    xddot = -(us/m)*sin(phi);
+    yddot =  (us/m)*cos(phi) - g;
+    phiddot = 0.5*l*ud/I;
+
+    zdot = np.array([xdot, ydot, phidot, \
+                     xddot, yddot, phiddot]);
+
+    return zdot
+
+
 if __name__=="__main__":
-    
-    params = Parameters()
-    args = params.m, params.g, params.l, params.r, params.I
-    
-    t, tend, N = 0, 5, 100
-    ts = np.linspace(t, tend, N)
-    
-    x, y, phi, x_d, y_d, phi_d = 0, 0, 0, 0, 0, 0
-    z0 = x, y, phi, x_d, y_d, phi_d
-    tau = np.zeros((N, 2))
-    z = np.zeros((N, 6))
+    #parameters
+    parms = parameters()
+
+    # time and tspan
+    h = 0.005;
+    t0 = 0;
+    tN = 4;
+
+    N = int((tN-t0)/h) + 1;
+    t = np.linspace(t0, tN,N)
+
+    #initialization
+    x0, y0, phi0, vx0, vy0, phidot0 = 0, 0, -0.1, 0, 0, 0
+    z0=np.array([x0, y0, phi0, vx0, vy0, phidot0]);
+
+    z = np.zeros((N,6))
+    us = np.zeros((N,1))
+    ud = np.zeros((N,1))
     z[0] = z0
-    
+
     for i in range(N-1):
-        t_temp = np.array([ts[i], ts[i+1]])
-        result = odeint(bicopter_dynamics, z0, t_temp, args)
-        
-        z0 = result[-1]
+
+        physical_parms = (parms.m,parms.I,parms.g,parms.l)
+        all_parms = physical_parms
+
+        t_temp = np.array([t[i], t[i+1]])
+        z_temp = odeint(bicopter_rhs, z0, t_temp, args=all_parms)
+        us_temp,ud_temp  = controller(z0[0],z0[1],z0[2],z0[3],z0[4],z0[5], \
+                parms.m,parms.I,parms.g,parms.l)
+
+        z0 = np.array([z_temp[1,0], z_temp[1,1], z_temp[1,2], \
+                    z_temp[1,3], z_temp[1,4], z_temp[1,5]])
+
         z[i+1] = z0
-        
-    animate(ts, z, params)
+        us[i+1,0] = us_temp
+        ud[i+1,0] = ud_temp
+
+    animate(t,z,parms)
