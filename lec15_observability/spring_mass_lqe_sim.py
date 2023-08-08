@@ -1,171 +1,138 @@
+import control
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy.integrate import odeint
-import control
 
-class parameters:
+
+class Parameter:
+
     def __init__(self):
-        self.m1 = 1
-        self.m2 = 1
-        self.k1 = 2
-        self.k2 = 3
+        self.m1, self.m2 = 1, 1
+        self.k1, self.k2 = 2, 3
 
-        self.A = np.array([
-                    [0,0,1,0],
-                    [0,0,0,1],
-                    [-(self.k1/self.m1+self.k2/self.m1), self.k2/self.m1, 0, 0],
-                    [self.k2/self.m2, -self.k2/self.m2, 0, 0]
-                    ])
+        self.A = np.array(
+            [
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+                [-(self.k1 / self.m1 + self.k2 / self.m1), self.k2 / self.m1, 0, 0],
+                [self.k2 / self.m2, -self.k2 / self.m2, 0, 0],
+            ]
+        )
 
-        self.C = np.array([
-                     [0,0,1,0],
-                     [0,0,0,1]
-                     ])
+        self.C = np.array([[0, 0, 1, 0], [0, 0, 0, 1]])
 
-        self.G = np.array([
-                     [0,0],
-                     [0,0],
-                     [1,0],
-                     [0,1]
-                     ])
+        self.G = np.array([[0, 0], [0, 0], [1, 0], [0, 1]])
 
-def spring_mass_rhs(x,t,A,C,G,L,f1_disturb,f2_disturb,q1dot_sensor,q2dot_sensor):
+        self.Qe = np.diag([0.1, 0.1])
+        self.Re = np.diag([0.1, 0.1])
 
-    O_44 = np.zeros((4,4))
-    LC = np.matmul(L,C)
-    A_LC = np.subtract(A,LC)
+        # self.Qe = np.diag([2,3])
+        # self.Re = np.diag([0.5,0.5])
 
-    O_42 = np.zeros((4,2))
-    Gbig = np.block([ \
-         [G], \
-         [O_42 ] \
-         ])
-    # print("Gbig", Gbig)
 
-    # process noise
-    w = np.array([f1_disturb,f2_disturb])
-    # print("w", w)
+def spring_mass_dynamics(x, t, A, C, G, L, p_noise1, p_noise2, m_noise1, m_noise2):
+    O_44 = np.zeros((4, 4))
+    O_42 = np.zeros((4, 2))
 
-    Lbig = np.block([ \
-         [O_42 ], \
-         [L] \
-         ])
-    
-    # measurement noise 
-    v = np.array([q1dot_sensor,q2dot_sensor])
+    # Gbig = np.block([
+    #     [G],
+    #     [O_42]
+    # ])
 
-    #no observer
-    # Abig = np.block([ \
-    #      [A,   O_44], \
-    #     [O_44, A ] \
-    #      ])
+    Gbig = np.block([[O_42], [G]])
 
-    #with filter gain L
-    Abig = np.block([ \
-         [A,   O_44], \
-        [LC, A_LC ] \
-         ])
+    Lbig = np.block([[O_42], [L]])
 
-    # e1_d = A*e1 + G*w + L*v - L=0
-    # e2_d = LC*e1 + (A-LC)*e1 + G*w + L*v - G=0
-    # xdot = Abig.dot(x) + Gbig.dot(w) - Lbig.dot(v)
-    xdot = Abig.dot(x) + Gbig.dot(w) + Lbig.dot(v)
+    Abig = np.block([[A, O_44], [L @ C, A - L @ C]])
+
+    # w: process noise, v: measurement noise
+    w = np.array([p_noise1, p_noise2])
+    v = np.array([m_noise1, m_noise2])
+
+    xdot = Abig @ x + Gbig @ w + Lbig @ v
 
     return xdot
 
-def plot(t, xbig):
-    
-    plt.figure(1)
-    
-    plt.subplot(2,2,1)
-    plt.plot(t,xbig[:,0],'r-.')
-    plt.plot(t,xbig[:,4],'b');
-    plt.ylabel("position q1")
-    plt.legend(['act','est'])
-    
-    plt.subplot(2,2,3)
-    plt.plot(t,xbig[:,1],'r-.')
-    plt.plot(t,xbig[:,5],'b');
-    plt.legend(['act','est'])
-    plt.ylabel("position q2")
-    plt.xlabel("time t")
 
-    plt.subplot(2,2,2)
-    plt.plot(t,xbig[:,2],'r-.')
-    plt.plot(t,xbig[:,6],'b');
-    plt.ylabel("velocity q1dot ")
-    plt.legend(['act','est'])
-    
-    plt.subplot(2,2,4)
-    plt.plot(t,xbig[:,3],'r-.')
-    plt.plot(t,xbig[:,7],'b');
-    plt.ylabel("velocity q2dot ")
-    plt.xlabel("time t")
-    plt.legend(['act','est'])
+def plot(t, z):
+    plt.figure(1)
+
+    plt.subplot(2, 2, 1)
+    plt.plot(t, z[:, 0], 'r-.')
+    plt.plot(t, z[:, 4], 'b')
+    plt.ylabel('position q1')
+    plt.legend(['act', 'est'])
+
+    plt.subplot(2, 2, 3)
+    plt.plot(t, z[:, 1], 'r-.')
+    plt.plot(t, z[:, 5], 'b')
+    plt.legend(['act', 'est'])
+    plt.ylabel('position q2')
+    plt.xlabel('time t')
+
+    plt.subplot(2, 2, 2)
+    plt.plot(t, z[:, 2], 'r-.')
+    plt.plot(t, z[:, 6], 'b')
+    plt.ylabel('velocity q1dot ')
+    plt.legend(['act', 'est'])
+
+    plt.subplot(2, 2, 4)
+    plt.plot(t, z[:, 3], 'r-.')
+    plt.plot(t, z[:, 7], 'b')
+    plt.ylabel('velocity q2dot ')
+    plt.xlabel('time t')
+    plt.legend(['act', 'est'])
 
     plt.show(block=False)
     plt.pause(10)
     plt.close()
 
-if __name__=="__main__":
 
-    np.random.seed(1)
-    parms = parameters()
+if __name__ == '__main__':
+    param = Parameter()
+    m1, m2, k1, k2 = param.m1, param.m2, param.k1, param.k2
+    A, C, G = param.A, param.C, param.G
+    Qe, Re = param.Qe, param.Re
 
-    #These are true values of disturbance and noise statistics
-    Qe_act = np.diag([2,3])
-    Re_act = np.diag([0.5,0.5])
-    f1_mean, f1_dev = 0, np.sqrt(Qe_act[0,0])
-    f2_mean, f2_dev = 0, np.sqrt(Qe_act[1,1])
-    q1dot_mean, q1dot_dev = 0, np.sqrt(Re_act[0,0])
-    q2dot_mean, q2dot_dev = 0, np.sqrt(Re_act[1,1])
-
-    A, C = parms.A, parms.C
-
-    # #Design Luenberg observer (Deterministic system)
-    # p = np.array([-5,-5.5,-6.5,-6])
-    # L_trans = control.place(A.T , C.T, p)
-    # L = np.transpose(L_trans)
-    # print("(Luenberg gain) L = ",L)
-
-    #Design Kalman filter (Stochastic system)
-    Qe = Qe_act
-    Re = Re_act
-    G = parms.G
-    print("Qe = ",Qe)
-    print("Re = ",Re)
-    
+    # kalman gain
     L, P, E = control.lqe(A, G, C, Qe, Re)
-    print("Kalman Gain: L = ",L)
+    print('L\n', L)
+    print('E\n', E)
 
-    x0 = np.array([0.5,0,0,0])
-    x0est = np.array([0.2,0,0,0])
-    x0big = np.concatenate((x0, x0est))
+    # process, measurement noise
+    p_noise1_mean, p_noise1_std = 0, np.sqrt(Qe[0, 0])
+    p_noise2_mean, p_noise2_std = 0, np.sqrt(Qe[1, 1])
+    m_noise1_mean, m_noise1_std = 0, np.sqrt(Re[0, 0])
+    m_noise2_mean, m_noise2_std = 0, np.sqrt(Re[1, 1])
 
-    t0, tend = 0, 5
+    p_noise = np.random.random
 
-    Npts = 101
-    N = 4
-    shape = (Npts,2*N)
-    
-    t = np.linspace(t0, tend, 101)
-    xbig = np.zeros((101, 8))
-    xbig[0] = x0big
+    t0, tend = 0, 10
+    ts = np.linspace(t0, tend, 1000)
 
-    for i in range(0, 101-1):
-        f1_disturb = np.random.normal(f1_mean,f1_dev)
-        f2_disturb = np.random.normal(f2_mean,f2_dev)
-        q1dot_sensor = np.random.normal(q1dot_mean,q1dot_dev)
-        q2dot_sensor = np.random.normal(q2dot_mean,q2dot_dev)
-        
-        t_temp = np.array([t[i], t[i+1]])
-        physical_parms = (parms.A,parms.C,parms.G)
-        control_parms = (L,f1_disturb,f2_disturb,q1dot_sensor,q2dot_sensor)
-        all_parms = physical_parms + control_parms
-        
-        xbig_temp = odeint(spring_mass_rhs, x0big, t_temp, args=all_parms)
-        
-        x0big = xbig_temp[1]
-        xbig[i+1] = x0big
-    
-    plot(t, xbig)
+    z_real = np.array([0.5, 0.5, 0.5, 0.5])
+    # z_noisy = np.array([0.3, 0, 0, 0])
+    z_noisy = np.array([0, 0, 0, 0])
+    z0 = np.concatenate((z_real, z_noisy))
+
+    z = np.zeros((len(ts), 8))
+    z[0] = z0
+
+    args = A, C, G, L
+
+    for i in range(len(ts) - 1):
+        p_noise1 = np.random.normal(p_noise1_mean, p_noise1_std)
+        p_noise2 = np.random.normal(p_noise2_mean, p_noise2_std)
+        m_noise1 = np.random.normal(m_noise1_mean, m_noise1_std)
+        m_noise2 = np.random.normal(m_noise2_mean, m_noise2_std)
+
+        total_args = args + (p_noise1, p_noise2, m_noise1, m_noise2)
+
+        t_temp = np.array([ts[i], ts[i + 1]])
+
+        result = odeint(spring_mass_dynamics, z0, t_temp, total_args)
+
+        z0 = result[1]
+        z[i + 1] = z0
+
+    plot(ts, z)
