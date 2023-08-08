@@ -94,31 +94,36 @@ print('C2 = ', sy.simplify(C2),'\n')
 print('G1 = ', sy.simplify(G1))
 print('G2 = ', sy.simplify(G2),'\n')
 
-# dC/dq, dC/dqdot, dG/dq, dG/dqdot 미리 구해둔다.
+#linearization
 C = sy.Matrix([C1,C2])
 G = sy.Matrix([G1,G2])
 
+dGdq =G.jacobian(q)
+dGdqdot =G.jacobian(qdot)
 dCdq = C.jacobian(q)
-dGdq = G.jacobian(q)
-dCdqd = C.jacobian(qdot)
-dGdqd = G.jacobian(qdot)
+dCdqdot = C.jacobian(qdot)
+
+# print(dGdqdot)
+# print(dGdq)
+# print(dCdq)
+# print(dCdqdot)
 
 print('dGdq11 = ', sy.simplify(dGdq[0,0]))
 print('dGdq12 = ', sy.simplify(dGdq[0,1]))
 print('dGdq21 = ', sy.simplify(dGdq[1,0]))
 print('dGdq22 = ', sy.simplify(dGdq[1,1]),'\n')
 
-print('dGdqd11 = ', sy.simplify(dGdqd[0,0]))
-print('dGdqd12 = ', sy.simplify(dGdqd[0,1]))
-print('dGdqd21 = ', sy.simplify(dGdqd[1,0]))
-print('dGdqd22 = ', sy.simplify(dGdqd[1,1]),'\n')
+print('dGdqdot11 = ', sy.simplify(dGdqdot[0,0]))
+print('dGdqdot12 = ', sy.simplify(dGdqdot[0,1]))
+print('dGdqdot21 = ', sy.simplify(dGdqdot[1,0]))
+print('dGdqdot22 = ', sy.simplify(dGdqdot[1,1]),'\n')
 
 print('dCdq11 = ', sy.simplify(dCdq[0,0]))
 print('dCdq12 = ', sy.simplify(dCdq[0,1]))
 print('dCdq21 = ', sy.simplify(dCdq[1,0]))
 print('dCdq22 = ', sy.simplify(dCdq[1,1]),'\n')
 
-print('dCdqd11 = ', sy.simplify(dCdqd[0,0]))
-print('dCdqd12 = ', sy.simplify(dCdqd[0,1]))
-print('dCdqd21 = ', sy.simplify(dCdqd[1,0]))
-print('dCdqd22 = ', sy.simplify(dCdqd[1,1]),'\n')
+print('dCdqdot11 = ', sy.simplify(dCdqdot[0,0]))
+print('dCdqdot12 = ', sy.simplify(dCdqdot[0,1]))
+print('dCdqdot21 = ', sy.simplify(dCdqdot[1,0]))
+print('dCdqdot22 = ', sy.simplify(dCdqdot[1,1]),'\n')
