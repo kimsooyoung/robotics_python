@@ -1,65 +1,188 @@
 from matplotlib import pyplot as plt
 import numpy as np
-import math
-from scipy.integrate import odeint
 from scipy import interpolate
+from scipy.integrate import odeint
 
-def cos(angle):
-    return np.cos(angle)
+pi = np.pi
 
-def sin(angle):
-    return np.sin(angle);
 
-class parameters:
+def cos(theta):
+    return np.cos(theta)
+
+
+def sin(theta):
+    return np.sin(theta)
+
+
+class Parameters:
+
     def __init__(self):
         self.m1 = 1
-        self.I1 = 0.5
         self.m2 = 1
-        self.I2 = 0.5
-        self.g = 10
-        self.c1 = 0.5
-        self.c2 = 0.5
         self.l = 1
-        self.pause = 0.01
-        self.fps =30
+        self.c1 = self.l / 2
+        self.c2 = self.l / 2
+
+        self.I1 = self.m1 * self.l**2 / 12
+        self.I2 = self.m2 * self.l**2 / 12
+
+        self.g = 9.81
 
         self.kp1 = 100
-        self.kd1 = 2*np.sqrt(self.kp1)
+        self.kd1 = 2 * np.sqrt(self.kp1)
         self.kp2 = 100
-        self.kd2 = 2*np.sqrt(self.kp2)
+        self.kd2 = 2 * np.sqrt(self.kp2)
 
-def animate(t,z,parms):
-    #interpolation
-    t_interp = np.arange(t[0],t[len(t)-1],1/parms.fps)
-    [m,n] = np.shape(z)
-    shape = (len(t_interp),n)
+        self.pause = 0.01
+        self.fps = 30
+
+
+def link1_traj(ts):
+    a0 = -pi / 2 - 0.5
+    a1 = 0
+    a2 = 0.333333333333333
+    a3 = -0.0740740740740741
+
+    pose = a0 + a1 * ts + a2 * ts**2 + a3 * ts**3
+    vel = a1 + 2 * a2 * ts + 3 * a3 * ts**2
+    acc = 2 * a2 + 6 * a3 * ts
+
+    return pose, vel, acc
+
+
+def link2_traj(ts):
+    T1 = ts[:100]
+    T2 = ts[100:]
+
+    a10 = 0
+    a11 = 0
+    a12 = 0.666666666666667 - 0.666666666666667 * pi
+    a13 = -0.296296296296296 + 0.296296296296296 * pi
+    pose1 = a10 + a11 * T1 + a12 * T1**2 + a13 * T1**3
+    vel1 = a11 + 2 * a12 * T1 + 3 * a13 * T1**2
+    acc1 = 2 * a12 + 6 * a13 * T1
+
+    a20 = -2.0 + 2.0 * pi
+    a21 = 4.0 - 4.0 * pi
+    a22 = -2.0 + 2.0 * pi
+    a23 = 0.296296296296296 - 0.296296296296296 * pi
+    pose2 = a20 + a21 * T2 + a22 * T2**2 + a23 * T2**3
+    vel2 = a21 + 2 * a22 * T2 + 3 * a23 * T2**2
+    acc2 = 2 * a22 + 6 * a23 * T2
+
+    pose = np.concatenate((pose1, pose2))
+    vel = np.concatenate((vel1, vel2))
+    acc = np.concatenate((acc1, acc2))
+
+    return pose, vel, acc
+
+
+def EOM(m1, m2, c1, c2, l, g, I1, I2, theta1, theta2, omega1, omega2):
+    M11 = (
+        1.0 * I1
+        + 1.0 * I2
+        + c1**2 * m1
+        + m2 * (c2**2 + 2 * c2 * l * cos(theta2) + l**2)
+    )
+    M12 = 1.0 * I2 + c2 * m2 * (c2 + l * cos(theta2))
+    M21 = 1.0 * I2 + c2 * m2 * (c2 + l * cos(theta2))
+    M22 = 1.0 * I2 + c2**2 * m2
+
+    C1 = -c2 * l * m2 * omega2 * (2.0 * omega1 + 1.0 * omega2) * sin(theta2)
+    C2 = c2 * l * m2 * omega1**2 * sin(theta2)
+
+    G1 = g * (
+        c1 * m1 * cos(theta1) + m2 * (c2 * cos(theta1 + theta2) + l * cos(theta1))
+    )
+    G2 = c2 * g * m2 * cos(theta1 + theta2)
+
+    M = np.array([[M11, M12], [M21, M22]])
+
+    C = np.array([C1, C2])
+    G = np.array([G1, G2])
+
+    return M, C, G
+
+
+def get_tau(
+    m1, m2, c1, c2, l, g, I1, I2,
+    theta1, theta2, omega1, omega2, kp1, kd1, kp2, kd2,
+    q1_p_ref, q1_v_ref, q1_a_ref, q2_p_ref, q2_v_ref, q2_a_ref
+):
+    qdd_ref = np.array([q1_a_ref, q2_a_ref])
+    qd_ref = np.array([q1_v_ref, q2_v_ref])
+    q_ref = np.array([q1_p_ref, q2_p_ref])
+
+    q_d = np.array([omega1, omega2])
+    q = np.array([theta1, theta2])
+
+    # 여기 주의!
+    kp = np.array([[kp1, 0], [0, kp2]])
+    kd = np.array([[kd1, 0], [0, kd2]])
+
+    M, C, G = EOM(m1, m2, c1, c2, l, g, I1, I2, theta1, theta2, omega1, omega2)
+    tau = M @ (qdd_ref - kp @ (q_d - qd_ref) - kd @ (q - q_ref)) + C + G
+
+    return tau
+
+
+def twolink_dynamics(z, t, dyn_args, gain_args, ref_args):
+    m1, m2, c1, c2, l, g, I1, I2 = dyn_args
+    kp1, kd1, kp2, kd2 = gain_args
+    q1_p_ref, q1_v_ref, q1_a_ref, q2_p_ref, q2_v_ref, q2_a_ref = ref_args
+
+    theta1, omega1, theta2, omega2 = z
+
+    tau = get_tau(
+        m1, m2, c1, c2, l, g, I1, I2,
+        theta1, theta2, omega1, omega2, kp1, kd1, kp2, kd2,
+        q1_p_ref, q1_v_ref, q1_a_ref, q2_p_ref, q2_v_ref, q2_a_ref
+    )
+    # noisy tau here
+    M, C, G = EOM(m1, m2, c1, c2, l, g, I1, I2, theta1, theta2, omega1, omega2)
+
+    # Ax = b
+    A = M
+    b = tau - C - G
+
+    x = np.linalg.solve(A, b)
+
+    return [omega1, x[0], omega2, x[1]]
+
+
+def animate(t, z, parms):
+    # interpolation
+    t_interp = np.arange(t[0], t[len(t) - 1], 1 / parms.fps)
+    [m, n] = np.shape(z)
+    shape = (len(t_interp), n)
     z_interp = np.zeros(shape)
 
-    for i in range(0,n-1):
-        f = interpolate.interp1d(t, z[:,i])
-        z_interp[:,i] = f(t_interp)
+    for i in range(0, n - 1):
+        f = interpolate.interp1d(t, z[:, i])
+        z_interp[:, i] = f(t_interp)
 
     l = parms.l
     c1 = parms.c1
     c2 = parms.c2
 
-    for i in range(0,len(t_interp)):
-        theta1 = z_interp[i,0];
-        theta2 = z_interp[i,2];
+    # plot
+    for i in range(0, len(t_interp)):
+        theta1 = z_interp[i, 0]
+        theta2 = z_interp[i, 2]
         O = np.array([0, 0])
-        P = np.array([l*cos(theta1), l*sin(theta1)])
-        Q = P + np.array([l*cos(theta1+theta2),l*sin(theta1+theta2)])
-        G1 = np.array([c1*cos(theta1), c1*sin(theta1)])
-        G2 = P + np.array([c2*cos(theta1+theta2),c2*sin(theta1+theta2)])
+        P = np.array([l * cos(theta1), l * sin(theta1)])
+        Q = P + np.array([l * cos(theta1 + theta2), l * sin(theta1 + theta2)])
+        G1 = np.array([c1 * cos(theta1), c1 * sin(theta1)])
+        G2 = P + np.array([c2 * cos(theta1 + theta2), c2 * sin(theta1 + theta2)])
 
-        pend1, = plt.plot([O[0], P[0]],[O[1], P[1]],linewidth=5, color='red')
-        pend2, = plt.plot([P[0], Q[0]],[P[1], Q[1]],linewidth=5, color='green')
-        com1, = plt.plot(G1[0],G1[1],color='black',marker='o',markersize=10)
-        com2, = plt.plot(G2[0],G2[1],color='black',marker='o',markersize=10)
-        endEff, = plt.plot(Q[0],Q[1],color='black',marker='o',markersize=5)
+        (pend1,) = plt.plot([O[0], P[0]], [O[1], P[1]], linewidth=5, color='red')
+        (pend2,) = plt.plot([P[0], Q[0]], [P[1], Q[1]], linewidth=5, color='green')
+        (com1,) = plt.plot(G1[0], G1[1], color='black', marker='o', markersize=10)
+        (com2,) = plt.plot(G2[0], G2[1], color='black', marker='o', markersize=10)
+        (endEff,) = plt.plot(Q[0], Q[1], color='black', marker='o', markersize=5)
 
-        plt.xlim(-2,2)
-        plt.ylim(-2,2)
+        plt.xlim(-2, 2)
+        plt.ylim(-2, 2)
         plt.gca().set_aspect('equal')
 
         plt.pause(parms.pause)
@@ -70,248 +193,109 @@ def animate(t,z,parms):
 
     plt.close()
 
-def control(theta1,theta1dot,theta2,theta2dot, \
-            kp1,kd1,kp2,kd2, \
-            theta1ref,theta1dotref,theta1ddotref, \
-            theta2ref,theta2dotref,theta2ddotref, \
-            m1,I1,c1,m2,I2,c2,l,g):
 
-    #pd control
-    #T1 = -kp1*(theta1-theta1ref)-kd1*(theta1dot-theta1dotref);
-    #T2 = -kp2*(theta2-theta2ref)-kd2*(theta2dot-theta2dotref)
-
-    #control partitioning
-    M11 =  1.0*I1 + 1.0*I2 + c1**2*m1 + m2*(c2**2 + 2*c2*l*cos(theta2) + l**2)
-    M12 =  1.0*I2 + c2*m2*(c2 + l*cos(theta2))
-    M21 =  1.0*I2 + c2*m2*(c2 + l*cos(theta2))
-    M22 =  1.0*I2 + c2**2*m2
-
-    C1 =  -c2*l*m2*theta2dot*(2.0*theta1dot + 1.0*theta2dot)*sin(theta2)
-    C2 =  c2*l*m2*theta1dot**2*sin(theta2)
-
-    G1 =  g*(c1*m1*cos(theta1) + m2*(c2*cos(theta1 + theta2) + l*cos(theta1)))
-    G2 =  c2*g*m2*cos(theta1 + theta2)
-
-    M = np.array([  [M11, M12], [M21,M22]  ]);
-    CG = np.array([C1+G1,C2+G2])
-
-    Kp = np.array([ [kp1, 0], [0, kp2] ]);
-    Kd = np.array([ [kd1, 0], [0, kd2] ]);
-
-    theta = np.array([theta1, theta2])
-    thetadot = np.array([theta1dot, theta2dot])
-    theta_ref = np.array([theta1ref, theta2ref])
-    thetadot_ref = np.array([theta1dotref, theta2dotref])
-    thetaddot_ref = np.array([theta1ddotref,theta2ddotref]);
-
-    T = M.dot((thetaddot_ref-Kp.dot(theta-theta_ref)-Kd.dot(thetadot-thetadot_ref)))+CG;
-
-    T1 = T[0]
-    T2 = T[1]
-    return T1,T2
-
-def twolink_rhs(z,t,m1,I1,c1,m2,I2,c2,l,g,kp1,kd1,kp2,kd2, \
-                theta1ref,theta1dotref,theta1ddotref, \
-                theta2ref,theta2dotref,theta2ddotref, \
-                T1_disturb,T2_disturb):
-
-    theta1 = z[0];
-    theta1dot = z[1];
-    theta2 = z[2];
-    theta2dot = z[3]
-
-    [T1,T2] = control(theta1,theta1dot,theta2,theta2dot, \
-                 kp1,kd1,kp2, kd2, \
-                 theta1ref,theta1dotref,theta1ddotref, \
-                 theta2ref,theta2dotref,theta2ddotref, \
-                 m1,I1,c1,m2,I2,c2,l,g)
-    T1 = T1 - T1_disturb;
-    T2 = T2 - T2_disturb;
-
-    M11 =  1.0*I1 + 1.0*I2 + c1**2*m1 + m2*(c2**2 + 2*c2*l*cos(theta2) + l**2)
-    M12 =  1.0*I2 + c2*m2*(c2 + l*cos(theta2))
-    M21 =  1.0*I2 + c2*m2*(c2 + l*cos(theta2))
-    M22 =  1.0*I2 + c2**2*m2
-
-    C1 =  -c2*l*m2*theta2dot*(2.0*theta1dot + 1.0*theta2dot)*sin(theta2)
-    C2 =  c2*l*m2*theta1dot**2*sin(theta2)
-
-    G1 =  g*(c1*m1*cos(theta1) + m2*(c2*cos(theta1 + theta2) + l*cos(theta1)))-T1
-    G2 =  c2*g*m2*cos(theta1 + theta2)-T2
-
-
-    A = np.array([[M11, M12], [M21,M22]]);
-    b = -np.array([C1+G1,C2+G2])
-    invA = np.linalg.inv(A)
-    thetaddot = invA.dot(b)
-    theta1ddot = thetaddot[0]
-    theta2ddot = thetaddot[1]
-
-    zdot = np.array([theta1dot, theta1ddot, theta2dot, theta2ddot]);
-
-    return zdot
-
-def plot(t,z,theta1_ref,theta2_ref):
-
+def plot(
+    t, z, theta1_ref, theta2_ref, omega1_ref, omega2_ref, T1, T2, tau1_ref, tau2_ref
+):
     plt.figure(1)
-    
-    plt.subplot(2,1,1)
-    plt.plot(t,z[:,0])
-    plt.plot(t,theta1_ref,'r-.');
-    plt.ylabel("theta1")
-    plt.title("Plot of position vs. time")
-    
-    plt.subplot(2,1,2)
-    plt.plot(t,z[:,2])
-    plt.plot(t,theta2_ref,'r-.');
-    plt.ylabel("theta2")
+
+    plt.subplot(2, 1, 1)
+    plt.plot(t, z[:, 0])
+    plt.plot(t, theta1_ref, 'r-.')
+    plt.ylabel('theta1')
+    plt.title('Plot of position vs. time')
+
+    plt.subplot(2, 1, 2)
+    plt.plot(t, z[:, 2])
+    plt.plot(t, theta2_ref, 'r-.')
+    plt.ylabel('theta2')
     plt.show(block=False)
-    plt.pause(2)
+    plt.pause(1)
     plt.close()
 
     plt.figure(2)
-    plt.subplot(2,1,1)
-    plt.plot(t,z[:,1])
-    plt.plot(t,theta1dot_ref,'r-.');
-    plt.ylabel("theta1dot")
-    plt.title("Plot of velocity vs. time")
-    
-    plt.subplot(2,1,2)
-    plt.plot(t,z[:,3])
-    plt.plot(t,theta2dot_ref,'-.');
-    plt.ylabel("theta2dot")
+    plt.subplot(2, 1, 1)
+    plt.plot(t, z[:, 1])
+    plt.plot(t, omega1_ref, 'r-.')
+    plt.ylabel('theta1dot')
+    plt.title('Plot of velocity vs. time')
+
+    plt.subplot(2, 1, 2)
+    plt.plot(t, z[:, 3])
+    plt.plot(t, omega2_ref, '-.')
+    plt.ylabel('theta2dot')
     plt.show(block=False)
-    plt.pause(2)
+    plt.pause(1)
     plt.close()
 
     plt.figure(3)
-    plt.subplot(2,1,1)
-    plt.plot(t,T1[:,0])
-    plt.ylabel("Torque 1")
-    
-    plt.subplot(2,1,2)
-    plt.plot(t,T2[:,0])
-    plt.ylabel("Torque 2")
-    plt.xlabel("time")
+    plt.subplot(2, 1, 1)
+    plt.plot(t, T1)
+    plt.plot(t, tau1_ref, 'r-.')
+    plt.ylabel('Torque 1')
+
+    plt.subplot(2, 1, 2)
+    plt.plot(t, T2)
+    plt.plot(t, tau2_ref, 'r-.')
+    plt.ylabel('Torque 2')
+    plt.xlabel('time')
+
     plt.show(block=False)
     plt.pause(4)
     plt.close()
 
-if __name__=="__main__":
-    #parameters
-    parms = parameters()
 
-    h = 0.005;
-    pi = np.pi;
+if __name__ == '__main__':
+    params = Parameters()
 
-    # disturbances
-    T1_mean = 0;
-    T1_dev = 40*0;
-    T2_mean = 0;
-    T2_dev = 40*0;
-    theta1_mean = 0;
-    theta1_dev = 0.0;
-    theta2_mean = 0;
-    theta2_dev = 0.0;
-    theta1dot_mean = 0
-    theta1dot_dev = 0.5*0
-    theta2dot_mean = 0
-    theta2dot_dev = 0.5*0
+    m1, m2, c1, c2, l = params.m1, params.m2, params.c1, params.c2, params.l
+    I1, I2, g = params.I1, params.I2, params.g
+    kp1, kd1, kp2, kd2 = params.kp1, params.kd1, params.kp2, params.kd2
 
-    #set the time
-    t1_0 =  0
-    t1_N =  3.0
-    a10 =  -0.5*pi - 0.5
-    a11 =  0
-    a12 =  0.333333333333333
-    a13 =  -0.0740740740740741
-    
-    N1 = int((t1_N-t1_0)/h) + 1;
-    time1 = np.linspace(t1_0, t1_N,N1)
-    theta1_ref =a10 + a11*time1 + a12*time1**2 + a13*time1**3;
-    theta1dot_ref =a11 + 2*a12*time1 + 3*a13*time1**2;
-    theta1ddot_ref =2*a12 + 6*a13*time1;
+    t0, t1, tend = 0, 1.5, 3.0
+    ts = np.linspace(t0, tend, 200)
 
-    #set the time
-    t1_0 =  0
-    t1_N =  1.5
-    t2_0 =  1.5
-    t2_N =  3
+    # traj generation
+    q1_p_ref, q1_v_ref, q1_a_ref = link1_traj(ts)
+    q2_p_ref, q2_v_ref, q2_a_ref = link2_traj(ts)
 
-    #time
-    N1 = int((t1_N-t1_0)/h) + 1;
-    time1 = np.linspace(t1_0, t1_N,N1)
-    N2 = int((t2_N-t2_0)/h) + 1;
-    time2 = np.linspace(t2_0, t2_N,N2)
-    mm = len(time2)
-    t = np.concatenate((time1,time2[1:mm]))
+    # initial conditions
+    z0 = np.array([q1_p_ref[0], q1_v_ref[0], q2_p_ref[0], q2_v_ref[0]])
 
-    pi = np.pi;
-    a10 =  0
-    a11 =  0
-    a12 =  0.666666666666667 - 0.666666666666667*pi
-    a13 =  -0.296296296296296 + 0.296296296296296*pi
-    a20 =  -2.0 + 2.0*pi
-    a21 =  4.0 - 4.0*pi
-    a22 =  -2.0 + 2.0*pi
-    a23 =  0.296296296296296 - 0.296296296296296*pi
+    z = np.zeros((len(ts), 4))
+    tau = np.zeros((len(ts), 2))
+    z[0], tau[0] = z0, np.array([0, 0])
 
-    thetaA =a10 + a11*time1 + a12*time1**2 + a13*time1**3;
-    thetaAdot =a11 + 2*a12*time1 + 3*a13*time1**2;
-    thetaAddot =2*a12 + 6*a13*time1;
+    dyn_args = (m1, m2, c1, c2, l, g, I1, I2)
+    gain_args = (kp1, kd1, kp2, kd2)
 
-    thetaB =a20 + a21*time2 + a22*time2**2 + a23*time2**3;
-    thetaBdot =a21 + 2*a22*time2 + 3*a23*time2**2;
-    thetaBddot =2*a22 + 6*a23*time2;
+    for i in range(len(q1_a_ref) - 1):
+        ref_args = (
+            q1_p_ref[i],
+            q1_v_ref[i],
+            q1_a_ref[i],
+            q2_p_ref[i],
+            q2_v_ref[i],
+            q2_a_ref[i],
+        )
+        args = (dyn_args, gain_args, ref_args)
 
-    mm = len(thetaB)
-    theta2_ref = np.concatenate((thetaA,thetaB[1:mm]))
-    theta2dot_ref = np.concatenate((thetaAdot,thetaBdot[1:mm]))
-    theta2ddot_ref = np.concatenate((thetaAddot,thetaBddot[1:mm]))
+        t_temp = np.array([ts[i], ts[i + 1]])
 
-    #initialization
-    theta1 = theta1_ref[0];
-    theta1dot = theta1dot_ref[0];
-    theta2 = theta2_ref[0]
-    theta2dot = theta2dot_ref[0]
+        result = odeint(twolink_dynamics, z0, t_temp, args=args)
+        tau_temp = get_tau(
+            m1, m2, c1, c2, l, g, I1, I2,
+            z0[0], z0[2], z0[1], z0[3], kp1, kd1, kp2, kd2,
+            q1_p_ref[i], q1_v_ref[i], q1_a_ref[i], q2_p_ref[i], q2_v_ref[i], q2_a_ref[i]
+        )
+        # noisy z here
 
-    #state
-    N = len(t)
-    shape = (N,4) #2 is for theta1 and theta2 and their rates, change according to the system
-    z = np.zeros(shape)
-    T1 = np.zeros((N,1))
-    T2 = np.zeros((N,1))
-    z0 = np.array([theta1, theta1dot, theta2, theta2dot])
-    z[0] = z0
-    
-    for i in range(0,N-1):
-        theta1ref, theta1dotref, theta1ddotref = theta1_ref[i], theta1dot_ref[i], theta1ddot_ref[i]
-        theta2ref, theta2dotref, theta2ddotref = theta2_ref[i], theta2dot_ref[i], theta2ddot_ref[i]
-        
-        T1_disturb = np.random.normal(T1_mean,T1_dev)
-        T2_disturb = np.random.normal(T2_mean,T2_dev)
-        physical_parms = (parms.m1,parms.I1,parms.c1,parms.m2,parms.I2,parms.c2,parms.l,parms.g)
-        control_parms = (parms.kp1,parms.kd1, parms.kp2, parms.kd2,\
-                        theta1ref,theta1dotref,theta1ddotref, \
-                        theta2ref,theta2dotref,theta2ddotref, \
-                        T1_disturb,T2_disturb)
-        all_parms = physical_parms + control_parms
-        
-        t_temp = np.array([t[i], t[i+1]])
-        z_temp = odeint(twolink_rhs, z0, t_temp, args=all_parms)
-        
-        T1_temp, T2_temp  = control(z0[0],z0[1],z0[2],z0[3], \
-                parms.kp1,parms.kd1, parms.kp2,parms.kd2,\
-                theta1ref,theta1dotref,theta1ddotref, \
-                theta2ref,theta2dotref,theta2ddotref, \
-                parms.m1,parms.I1,parms.c1,parms.m2,parms.I2,parms.c2,parms.l,parms.g)
-        z0 = np.array([z_temp[1,0]+np.random.normal(theta1_mean,theta1_dev), \
-                    z_temp[1,1]+np.random.normal(theta1dot_mean,theta1dot_dev), \
-                    z_temp[1,2]+np.random.normal(theta2_mean,theta2_dev), \
-                    z_temp[1,3]+np.random.normal(theta2dot_mean,theta2dot_dev)])
-        z[i+1] = z0
-        T1[i+1,0] = T1_temp
-        T2[i+1,0] = T2_temp
+        z0 = result[-1]
+        z[i] = z0
+        tau[i] = tau_temp
 
-    animate(t,z,parms)
-    plot(t,z,theta1_ref,theta2_ref)
+    animate(ts, z, params)
+    plot(
+        ts, z, q1_p_ref, q2_p_ref, q1_v_ref, q2_v_ref,
+        tau[:, 0], tau[:, 1], q1_a_ref, q2_a_ref
+    )
