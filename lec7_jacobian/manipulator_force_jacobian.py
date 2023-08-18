@@ -1,3 +1,18 @@
+# Copyright 2022 @RoadBalance
+# Reference from https://pab47.github.io/legs.html
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from matplotlib import pyplot as plt
 import numpy as np
 from scipy import interpolate
@@ -61,18 +76,6 @@ def animate(t_interp, z_interp, params):
         P = np.array([l*sin(theta1), -l*cos(theta1)])
         # 그림을 그려야 하니까 + P를 해주었음
         Q = P + np.array([l*sin(theta1+theta2), -l*cos(theta1+theta2)])
-
-        # 사실 이렇게도 구할 수 있다.
-        # H_01 = np.array([
-        #     [np.cos(3*np.pi/2 + theta1), -np.sin(3*np.pi/2 + theta1), 0],
-        #     [np.sin(3*np.pi/2 + theta1), -np.cos(3*np.pi/2 + theta1), 0],
-        #     [0, 0, 1],
-        # ])
-        # H_12 = np.array([
-        #     [np.cos(theta2), -np.sin(theta2), 0],
-        #     [np.sin(theta2), -np.cos(theta2), 0],
-        #     [0, 0, 1],
-        # ])
 
         # COM Point
         G1 = np.array([c1*sin(theta1), -c1*cos(theta1)])
@@ -145,25 +148,16 @@ def double_pendulum(z0, t, m1, m2, I1, I2, c1, c2, l, g, kp, kd, q_des):
     G1 = g*(c1*m1*sin(theta1) + m2*(c2*sin(theta1 + theta2) + l*sin(theta1)))
     G2 = c2*g*m2*sin(theta1 + theta2)
 
-    # equilibrium point => may fail
     tau0 = -c1*g*m1*sin(theta1) - g*m2*(c2*sin(theta1 + theta2) + l*sin(theta1))
     tau1 = -c2*g*m2*sin(theta1 + theta2)
 
-    # pd controller => robust
-    gain0 = get_tau(theta1, omega1, kp, kd, q_des)
-    gain1 = get_tau(theta2, omega2, kp, kd, q_des)
-
-    tau0 = gain0 - c1*g*m1*sin(theta1) - g*m2*(c2*sin(theta1 + theta2) + l*sin(theta1))
-    tau1 = gain1 - c2*g*m2*sin(theta1 + theta2)
-
     A = np.array([[M11, M12], [M21, M22]])
-    b = -np.array([[C1 + G1 - tau0], [C2 + G2 - tau1]])
+    # b = -np.array([[C1 + G1], [C2 + G2]])
+    b = -np.array([[C1 + G1 + tau0], [C2 + G2 + tau1]])
 
-    # print(Tau)
     x = np.linalg.solve(A, b)
 
-    return [omega1, x[0], omega2, x[1]]
-    # return [omega1, Tau[0], omega2, Tau[1]]
+    return [omega1, x[0][0], omega2, x[1][0]]
 
 
 if __name__ == '__main__':
