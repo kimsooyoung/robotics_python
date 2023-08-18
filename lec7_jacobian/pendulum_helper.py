@@ -72,3 +72,8 @@ def forward_kinematics(l, theta1, theta2):
 
     # q is the same as e (end effector)
     return o, p, q
+
+
+if __name__ == '__main__':
+    o, p, q = forward_kinematics(1, np.pi/2, 0.0)
+    print(q)
