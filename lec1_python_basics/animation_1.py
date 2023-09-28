@@ -25,5 +25,5 @@ for i in range(len(y)):
     plt.pause(0.005)
     temp.remove()
 
-plt.show()
+# plt.show()
 plt.close()
