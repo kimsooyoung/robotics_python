@@ -33,4 +33,4 @@ def calc_homogeneous_2d(theta, trans):
 
 if __name__ == '__main__':
     trans = [30.0, 1.0]
-    print(calc_homogeneous_2d(0.0, trans))
+    print(calc_homogeneous_2d(30 * np.pi / 180, trans))
