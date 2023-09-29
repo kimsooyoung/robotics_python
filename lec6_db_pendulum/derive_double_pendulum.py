@@ -94,6 +94,8 @@ for i in range(len(q)):
 # EOM_0 = A11 theta1ddot + A12 theta2ddot - b1 = 0
 # EOM_1 = A21 theta1ddot + A22 theta2ddot - b2 = 0
 EOM = sy.Matrix([EOM[0], EOM[1]])
+print('EOM_0 = ', sy.simplify(EOM[0]))
+print('EOM_1 = ', sy.simplify(EOM[1]), '\n')
 
 # M(q)*q_dd + C(q, q_d)*q_d + G(q) -Tau = 0
 # C : coriolis force

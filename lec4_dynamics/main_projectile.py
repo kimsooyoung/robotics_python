@@ -29,7 +29,7 @@ class parameters:
         self.g = 9.81
         self.m = 1
         self.c = 0.47
-        self.pause = 0.01
+        self.pause = 0.05
         self.fps = 10
         self.t_length = 5
 

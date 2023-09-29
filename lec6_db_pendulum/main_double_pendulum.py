@@ -59,7 +59,7 @@ def interpolation(t, z, params):
 
 def animate(t_interp, z_interp, params):
 
-    l = params.len
+    l = params.l
     c1 = params.c1
     c2 = params.c2
 
