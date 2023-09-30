@@ -89,7 +89,7 @@ def single_stance(t, z, M, m, I, l, c, g, gam):
 
     alpha1, alpha2 = np.linalg.inv(A).dot(b)
 
-    return [omega1, alpha1, omega2, alpha2]
+    return [omega1, alpha1[0], omega2, alpha2[0]]
 
 
 def footstrike(t_minus, z_minus, params):
@@ -223,10 +223,6 @@ def n_steps(z0, t0, step_size, params):
         for j in range(len(t_temp)):
             xh = xh_start + params.l * sin(z_temp[0, 0]) - params.l * sin(z_temp[j, 0])
             yh = params.l * cos(z_temp[j, 0])
-            # z_temp[j,:] = np.append(z_temp[j,:], np.array([xh, yh]))
-            # 이렇게 하고 싶지만 numpy array는 초기에 크기가 정해지면 append가 안된다.
-            # ValueError: could not broadcast input array from shape (6,)
-            # into shape (4,)
             zz_temp[j, :] = np.append(z_temp[j, :], np.array([xh, yh]))
 
         z = np.concatenate((z, zz_temp), axis=0)

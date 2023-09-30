@@ -27,7 +27,7 @@ class Param:
         self.c = 0
         self.e = 0.8
 
-        self.pause = 0.005
+        self.pause = 0.01
         self.fps = 10
 
 

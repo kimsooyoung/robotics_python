@@ -52,7 +52,7 @@ def animation(params, x_all, y_all, theta1_all, theta2_all):
         plt.ylim(-2, 2)
         plt.gca().set_aspect('equal')
 
-        plt.pause(0.01)
+        plt.pause(0.05)
         tmp1.remove()
         tmp2.remove()
 

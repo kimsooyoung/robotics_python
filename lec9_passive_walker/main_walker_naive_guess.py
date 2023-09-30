@@ -33,7 +33,7 @@ class parameters:
         self.l = 1.0
         self.c = 0.5
         self.gam = 0.01
-        self.pause = 0.01
+        self.pause = 0.02
         self.fps = 10
 
 
@@ -88,11 +88,11 @@ def animate(t, z, parms):
         C2 = np.array([xh+l*sin(theta1+theta2), yh-l*cos(theta1+theta2)])
         G2 = np.array([xh+c*sin(theta1+theta2), yh-c*cos(theta1+theta2)])
 
-        hip, = plt.plot(H[0], H[1], color='black', marker='o', markersize=10)
         leg1, = plt.plot([H[0], C1[0]], [H[1], C1[1]], linewidth=5, color='red')
         leg2, = plt.plot([H[0], C2[0]], [H[1], C2[1]], linewidth=5, color='red')
         com1, = plt.plot(G1[0], G1[1], color='black', marker='o', markersize=5)
         com2, = plt.plot(G2[0], G2[1], color='black', marker='o', markersize=5)
+        hip, = plt.plot(H[0], H[1], color='black', marker='o', markersize=10)
 
         window_xmin = window_xmin + camera_rate
         window_xmax = window_xmax + camera_rate
