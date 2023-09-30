@@ -65,7 +65,7 @@ class Parameters:
         self.theta1_mean, self.theta1_dev = 0.0, 0.0
         self.theta1dot_mean, self.theta1dot_dev = 0, 0.5 * 0
 
-        self.pause = 0.001
+        self.pause = 0.05
         self.fps = 30
 
 
@@ -131,7 +131,7 @@ def simulator(x):
     # 2 is for theta1 and theta1dot, change according to the system
     z = np.zeros((N+1, 2))
     tau = np.zeros((N+1, 1))
-    z0 = [0, 0]
+    z0 = [-np.pi/2, 0]
     z[0] = z0
 
     physical_parms = (parms.m1, parms.I1, parms.l1, parms.g)
@@ -243,7 +243,7 @@ if __name__ == '__main__':
     u_min, u_max = -20, 120
 
     # initial state (theta1, theta1dot)
-    z0 = [0.0, 0.0]
+    z0 = [-np.pi/2, 0.0]
 
     # object state (theta1, theta1dot)
     z_end = parms.z_end

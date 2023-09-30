@@ -42,7 +42,7 @@ class parameters:
 
         self.theta_des = np.pi/2
 
-        self.pause = 0.001
+        self.pause = 0.05
         self.fps = 30
 
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     parms = parameters()
 
     # initialization
-    theta1, theta1dot = 0, 0
+    theta1, theta1dot = -np.pi/2, 0
 
     # disturbances
     T1_mean, T1_dev = 0, 40 * 0.1
