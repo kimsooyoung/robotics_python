@@ -25,7 +25,7 @@ class Parameters:
         # D : distance between start and end
         # N : number of collocation points
         self.D = 5
-        self.N = 5
+        self.N = 12
 
 
 def cost(x):
