@@ -25,17 +25,17 @@ class Parameter():
         self.C = np.array([[0.2, 0], [0, 0.1]])
         self.G = np.array([[5, 1], [1, 10]])
 
-        # self.Kp = 100 * np.identity(2)
-        self.Kp = 10 * np.identity(2)
+        self.Kp = 100 * np.identity(2)
+        # self.Kp = 10 * np.identity(2)
         
-        # self.Kp = 1 * np.identity(2)
+        # self.Kd = 1 * np.sqrt(self.Kp)
         self.Kd = 2 * np.sqrt(self.Kp)
 
         self.q_des = np.array([0.5, 1.0])
 
-        # self.uncertainty = 0.1
+        self.uncertainty = 0.1
         # self.uncertainty = 0.2
-        self.uncertainty = 5.0
+        # self.uncertainty = 5.0
         self.M_hat = self.M + self.uncertainty * np.random.rand(2, 2)
         self.C_hat = self.C + self.uncertainty * np.random.rand(2, 2)
         self.G_hat = self.G + self.uncertainty * np.random.rand(2, 2)

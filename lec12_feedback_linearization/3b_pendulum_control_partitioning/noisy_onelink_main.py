@@ -35,7 +35,7 @@ class Parameters():
 
         self.q_des = np.pi / 2
 
-        self.pause = 0.001
+        self.pause = 0.05
         self.fps = 30
 
         self.tau_noise_mean, self.tau_noise_std = 0, 0.1 * 20
