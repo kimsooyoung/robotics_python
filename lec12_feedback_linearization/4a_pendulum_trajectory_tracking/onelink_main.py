@@ -164,7 +164,7 @@ if __name__ == '__main__':
     for i in range(len(ts)-1):
 
         args = m, I, g, l, kp, kd, \
-            theta_ref[i], omega_ref[i], ang_acc_ref[i]
+            theta_ref[i], omega_ref[i], ang_acc_ref[i], 0.0
 
         temp_ts = np.array([ts[i], ts[i+1]])
         result = odeint(one_link_eom, z0, temp_ts, args=args)
