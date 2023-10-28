@@ -224,7 +224,7 @@ def plot(
     plt.plot(t, z[:, 2])
     plt.plot(t, theta2_ref, 'r-.')
     plt.ylabel('theta2')
-    plt.show(block=False)
+    plt.show(block=True)
     plt.pause(1)
     plt.close()
 
@@ -239,7 +239,7 @@ def plot(
     plt.plot(t, z[:, 3])
     plt.plot(t, omega2_ref, '-.')
     plt.ylabel('theta2dot')
-    plt.show(block=False)
+    plt.show(block=True)
     plt.pause(1)
     plt.close()
 
@@ -255,7 +255,7 @@ def plot(
     plt.ylabel('Torque 2')
     plt.xlabel('time')
 
-    plt.show(block=False)
+    plt.show(block=True)
     plt.pause(4)
     plt.close()
 

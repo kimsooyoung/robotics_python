@@ -54,10 +54,10 @@ def spring_mass_linear_equ(x, t, m1, m2, k1, k2, K):
     A, B = dynamisc(m1, m2, k1, k2)
 
     # uncontrolled
-    # u = np.array([0,0])
+    u = np.array([0,0])
 
     # Linear control
-    u = get_control(x, K)
+    # u = get_control(x, K)
 
     return A @ x + B @ u
 
@@ -100,15 +100,16 @@ if __name__ == '__main__':
     A, B = dynamisc(m1, m2, k1, k2)
 
     # Pole placement
-    # p = [-1,-2,-3,-4]
-    # K = control.place(A,B,p)
-    # eigVal_p, eigVec_p = np.linalg.eig(A - B@K)
-    # print(f'new eigVal, eigVec: \n {eigVal_p} \n {eigVec_p}')
+    p = [-1,-2,-3,-4]
+    # p = [-10,-20,-30,-40]
+    K = control.place(A,B,p)
+    eigVal_p, eigVec_p = np.linalg.eig(A - B@K)
+    print(f'new eigVal, eigVec: \n {eigVal_p} \n {eigVec_p}')
 
-    # LQR
-    K, _, E = control.lqr(A, B, Q, R)
-    print(f'K = {K}')
-    print(f'E = {E}')
+    # # LQR
+    # K, _, E = control.lqr(A, B, Q, R)
+    # print(f'K = {K}')
+    # print(f'E = {E}')
 
     t0, tend, N = 0, 10, 101
     ts = np.linspace(t0, tend, N)
