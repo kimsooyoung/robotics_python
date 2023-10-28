@@ -47,12 +47,12 @@ def spring_mass_dynamics(z, t, A, C, L):
     O_44 = np.zeros((4, 4))
     LC = L @ C
 
-    Abig = np.block([[A, O_44], [O_44, A]])
+    # Abig = np.block([[A, O_44], [O_44, A]])
 
-    #  Abig = np.block([
-    #       [A,   O_44],
-    #       [LC,  A-LC]
-    #  ])
+    Abig = np.block([
+        [A,   O_44],
+        [LC,  A-LC]
+    ])
 
     return Abig @ z
 
@@ -100,7 +100,8 @@ if __name__ == '__main__':
 
     # x0_real = np.array([0.5, 0.0, 0.0, 0.0])
     x0_real = np.array([0.5, 0.5, 0.5, 0.5])
-    x0_est = np.array([0.2, 0.0, 0.0, 0.0])
+    # x0_est = np.array([0.2, 0.0, 0.0, 0.0])
+    x0_est = np.array([0.0, 0.0, 0.0, 0.0])
     x0 = np.concatenate((x0_real, x0_est))
 
     A, B, C = dynamics(m1, m2, k1, k2)

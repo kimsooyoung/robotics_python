@@ -49,11 +49,6 @@ def spring_mass_dynamics(x, t, A, C, G, L, p_noise1, p_noise2, m_noise1, m_noise
     O_44 = np.zeros((4, 4))
     O_42 = np.zeros((4, 2))
 
-    # Gbig = np.block([
-    #     [G],
-    #     [O_42]
-    # ])
-
     Gbig = np.block([[O_42], [G]])
 
     Lbig = np.block([[O_42], [L]])
