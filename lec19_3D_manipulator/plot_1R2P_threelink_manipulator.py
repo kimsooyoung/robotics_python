@@ -69,7 +69,12 @@ def DH2Matrix(a, alpha, d, theta):
 
 def plot(point1, point2, point3):
     fig = plt.figure(1)
-    ax = p3.Axes3D(fig)
+
+    # For MacOS Users
+    # ax = p3.Axes3D(fig)
+
+    # For Windows/Linux Users
+    ax = fig.add_subplot(111, projection='3d')
 
     (line1,) = ax.plot(
         [0, point1[0]], [0, point1[1]], [0, point1[2]], color='red', linewidth=2
