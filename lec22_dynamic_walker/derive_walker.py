@@ -44,6 +44,10 @@ C2 = sy.simplify(H_02 * sy.Matrix([l, 0, 1]))
 #####  Step 2. velocity  #####
 ##############################
 
+# 기존 passive walker에서는 theta1, theta2를 나눠서 구현했지만
+# 이번 코드에서는 controller의 실습과 간단한 구현을 위해 theta1에 대해서만
+# 시스템을 모델링한다.
+
 q = sy.Matrix([x, y, theta1])
 q_d = sy.Matrix([vx, vy, omega1])
 
