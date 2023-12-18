@@ -18,7 +18,8 @@ class Parameters:
         self.g = 9.81
         self.gam = 0.1
         
-        self.Kp = 5
+        # self.Kp = 5
+        self.Kp = 0.05
         
         self.pause = 0.05
         self.fps = 30
@@ -27,27 +28,33 @@ def check_error(t_temp, z_temp, params):
     
     M, I, l, g, gam = params.M, params.I, params.l, params.g, params.gam
     
-    Rx = np.zeros((len(t_temp), 1))
-    Ry = np.zeros((len(t_temp), 1))
-    omega_all = np.zeros((len(t_temp), 1))
-    y_h = np.zeros((len(t_temp), 1))
-    
-    for i, state in enumerate(z_temp):
+    for state in z_temp:
         theta1, omega1 = state[0], state[1]
         A_ss = 1.0 * I + M * l ** 2
         b_ss = -M * g * l * sin(gam - theta1)
         alpha1 = b_ss / A_ss
         
-        Rx[i] = 1.0*M*(-alpha1*l*cos(theta1) - g*sin(gam) + l*omega1**2*sin(theta1))
-        Ry[i] = 1.0*M*(-alpha1*l*sin(theta1) + g*cos(gam) - l*omega1**2*cos(theta1))
-        omega_all[i] = omega1
-        y_h[i] = l * cos(theta1)
-    
+        Rx = 1.0*M*(-alpha1*l*cos(theta1) - g*sin(gam) + l*omega1**2*sin(theta1))
+        Ry = 1.0*M*(-alpha1*l*sin(theta1) + g*cos(gam) - l*omega1**2*cos(theta1))
+        y_h = l * cos(theta1)
+        
+        if Ry <= 0:
+            print("Robot fly away")
+            return -1
+        if omega1 > 0:
+            print("Robot falling backward")
+            return -1
+        if y_h <= 0:
+            print("Robot penetrated the ground")
+            return -1
+
+    return 0
+
         
 def controller(z0, theta_dot_desire, params):
     theta1, theta1_dot = z0
     
-    output = -params.Kp * (theta1_dot - theta_dot_desire)
+    output = 0.5 + params.Kp * (theta1_dot - theta_dot_desire)
     
     return output
 
@@ -164,7 +171,8 @@ def one_step(step_i, z0, t0, phi, xh_start, params):
     z_first_swing = np.zeros((n, m))
     z_first_swing = sol.y.T
     
-    check_error(t_first_swing, z_first_swing, params)
+    if check_error(t_first_swing, z_first_swing, params) < 0:
+        return -1, -1
 
     xh_temp1 = xh_start + params.l*sin(z_first_swing[0,0]) - params.l*sin(z_first_swing[:,0])
     yh_temp1 = params.l * cos(z_first_swing[:,0])
@@ -209,12 +217,14 @@ def one_step(step_i, z0, t0, phi, xh_start, params):
         dense_output=True, events=midstance, atol = 1e-13, rtol = 1e-12, 
         args=(phi, params.M,params.I,params.l,params.g,params.gam)
     )
-    # TODO: Check ERR
     
     t_second_swing = sol.t
     m, n = np.shape(sol.y) # m : 3 / n : sth
     z_second_swing = np.zeros((n, m))
     z_second_swing = sol.y.T
+    
+    if check_error(t_second_swing, z_second_swing, params) < 0:
+        return -1, -1
 
     xh_start = xh_temp1[-1]
     xh_temp2 = xh_start + params.l*sin(z_second_swing[0,0]) - params.l*sin(z_second_swing[:,0]); 
@@ -265,11 +275,17 @@ def n_steps(z0, t0, step_size, theta_dot_desire, params):
     ]))
 
     for i in range(step_size):
-        # case1. 두 다리 사이각을 고정시킨다.
-        phi = np.pi/6
+        # # case1. 두 다리 사이각을 고정시킨다.
+        # phi = np.pi/6
+        
         # case2. controller를 사용한다.
-        # phi = controller(z0, theta_dot_desire[i], params)
+        if type(theta_dot_desire) == list:
+            phi = controller(z0, theta_dot_desire[i], params)
+        else:
+            phi = controller(z0, theta_dot_desire, params)
+
         z_temp, t_temp = one_step(i, z0, t0, phi, xh_start, params)
+        print(f"theta1 : {z_temp[-1][0]} / theta1_dot : {z_temp[-1][1]}")
         
         z = np.concatenate((z, z_temp), axis=0)
         t = np.concatenate((t, t_temp), axis=0)
@@ -340,20 +356,18 @@ if __name__=="__main__":
     params = Parameters()
     t0 = 0.0
     
-    # Step1. walker data generation
-    theta_0 = 0.0
-    theta_dot_des = -1.0
-    z0 = [theta_0, theta_dot_des]
-    z, t = n_steps(z0, t0, 1, theta_dot_des, params)
-    print(z[-1])
+    # # Step1. walker data generation
+    # theta_0 = 0.0
+    # theta_dot_des = -1.0
+    # z0 = [theta_0, theta_dot_des]
+    # z, t = n_steps(z0, t0, 1, theta_dot_des, params)
     # animate(t, z, params)
 
+    # # Step2. Velocity Trajectory Following
     # # theta_dot_des = [-0.5, -0.5]
     # theta_dot_des = [-0.5, -1, -1.2, -0.9, -0.7, -0.7, -1, -1.5]
     # steps = len(theta_dot_des)
-    
     # z0 = [0, theta_dot_des[0]]
-    
     # z, t = n_steps(z0, t0, steps, theta_dot_des, params)
     # animate(t, z, params)
 
