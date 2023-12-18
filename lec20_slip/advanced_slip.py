@@ -92,20 +92,29 @@ def stance(t, z, m, g, l0, k, I, phi_des, Kp, Kd):
         [0, 0, I]
     ])
     
+    sin_theta = (x / l)
+    cos_theta = (y / l)
+    
+    # Force by spring
     F_spring = k * (l0 - l)
-    G1 = F_spring * (x / l)
-    G2 = F_spring * (y / l) - m*g
+    G1 = F_spring * sin_theta
+    G2 = F_spring * cos_theta - m*g
     G3 = 0
     
     # spring thrust & friection ignored
-    tau1 = -(Tphi*y)/(l*l)
-    tau2 = (Tphi*x)/(l*l)
-    tau3 = -Tphi
+    F_tau = - Tphi / l
+    Tau1 = F_tau * cos_theta
+    Tau2 = - F_tau * sin_theta
+    Tau3 = - Tphi
+    
+    # Tau1 = -(Tphi*y)/(l*l)
+    # Tau2 = (Tphi*x)/(l*l)
+    # Tau3 = -Tphi
     
     b = np.array([
-        tau1 - G1,
-        tau2 - G2,
-        tau3 - G3
+        Tau1 - G1,
+        Tau2 - G2,
+        Tau3 - G3
     ])
     
     x = np.linalg.solve(M, b)
@@ -342,7 +351,7 @@ if __name__=="__main__":
     
     params = Params()
 
-    # 이제 state가 2개가 된다. x, y, theta
+    # 이제 state가 3개가 된다. x, y, theta
     x, x_d, y, y_d, phi, phi_d = 0, 0.34271, 1.1, 0, 5 * (np.pi / 180), 0
     z0 = np.array([x, x_d, y, y_d, phi, phi_d])
 

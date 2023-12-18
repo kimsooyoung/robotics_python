@@ -44,13 +44,13 @@ def stance(t, z, m, g, l0, k, theta):
     x, x_dot, y, y_dot = z
     
     l = np.sqrt(x**2 + y**2)
-    
     F_spring = k * (l0 - l)
-    Fx_spring = F_spring*(x/l)
-    Fy_spring = F_spring*(y/l)
-    Fy_gravity = m*g
-    xddot = (1/m)*(Fx_spring)
-    yddot = (1/m)*(-Fy_gravity+Fy_spring)
+    Fx_spring = F_spring * (x / l)
+    Fy_spring = F_spring * (y / l)
+    Fy_gravity = m * g
+    
+    xddot = (Fx_spring) / m
+    yddot = (Fy_spring - Fy_gravity) / m
     
     return [x_dot, xddot, y_dot, yddot]
 
@@ -68,9 +68,9 @@ def apex(t, z, m, g, l0, k, theta):
 
 def raibert_controller(vx, vx_des, params):
     
-    theta_c = vx * params.control_tp/(2*params.l)
-    speed_correction = params.Kp*(vx - vx_des)
-    theta = np.arcsin(theta_c)+speed_correction
+    theta_c = (vx * params.control_tp) / (2 * params.l)
+    speed_correction = params.Kp * (vx - vx_des)
+    theta = np.arcsin(theta_c) + speed_correction
     
     params.control_theta = theta
     

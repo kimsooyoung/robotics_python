@@ -70,7 +70,7 @@ def stance(t, z, m, g, l0, k, theta):
     F_spring = k * (l0 - l)
     Fx_spring = F_spring * (x / l)
     Fy_spring = F_spring * (y / l)
-    Fy_gravity = m*g
+    Fy_gravity = m * g
     
     x_dd = (Fx_spring) / m
     y_dd = (Fy_spring - Fy_gravity) / m
