@@ -17,6 +17,10 @@ from matplotlib import pyplot as plt
 import numpy as np
 from scipy.integrate import odeint
 
+# [] EOM 변경해보기
+# [] 그림 수정하기
+# [] linearization - 손으로
+# [] control law - mpc 포함
 
 class Param:
 
@@ -89,17 +93,6 @@ if __name__ == '__main__':
     # u = lambda x: -K@(x-wr)           # Control law
     u = 0
 
-    z_result = np.zeros((N, 4))
-
-    # for i in range(N - 1):
-    #     t_temp = np.array([tspan[i], tspan[i + 1]])
-    #     u = 0
-    #     # u[i] = get_control(z0, K)
-    #     z_temp = odeint(pendcart, z0, t_temp, args=(m, M, L, g, d, u))
-        
-    #     z0 = z_temp[-1]
-    #     z_result[i + 1] = z0
-    
     x = odeint(pendcart, z0, tspan, args=(m, M, L, g, d, u))
     
     animate(tspan, x, params)
