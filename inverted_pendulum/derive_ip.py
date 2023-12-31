@@ -51,8 +51,6 @@ Xm = H_01 * X_mass
 m_xy = sy.Matrix([Xm[0], Xm[1]])
 v_xy = m_xy.jacobian(q) * q_d
 
-print(v_xy)
-
 ####################
 ## Step 2. Energy ##
 ####################

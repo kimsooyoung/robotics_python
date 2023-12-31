@@ -17,10 +17,11 @@ from matplotlib import pyplot as plt
 import numpy as np
 from scipy.integrate import odeint
 
-# [] EOM 변경해보기
-# [] 그림 수정하기
-# [] linearization - 손으로
-# [] control law - mpc 포함
+# [x] EOM 변경해보기
+# [x] 그림 수정하기
+# [x] linearization - 손으로
+# [] control law - mpc
+# [] control law - 그 외
 
 class Param:
 
@@ -49,9 +50,22 @@ def pendcart(x, t, m, M, L, g, d, u):
     
     return dx, ax, omega, alpha
 
+# my EOM
+def pendcart2(z, t, m, M, L, g, d, u):
+    
+    x, x_dot, theta, theta_dot = z
+    
+    dx = z[1]
+    ax = 1.0*(1.0*L*m*theta_dot**2*np.sin(theta) - d*x_dot + g*m*np.sin(2*theta)/2 + u)/(M + m*np.sin(theta)**2)
+    omega = z[3]
+    alpha = -(1.0*g*(M + m)*np.sin(theta) + 1.0*(1.0*L*m*theta_dot**2*np.sin(theta) - d*x_dot + u)*np.cos(theta))/(L*(M + m*np.sin(theta)**2))
+    
+    return dx, ax, omega, alpha
+
 def animate(tspan, x, params):
     
     L = params.L
+    W = 0.5
     
     plt.xlim(-5, 5)
     plt.ylim(-2.7, 2.7)
@@ -73,10 +87,17 @@ def animate(tspan, x, params):
             -L*np.cos(x[i, 2]), 
             'ro'
         )
+        body, = plt.plot(
+            [x[i, 0] - W/2, x[i, 0] + W/2],
+            [0, 0],
+            linewidth=5,
+            color='black'
+        )
         
         plt.pause(params.pause)
         stick.remove()
         ball.remove()
+        body.remove()
         
     plt.close()
 
@@ -92,8 +113,13 @@ if __name__ == '__main__':
     # wr = np.array([1,0,np.pi,0])      # Reference position
     # u = lambda x: -K@(x-wr)           # Control law
     u = 0
-
-    x = odeint(pendcart, z0, tspan, args=(m, M, L, g, d, u))
+    
+    # lecture EOM => g = -9.81
+    # x = odeint(pendcart, z0, tspan, args=(m, M, L, g, d, u))
+    
+    # my EOM => g = 9.81
+    m, M, L, g, d = params.m, params.M, params.L, -params.g, params.d
+    x = odeint(pendcart2, z0, tspan, args=(m, M, L, g, d, u))
     
     animate(tspan, x, params)
     
