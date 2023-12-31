@@ -122,7 +122,7 @@ B_ss = A_temp.jacobian(u_ss)
 # Step 5. Linearization #
 #########################
 
-# fixed point 1. => 실제로는 이것 사용
+# fixed point 1.
 # x_dot = 0 / theta = 0 / theta_dot = 0
 A_lin_case1 = A_ss.subs([(x_dot, 0), (theta, 0), (theta_dot, 0)])
 B_lin_case1 = B_ss.subs([(x_dot, 0), (theta, 0), (theta_dot, 0)])

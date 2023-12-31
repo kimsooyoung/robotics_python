@@ -15,6 +15,7 @@
 
 from matplotlib import pyplot as plt
 import numpy as np
+import control
 from scipy.integrate import odeint
 
 class Param:
@@ -30,16 +31,33 @@ class Param:
         self.pause = 0.01
         self.fps = 10
 
-def pendcart(z, t, m, M, L, g, d, u):
-    
-    x, x_dot, theta, theta_dot = z
-    
-    dx = z[1]
-    ax = 1.0*(1.0*L*m*theta_dot**2*np.sin(theta) - d*x_dot + g*m*np.sin(2*theta)/2 + u)/(M + m*np.sin(theta)**2)
-    omega = z[3]
-    alpha = -(1.0*g*(M + m)*np.sin(theta) + 1.0*(1.0*L*m*theta_dot**2*np.sin(theta) - d*x_dot + u)*np.cos(theta))/(L*(M + m*np.sin(theta)**2))
-    
-    return dx, ax, omega, alpha
+# x_dot = 0 / theta = 0 / theta_dot = 0
+def dynamics1(m, M, L, d, g):
+
+    A = np.array([
+        [0, 1, 0, 0], 
+        [0, -1.0*d/M, 1.0*g*m/M, 0], 
+        [0, 0, 0, 1], 
+        [0, 1.0*d/(L*M), -1.0*g*(M + m)/(L*M), 0]
+    ])
+
+    B = np.array([0, 1/M, 0, -1/(M*L)]).reshape((4,1))
+
+    return A, B
+
+# x_dot = 0 / theta = sy.pi / theta_dot = 0
+def dynamics2(m, M, L, d, g):
+
+    A = np.array([
+        [0, 1, 0, 0], 
+        [0, -1.0*d/M, 1.0*g*m/M, 0], 
+        [0, 0, 0, 1], 
+        [0, -1.0*d/(L*M), 1.0*g*(M + m)/(L*M), 0]
+    ])
+
+    B = np.array([0, 1/M, 0, 1/(M*L)]).reshape((4,1))
+
+    return A, B
 
 def animate(tspan, x, params):
     
@@ -83,18 +101,26 @@ def animate(tspan, x, params):
 if __name__ == '__main__':
 
     params = Param()
-    m, M, L, g, d = params.m, params.M, params.L, params.g, params.d
+    m, M, L, d, g = params.m, params.M, params.L, params.d, params.g
     
-    ## Simulate closed-loop system
-    t0, tend, N = 0, 10, 100
-    tspan = np.linspace(t0, tend, N)    
-    
-    # Initial condition (x, x_dot, theta, theta_dot)
-    z0 = np.array([-1, 0, np.pi+0.1, 0])
-    u = 0
+    # fixed case1. x_dot = 0 / theta = 0 / theta_dot = 0
+    A1, B1 = dynamics1(m, M, L, d, g)
 
-    m, M, L, g, d = params.m, params.M, params.L, params.g, params.d
-    x = odeint(pendcart, z0, tspan, args=(m, M, L, g, d, u))
-    
-    animate(tspan, x, params)
-    
+    # fixed case2. x_dot = 0 / theta = sy.pi / theta_dot = 0
+    A2, B2 = dynamics2(m, M, L, d, g)
+
+    # Calculate the eigenvalues of A
+    eigvals1, eigvecs1 = np.linalg.eig(A1)
+    eigvals2, eigvecs2 = np.linalg.eig(A2)
+
+    print("eigenvalues of A1")
+    print(eigvals1)
+    print("eigenvalues of A2")
+    print(eigvals2)
+
+    # Determine Controllability
+    C1_o = control.ctrb(A1, B1)
+    C2_o = control.ctrb(A2, B2)
+
+    print(f'C1_o rank: {np.linalg.matrix_rank(C1_o)}')
+    print(f'C2_o rank: {np.linalg.matrix_rank(C2_o)}')
