@@ -39,26 +39,29 @@ def get_control(x, x_ref, K):
 def pendcart_linear(z, t, A, B, K=None, z_ref=None):
     
     if isinstance(K, np.ndarray):
-        u = get_control(z, z_ref, K)
+        u = get_control(z, z_ref, K).reshape((1,1))
     else:
-        u = 0
+        u = np.zeros((1,1))
     
-    return A @ z + B @ u
+    z = z.reshape((4,1))
+    
+    result = A @ z + B @ u
+    return result.reshape((4,)).tolist()
 
 def pendcart_non_linear(z, t, m, M, L, g, d, K=None, z_ref=None):
     
     if isinstance(K, np.ndarray):
-        u = get_control(z, z_ref, K)
+        u = get_control(z, z_ref, K)[0]
     else:
-        u = 0
-    
+        u = 0    
+
     x, x_dot, theta, theta_dot = z
     
     dx = z[1]
     ax = 1.0*(1.0*L*m*theta_dot**2*np.sin(theta) - d*x_dot + g*m*np.sin(2*theta)/2 + u)/(M + m*np.sin(theta)**2)
     omega = z[3]
     alpha = -(1.0*g*(M + m)*np.sin(theta) + 1.0*(1.0*L*m*theta_dot**2*np.sin(theta) - d*x_dot + u)*np.cos(theta))/(L*(M + m*np.sin(theta)**2))
-    
+
     return dx, ax, omega, alpha
 
 
@@ -97,8 +100,8 @@ def animate(tspan, x, params):
     L = params.L
     W = 0.5
     
-    plt.xlim(-50, 50)
-    # plt.xlim(-5, 5)
+    # plt.xlim(-50, 50)
+    plt.xlim(-5, 5)
     plt.ylim(-2.7, 2.7)
     plt.gca().set_aspect('equal')
     
@@ -145,7 +148,7 @@ if __name__ == '__main__':
     A2, B2 = dynamics2(m, M, L, d, g)
 
     # Pole placement
-    # p = [-1.3,-1.4,-1.5,-1.6] # slow but robust control
+    p = [-1.3,-1.4,-1.5,-1.6] # slow but robust control
     # p = [-2.3,-2.4,-2.5,-2.6] # aggressive but jerky control (너무 멀리 가면 break)
 
     K1 = control.place(A1, B1, p)
@@ -167,19 +170,22 @@ if __name__ == '__main__':
     tspan = np.linspace(t0, tend, N)
     z0 = np.array([-1, 0, np.pi+0.1, 0])
     z_ref = np.array([1, 0, np.pi, 0])
+
+    # TODO: odeint return type check
     
     # non-linear dynamics
-    # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d))
+    z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d))
     
     # linear dynamics => TODO: 질문
-    # z_result = odeint(pendcart_linear, z0, tspan, args=(A1, B1)) => x축 offset이 커짐
-    # z_result = odeint(pendcart_linear, z0, tspan, args=(A2, B2)) => 날아가버림
+    # z_result = odeint(pendcart_linear, z0, tspan, args=(A1, B1)) # => x축 offset이 커짐
+    # z_result = odeint(pendcart_linear, z0, tspan, args=(A2, B2)) # => 날아가버림
     
     # Case 1
     # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K1, z_ref))
+    # z_result = odeint(pendcart_linear, z0, tspan, args=(A1, B1, K1, z_ref))
 
     # Case 2 => working
     # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K2, z_ref))
-    z_result = odeint(pendcart_linear, z0, tspan, args=(A2, B2, K2, z_ref))
+    # z_result = odeint(pendcart_linear, z0, tspan, args=(A2, B2, K2, z_ref))
     
     animate(tspan, z_result, params)
