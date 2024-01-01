@@ -135,6 +135,20 @@ def animate(tspan, x, params):
         
     plt.close()
 
+def plot(t, z):
+    # plt.figure(1, figsize=(8, 8))
+    plt.figure(1)
+
+    plt.plot(t, z[:, 0], color='red', label=r'$x$')
+    plt.plot(t, z[:, 1], color='blue', label=r'$\dot{x}$')
+    plt.plot(t, z[:, 2], color='green', label=r'$\theta$')
+    plt.plot(t, z[:, 3], color='orange', label=r'$\dot{\theta}$')
+
+    plt.xlabel('time')
+    plt.ylabel('state')
+
+    plt.legend()
+    plt.show()
 
 if __name__ == '__main__':
 
@@ -147,25 +161,24 @@ if __name__ == '__main__':
     # fixed case2. x_dot = 0 / theta = sy.pi / theta_dot = 0
     A2, B2 = dynamics2(m, M, L, d, g)
 
-    # p = [-1.3,-1.4,-1.5,-1.6] # slow but robust control
-    p = [-2.3,-2.4,-2.5,-2.6] # aggressive but jerky control 
-    # p = [-3.3,-3.4,-3.5,-3.6]
-    # p = [-4.3,-4.4,-4.5,-4.6]
-    # p = [-5.3,-5.5,-5.5,-5.6] # (너무 멀리 가면 break)
+    # Define Weighting Matrix
+    Q = np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0], 
+        [0, 0, 10, 0], 
+        [0, 0, 0, 100]
+    ])
+    R = 0.001
+    # R = 10
 
-    K1 = control.place(A1, B1, p)
-    eigvals1, eigvecs1 = np.linalg.eig(A1)
-    eigVal_p, eigVec_p = np.linalg.eig(A1 - B1@K1)
-    print(f'[Case1] eigVal: \n {eigvals1}')
-    print(f'[Case1] new eigVal, eigVec: \n {eigVal_p} \n {eigVec_p}')
+    K1, S1, E1 = control.lqr(A1, B1, Q, R)
     print(f'Gain K = {K1}\n')
 
-    K2 = control.place(A2, B2, p)
-    eigvals2, eigvecs2 = np.linalg.eig(A2)
-    eigVal_p, eigVec_p = np.linalg.eig(A2 - B2@K2)
-    print(f'[Case2] eigVal: \n {eigvals2}')
-    print(f'[Case2] new eigVal, eigVec: \n {eigVal_p} \n {eigVec_p}')
-    print(f'Gain K = {K2}')
+    K2, S2, E2 = control.lqr(A2, B2, Q, R)
+    eigVal_p, eigVec_p = np.linalg.eig(A2 - B2 @ K2)
+    print(f'new eigVal : \n {eigVal_p}')
+    print(f'new eigVec : \n {eigVec_p}')
+    print(f'Gain K = {K2}\n')
 
     ## Simulate closed-loop system
     t0, tend, N = 0, 10, 100
@@ -173,19 +186,8 @@ if __name__ == '__main__':
     z0 = np.array([-1, 0, np.pi+0.1, 0])
     z_ref = np.array([1, 0, np.pi, 0])
 
-    # non-linear dynamics
-    z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d))
-    
-    # linear dynamics => TODO: 질문1
-    # z_result = odeint(pendcart_linear, z0, tspan, args=(A1, B1)) # => x축 offset이 커짐
-    # z_result = odeint(pendcart_linear, z0, tspan, args=(A2, B2)) # => 날아가버림
-    
-    # Case 1 ()
-    # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K1, z_ref))
-    # z_result = odeint(pendcart_linear, z0, tspan, args=(A1, B1, K1, z_ref))
-
-    # Case 2
-    # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K2, z_ref)) # => working
-    # z_result = odeint(pendcart_linear, z0, tspan, args=(A2, B2, K2, z_ref))
+    # Simulate linear system
+    z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K2, z_ref))
     
     animate(tspan, z_result, params)
+    plot(tspan, z_result)
