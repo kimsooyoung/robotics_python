@@ -100,8 +100,8 @@ def animate(tspan, x, params):
     L = params.L
     W = 0.5
     
-    # plt.xlim(-50, 50)
-    plt.xlim(-5, 5)
+    plt.xlim(-50, 50)
+    # plt.xlim(-5, 5)
     plt.ylim(-2.7, 2.7)
     plt.gca().set_aspect('equal')
     
@@ -148,8 +148,11 @@ if __name__ == '__main__':
     A2, B2 = dynamics2(m, M, L, d, g)
 
     # Pole placement
-    p = [-1.3,-1.4,-1.5,-1.6] # slow but robust control
-    # p = [-2.3,-2.4,-2.5,-2.6] # aggressive but jerky control (너무 멀리 가면 break)
+    # p = [-1.3,-1.4,-1.5,-1.6] # slow but robust control
+    p = [-2.3,-2.4,-2.5,-2.6] # aggressive but jerky control 
+    # p = [-3.3,-3.4,-3.5,-3.6]
+    # p = [-4.3,-4.4,-4.5,-4.6]
+    # p = [-5.3,-5.5,-5.5,-5.6] # (너무 멀리 가면 break)
 
     K1 = control.place(A1, B1, p)
     eigvals1, eigvecs1 = np.linalg.eig(A1)
@@ -182,8 +185,8 @@ if __name__ == '__main__':
     # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K1, z_ref))
     # z_result = odeint(pendcart_linear, z0, tspan, args=(A1, B1, K1, z_ref))
 
-    # Case 2  => working
-    # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K2, z_ref))
+    # Case 2
+    # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K2, z_ref)) # => working
     # z_result = odeint(pendcart_linear, z0, tspan, args=(A2, B2, K2, z_ref))
     
-    # animate(tspan, z_result, params)
+    animate(tspan, z_result, params)
