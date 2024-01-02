@@ -98,8 +98,8 @@ if __name__ == '__main__':
 
     # Constraints
     u0 = 0.0
-    umin = np.array([-100.0])
-    umax = np.array([+100.0])
+    umin = np.array([-300.0])
+    umax = np.array([+300.0])
     xmin = np.array([-np.inf, -np.inf, -np.inf, -np.inf])
     xmax = np.array([+np.inf,  np.inf, +np.inf,  np.inf])
 

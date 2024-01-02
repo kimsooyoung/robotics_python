@@ -48,13 +48,14 @@ def pendcart_linear(z, t, A, B, K=None, z_ref=None):
     result = A @ z + B @ u
     return result.reshape((4,)).tolist()
 
-def pendcart_non_linear(z, t, m, M, L, g, d, K=None, z_ref=None):
-    
+def pendcart_non_linear(z, t, m, M, L, g, d, u_list, K=None, z_ref=None):
+
     if isinstance(K, np.ndarray):
         u = get_control(z, z_ref, K)[0]
     else:
-        u = 0    
+        u = 0
 
+    u_list.append(u)
     x, x_dot, theta, theta_dot = z
     
     dx = z[1]
@@ -135,19 +136,25 @@ def animate(tspan, x, params):
         
     plt.close()
 
-def plot(t, z):
+def plot(t, z, u):
     # plt.figure(1, figsize=(8, 8))
     plt.figure(1)
 
+    plt.subplot(2, 1, 1)
     plt.plot(t, z[:, 0], color='red', label=r'$x$')
     plt.plot(t, z[:, 1], color='blue', label=r'$\dot{x}$')
     plt.plot(t, z[:, 2], color='green', label=r'$\theta$')
     plt.plot(t, z[:, 3], color='orange', label=r'$\dot{\theta}$')
-
     plt.xlabel('time')
     plt.ylabel('state')
-
     plt.legend()
+    
+    plt.subplot(2, 1, 2)
+    plt.plot(u, color='brown', label=r'$u$')
+    plt.xlabel('time')
+    plt.ylabel('state')
+    plt.legend()
+
     plt.show()
 
 if __name__ == '__main__':
@@ -187,7 +194,8 @@ if __name__ == '__main__':
     z_ref = np.array([1, 0, np.pi, 0])
 
     # Simulate linear system
-    z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K2, z_ref))
-    
-    animate(tspan, z_result, params)
-    plot(tspan, z_result)
+    u_result = []
+    z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, u_result, K2, z_ref))
+
+    # animate(tspan, z_result, params)
+    plot(tspan, z_result, u_result)
