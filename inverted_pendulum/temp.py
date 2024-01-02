@@ -50,7 +50,7 @@ R = 0.1*sparse.eye(4)
 
 # Initial and reference states
 x0 = np.zeros(12)
-xr = np.array([0.,0.,1.,0.,0.,0.,0.,0.,0.,0.,0.,0.])
+xr = np.array([0.,0.,1.,1.,1.,0.,0.,0.,0.,0.,0.,0.])
 
 # Prediction horizon
 N = 10
@@ -86,7 +86,7 @@ prob = osqp.OSQP()
 prob.setup(P, q, A, l, u, verbose=False)
 
 # Simulate in closed loop
-nsim = 15
+nsim = 20
 for i in range(nsim):
     # Solve
     res = prob.solve()

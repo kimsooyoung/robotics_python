@@ -171,10 +171,11 @@ if __name__ == '__main__':
     t0, tend, N = 0, 10, 100
     tspan = np.linspace(t0, tend, N)
     z0 = np.array([-1, 0, np.pi+0.1, 0])
+    # z0 = np.array([-1, 0, np.pi-0.8, 0])
     z_ref = np.array([1, 0, np.pi, 0])
 
     # non-linear dynamics
-    z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d))
+    # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d))
     
     # linear dynamics => TODO: 질문1
     # z_result = odeint(pendcart_linear, z0, tspan, args=(A1, B1)) # => x축 offset이 커짐
@@ -185,7 +186,7 @@ if __name__ == '__main__':
     # z_result = odeint(pendcart_linear, z0, tspan, args=(A1, B1, K1, z_ref))
 
     # Case 2
-    # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K2, z_ref)) # => working
+    z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K2, z_ref)) # => working
     # z_result = odeint(pendcart_linear, z0, tspan, args=(A2, B2, K2, z_ref))
     
     animate(tspan, z_result, params)

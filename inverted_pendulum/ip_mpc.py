@@ -8,11 +8,19 @@ from matplotlib import pyplot as plt
 class Param:
 
     def __init__(self):
+        # self.g = 9.81
+        # self.m = 0.2
+        # self.M = 0.5
+        # self.L = 0.3
+        # self.I = 0.006
+        # self.d = 0.1
+        # self.b = 1 # pendulum up (b=1)
+
         self.g = 9.81
-        self.m = 0.2
-        self.M = 0.5
-        self.L = 0.3
-        self.I = 0.006
+        self.m = 1
+        self.M = 5
+        self.L = 2
+        self.I = 0
         self.d = 0.1
         self.b = 1 # pendulum up (b=1)
 
@@ -22,26 +30,26 @@ class Param:
 # x_dot = 0 / theta = sy.pi / theta_dot = 0
 def dynamics(m, M, I, l, d, g):
 
-    p = I*(M+m)+M*m*l**2
+    # p = I*(M+m)+M*m*l**2
 
-    A = np.array([[0,      1,              0,            0],
-                [0, -(I+m*l**2)*b/p,  (m**2*g*l**2)/p, 0],
-                [0,      0,              0,            1],
-                [0, -(m*l*b)/p,       m*g*l*(M+m)/p,   0]])
+    # A = np.array([[0,      1,              0,            0],
+    #             [0, -(I+m*l**2)*b/p,  (m**2*g*l**2)/p, 0],
+    #             [0,      0,              0,            1],
+    #             [0, -(m*l*b)/p,       m*g*l*(M+m)/p,   0]])
 
-    B = np.array([[0],
-                [(I+m*l**2)/p],
-                [0],
-                [m*l/p]])
+    # B = np.array([[0],
+    #             [(I+m*l**2)/p],
+    #             [0],
+    #             [m*l/p]])
 
-    # A = np.array([
-    #     [0, 1, 0, 0], 
-    #     [0, -1.0*d/M, 1.0*g*m/M, 0], 
-    #     [0, 0, 0, 1], 
-    #     [0, -1.0*d/(L*M), 1.0*g*(M + m)/(L*M), 0]
-    # ])
+    A = np.array([
+        [0, 1, 0, 0], 
+        [0, -1.0*d/M, 1.0*g*m/M, 0], 
+        [0, 0, 0, 1], 
+        [0, -1.0*d/(L*M), 1.0*g*(M + m)/(L*M), 0]
+    ])
 
-    # B = np.array([0, 1/M, 0, 1/(M*L)]).reshape((4,1))
+    B = np.array([0, 1/M, 0, 1/(M*L)]).reshape((4,1))
 
     return A, B
 
@@ -63,9 +71,9 @@ def animate(x, params):
     W = 0.5
     
     # plt.xlim(-50, 50)
-    plt.xlim(-5.0, 5.0)
-    plt.ylim(-0.5, 2.0)
-    # plt.gca().set_aspect('equal')
+    plt.xlim(-10.0, 10.0)
+    plt.ylim(-2.7, 2.7)
+    plt.gca().set_aspect('equal')
     
     plt.grid()
     plt.xlabel('x')
@@ -111,25 +119,25 @@ if __name__ == '__main__':
 
     # Constraints
     u0 = 0.0
-    umin = np.array([-100.0])
-    umax = np.array([+100.0])
+    umin = np.array([-500.0])
+    umax = np.array([+500.0])
     xmin = np.array([-np.inf, -np.inf, -np.inf, -np.inf])
     xmax = np.array([+np.inf, +np.inf, +np.inf,  np.inf])
 
     # Objective function
-    Q = sparse.diags([10., 5., 100., 5.])
+    Q = sparse.diags([1., 1., 10., 1.])
     QN = Q
-    R = 10 * sparse.eye(1)
+    R = 0.01 * sparse.eye(1)
 
     # Initial and reference states
-    # x0 = np.array([-1, 0, np.pi+0.1, 0])
-    # xr = np.array([1, 0, np.pi, 0])
+    x0 = np.array([1, 1, np.pi+0.1, 0])
+    xr = np.array([-1, 0, np.pi, 0])
     
     # x0 = np.array([-1.5, -1., 0.65, 0.5])  # Initial conditions
     # xr = np.array([0., 0., 0., 0.])  # Desired states
 
-    x0 = np.array([0, 0, np.pi, 0])
-    xr = np.array([0, 0, np.pi, 0])
+    # x0 = np.array([0, 0, np.pi, 0])
+    # xr = np.array([0, 0, np.pi, 0])
 
     # Prediction horizon
     N = 10
@@ -165,7 +173,9 @@ if __name__ == '__main__':
     prob.setup(P, q, A, l, u, verbose=False)
 
     # Simulate and solve
-    nsim = 30
+    nsim = 100
+    t_span = np.linspace(0, 0.1 * nsim, nsim + 1)
+
     state = np.zeros((nsim+1, nx))
     state[0] = x0
     for i in range(nsim):
@@ -179,11 +189,16 @@ if __name__ == '__main__':
         # Apply first control input to the plant
         ctrl = res.x[-N*nu:-(N-1)*nu]
         print(ctrl)
-        # z_result = odeint(pendcart_non_linear, x0, tspan, args=(m, M, L, g, d, K2, z_ref))
-
+        
+        t_temp = np.array([t_span[i], t_span[i+1]])
+        z_result = odeint(pendcart_non_linear, x0, t_temp, args=(m, M, L, g, d, ctrl[0]))
+        print(f"z_result : {z_result}")
+        
         # Parse state
-        x0 = Ad@x0 + Bd@ctrl
-        print(x0)
+        # x0 = Ad@x0 + Bd@ctrl
+        x0 = z_result[1]
+        print(f"state : {x0}")
+
         state[i+1] = x0
 
         # Update initial state
