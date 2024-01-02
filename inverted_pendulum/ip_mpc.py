@@ -9,26 +9,39 @@ class Param:
 
     def __init__(self):
         self.g = 9.81
-        self.m = 1
-        self.M = 5
-        self.L = 2
-        self.d = 0
+        self.m = 0.2
+        self.M = 0.5
+        self.L = 0.3
+        self.I = 0.006
+        self.d = 0.1
         self.b = 1 # pendulum up (b=1)
 
-        self.pause = 0.05
+        self.pause = 0.1
         self.fps = 10
 
 # x_dot = 0 / theta = sy.pi / theta_dot = 0
-def dynamics(m, M, L, d, g):
+def dynamics(m, M, I, l, d, g):
 
-    A = np.array([
-        [0, 1, 0, 0], 
-        [0, -1.0*d/M, 1.0*g*m/M, 0], 
-        [0, 0, 0, 1], 
-        [0, -1.0*d/(L*M), 1.0*g*(M + m)/(L*M), 0]
-    ])
+    p = I*(M+m)+M*m*l**2
 
-    B = np.array([0, 1/M, 0, 1/(M*L)]).reshape((4,1))
+    A = np.array([[0,      1,              0,            0],
+                [0, -(I+m*l**2)*b/p,  (m**2*g*l**2)/p, 0],
+                [0,      0,              0,            1],
+                [0, -(m*l*b)/p,       m*g*l*(M+m)/p,   0]])
+
+    B = np.array([[0],
+                [(I+m*l**2)/p],
+                [0],
+                [m*l/p]])
+
+    # A = np.array([
+    #     [0, 1, 0, 0], 
+    #     [0, -1.0*d/M, 1.0*g*m/M, 0], 
+    #     [0, 0, 0, 1], 
+    #     [0, -1.0*d/(L*M), 1.0*g*(M + m)/(L*M), 0]
+    # ])
+
+    # B = np.array([0, 1/M, 0, 1/(M*L)]).reshape((4,1))
 
     return A, B
 
@@ -50,9 +63,9 @@ def animate(x, params):
     W = 0.5
     
     # plt.xlim(-50, 50)
-    plt.xlim(-5, 5)
-    plt.ylim(-2.7, 2.7)
-    plt.gca().set_aspect('equal')
+    plt.xlim(-5.0, 5.0)
+    plt.ylim(-0.5, 2.0)
+    # plt.gca().set_aspect('equal')
     
     plt.grid()
     plt.xlabel('x')
@@ -87,10 +100,10 @@ def animate(x, params):
 if __name__ == '__main__':
 
     params = Param()
-    m, M, L, d, g = params.m, params.M, params.L, params.d, params.g
+    m, M, I, L, d, g, b = params.m, params.M, params.I, params.L, params.d, params.g, params.b
 
     # Discrete time model of a inverted pendulum
-    A, B = dynamics(m, M, L, d, g)
+    A, B = dynamics(m, M, I, L, d, g)
 
     Ad = sparse.csc_matrix(A)
     Bd = sparse.csc_matrix(B)
@@ -98,22 +111,28 @@ if __name__ == '__main__':
 
     # Constraints
     u0 = 0.0
-    umin = np.array([-300.0])
-    umax = np.array([+300.0])
+    umin = np.array([-100.0])
+    umax = np.array([+100.0])
     xmin = np.array([-np.inf, -np.inf, -np.inf, -np.inf])
-    xmax = np.array([+np.inf,  np.inf, +np.inf,  np.inf])
+    xmax = np.array([+np.inf, +np.inf, +np.inf,  np.inf])
 
     # Objective function
-    Q = sparse.diags([1., 1., 1., 1.])
+    Q = sparse.diags([10., 5., 100., 5.])
     QN = Q
-    R = 1*sparse.eye(1)
+    R = 10 * sparse.eye(1)
 
     # Initial and reference states
-    x0 = np.array([-1, 0, np.pi+0.1, 0])
-    xr = np.array([1, 0, np.pi, 0])
+    # x0 = np.array([-1, 0, np.pi+0.1, 0])
+    # xr = np.array([1, 0, np.pi, 0])
+    
+    # x0 = np.array([-1.5, -1., 0.65, 0.5])  # Initial conditions
+    # xr = np.array([0., 0., 0., 0.])  # Desired states
+
+    x0 = np.array([0, 0, np.pi, 0])
+    xr = np.array([0, 0, np.pi, 0])
 
     # Prediction horizon
-    N = 20
+    N = 10
 
     # Cast MPC problem to a QP: x = (x(0),x(1),...,x(N),u(0),...,u(N-1))
     # - quadratic objective (Hessian)
@@ -159,12 +178,12 @@ if __name__ == '__main__':
 
         # Apply first control input to the plant
         ctrl = res.x[-N*nu:-(N-1)*nu]
-        # print(ctrl)
+        print(ctrl)
         # z_result = odeint(pendcart_non_linear, x0, tspan, args=(m, M, L, g, d, K2, z_ref))
 
         # Parse state
         x0 = Ad@x0 + Bd@ctrl
-        # print(x0)
+        print(x0)
         state[i+1] = x0
 
         # Update initial state
@@ -172,5 +191,5 @@ if __name__ == '__main__':
         u[:nx] = -x0
         prob.update(l=l, u=u)
 
-    print(state)
+    # print(state)
     animate(state, params)

@@ -25,7 +25,7 @@ class Param:
         self.m = 1
         self.M = 5
         self.L = 2
-        self.d = 1
+        self.d = 0.1
         self.b = 1 # pendulum up (b=1)
 
         self.pause = 0.01

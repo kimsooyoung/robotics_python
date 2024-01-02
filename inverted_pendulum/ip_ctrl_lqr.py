@@ -25,7 +25,7 @@ class Param:
         self.m = 1
         self.M = 5
         self.L = 2
-        self.d = 1
+        self.d = 0.1
         self.b = 1 # pendulum up (b=1)
 
         self.pause = 0.01
@@ -197,5 +197,5 @@ if __name__ == '__main__':
     u_result = []
     z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, u_result, K2, z_ref))
 
-    # animate(tspan, z_result, params)
+    animate(tspan, z_result, params)
     plot(tspan, z_result, u_result)
