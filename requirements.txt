@@ -3,3 +3,4 @@ numpy
 control
 scipy
 sympy
+osqp
