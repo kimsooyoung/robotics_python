@@ -53,7 +53,7 @@ def pendcart_non_linear(z, t, m, M, L, g, d, K=None, z_ref=None):
     if isinstance(K, np.ndarray):
         u = get_control(z, z_ref, K)[0]
     else:
-        u = 0    
+        u = 0
 
     x, x_dot, theta, theta_dot = z
     

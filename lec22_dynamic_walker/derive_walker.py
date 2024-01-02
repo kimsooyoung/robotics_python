@@ -92,10 +92,6 @@ for i in range(len(q_dd)):
 
 EOM = sy.Matrix(EOM)
 
-# print(EOM[0])
-# print(EOM[1])
-# print(EOM[2])
-
 # Ax = b
 A_ss = EOM.jacobian(q_dd)
 b_ss = []

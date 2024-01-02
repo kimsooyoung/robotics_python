@@ -30,6 +30,35 @@ class Param:
         self.pause = 0.01
         self.fps = 10
 
+
+def dynamics1(m, M, L, d, g):
+
+    A = np.array([
+        [0, 1, 0, 0], 
+        [0, -1.0*d/M, 1.0*g*m/M, 0], 
+        [0, 0, 0, 1], 
+        [0, 1.0*d/(L*M), -1.0*g*(M + m)/(L*M), 0]
+    ])
+
+    B = np.array([0, 1/M, 0, -1/(M*L)]).reshape((4,1))
+
+    return A, B
+
+
+def dynamics2(m, M, L, d, g):
+
+    A = np.array([
+        [0, 1, 0, 0], 
+        [0, -1.0*d/M, 1.0*g*m/M, 0], 
+        [0, 0, 0, 1], 
+        [0, -1.0*d/(L*M), 1.0*g*(M + m)/(L*M), 0]
+    ])
+
+    B = np.array([0, 1/M, 0, 1/(M*L)]).reshape((4,1))
+
+    return A, B
+
+
 def pendcart(z, t, m, M, L, g, d, u):
     
     x, x_dot, theta, theta_dot = z
@@ -40,6 +69,17 @@ def pendcart(z, t, m, M, L, g, d, u):
     alpha = -(1.0*g*(M + m)*np.sin(theta) + 1.0*(1.0*L*m*theta_dot**2*np.sin(theta) - d*x_dot + u)*np.cos(theta))/(L*(M + m*np.sin(theta)**2))
     
     return dx, ax, omega, alpha
+
+def pendcart_lin(z, t, m, M, L, g, d, u):
+    
+    z = z.reshape((4,1))
+    u = np.zeros((1,1))
+    A, B = dynamics2(m, M, L, d, g)
+
+    result = A @ z + B @ u
+
+    return result.reshape((4,)).tolist()
+
 
 def animate(tspan, x, params):
     
@@ -94,7 +134,7 @@ if __name__ == '__main__':
     u = 0
 
     m, M, L, g, d = params.m, params.M, params.L, params.g, params.d
-    x = odeint(pendcart, z0, tspan, args=(m, M, L, g, d, u))
+    # x = odeint(pendcart, z0, tspan, args=(m, M, L, g, d, u))
+    x = odeint(pendcart_lin, z0, tspan, args=(m, M, L, g, d, u))
     
     animate(tspan, x, params)
-    
