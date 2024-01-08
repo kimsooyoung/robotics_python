@@ -134,7 +134,7 @@ if __name__ == '__main__':
     u = 0
 
     m, M, L, g, d = params.m, params.M, params.L, params.g, params.d
-    # x = odeint(pendcart, z0, tspan, args=(m, M, L, g, d, u))
-    x = odeint(pendcart_lin, z0, tspan, args=(m, M, L, g, d, u))
+    x = odeint(pendcart, z0, tspan, args=(m, M, L, g, d, u))
+    # x = odeint(pendcart_lin, z0, tspan, args=(m, M, L, g, d, u))
     
     animate(tspan, x, params)

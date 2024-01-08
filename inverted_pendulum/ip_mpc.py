@@ -1,4 +1,5 @@
 import osqp
+import control
 import numpy as np
 import scipy as sp
 from scipy import sparse
@@ -17,7 +18,7 @@ class Param:
         # self.b = 1 # pendulum up (b=1)
 
         self.g = 9.81
-        self.m = 1
+        self.m = 0.5
         self.M = 5
         self.L = 2
         self.I = 0
@@ -112,6 +113,8 @@ if __name__ == '__main__':
 
     # Discrete time model of a inverted pendulum
     A, B = dynamics(m, M, I, L, d, g)
+    C_o = control.ctrb(A, B)
+    print(f'C_o rank: {np.linalg.matrix_rank(C_o)}')
 
     Ad = sparse.csc_matrix(A)
     Bd = sparse.csc_matrix(B)
@@ -130,7 +133,7 @@ if __name__ == '__main__':
     R = 0.01 * sparse.eye(1)
 
     # Initial and reference states
-    x0 = np.array([1, 1, np.pi+0.1, 0])
+    x0 = np.array([1, 0, np.pi+0.1, 0])
     xr = np.array([-1, 0, np.pi, 0])
     
     # x0 = np.array([-1.5, -1., 0.65, 0.5])  # Initial conditions
