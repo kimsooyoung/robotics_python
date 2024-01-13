@@ -33,6 +33,7 @@ Bd = sparse.csc_matrix([
   [0.0236,   0.,     -0.0236, 0.    ],
   [0.2107,   0.2107,  0.2107, 0.2107]])
 [nx, nu] = Bd.shape
+# print(f"nx: {nx}, nu: {nu}")
 
 # Constraints
 u0 = 10.5916
