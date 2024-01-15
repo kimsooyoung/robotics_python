@@ -59,7 +59,8 @@ def cost(x, args):
 
     tau_sum = sum([x*y for x, y in zip(u_opt, u_opt)]) * dt
 
-    return tau_sum + time
+    # return tau_sum + time
+    return time
 
 
 # heuristic controller
@@ -135,13 +136,9 @@ def simulator(x, z_current):
             args=all_parms, atol=1e-13, rtol=1e-13
         )
 
+        # tau approximation
         t_half = (t_opt[i] + t_opt[i+1])/2
         tau_temp = u_opt[i] + (u_opt[i+1]-u_opt[i])/(t_opt[i+1]-t_opt[i])*(t_half-t_opt[i])
-
-        # z0 = np.array([
-        #     z_temp[1, 0] + np.random.normal(theta1_mean, theta1_dev),
-        #     z_temp[1, 1] + np.random.normal(theta1dot_mean, theta1dot_dev)
-        # ])
 
         z0 = z_temp[1]
         z[i+1] = z0
@@ -163,7 +160,7 @@ def pendcart_constraint(x, z0, z_end):
     return [x_diff, xdot_diff, theta_diff, theta_dot_diff]
 
 
-def animate(tspan, x, params):
+def animate(x, params):
     
     L = params.L
     W = 0.5
@@ -177,7 +174,7 @@ def animate(tspan, x, params):
     plt.ylabel('y')
     plt.title('Inverted Pendulum')
     
-    for i in range(len(tspan)):
+    for i in range(len(x)):
         stick, = plt.plot(
             [x[i, 0], x[i, 0] + L*np.sin(x[i, 2])], 
             [0, -L*np.cos(x[i, 2])], 
@@ -243,15 +240,19 @@ if __name__ == '__main__':
     u_lb = (u_min * np.ones((1, N+1))).flatten()
     u_ub = (u_max * np.ones((1, N+1))).flatten()
 
+    # iteration
+    iter = 20
     # Initial condition (x, x_dot, theta, theta_dot)
     z0 = parms.z0
-
     # object state (theta1, theta1dot)
     z_end = parms.z_end
+    # simulated states
+    z_sim = np.zeros((iter+1, 4))
+    z_sim[0] = z0
 
     physical_parms = (parms.g, parms.m, parms.M, parms.L, parms.d, parms.b)
 
-    for i in range(100):
+    for i in range(iter):
 
         # temporal control inputs
         u_opt = (u_min + (u_max-u_min) * np.random.rand(1, N+1)).flatten()
@@ -280,17 +281,14 @@ if __name__ == '__main__':
         u = opt_state[1]
         all_parms = physical_parms + (u,)
 
+        # TODO Time setup
         z_temp = odeint(
             ode_pendcart, z0, np.array([0.0, dt]),
             args=all_parms, atol=1e-13, rtol=1e-13
         )
         z0 = z_temp[1]
+        z_sim[i+1] = z0
         print(z0)
 
-        # print(f'opt_state = {opt_state}')
-        # print(f'params.t_opt = {opt_state[0]}')
-        # print(f'params.u_opt = {opt_state[1:]}')
-
-    # z_aft, t, z, tau = simulator(opt_state)
-    # animate(t, z, parms)
+    animate(z_sim, parms)
     # plot(t, z, tau, parms)
