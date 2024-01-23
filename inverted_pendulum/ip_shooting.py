@@ -20,32 +20,33 @@ from scipy import interpolate
 from scipy.integrate import odeint
 import scipy.optimize as opt
 
-
 class OptParams:
 
     def __init__(self):
-        self.N = 10
-
+        self.N = 20
+        self.window = 5
+        self.dt = 0.1
 
 class Parameters:
 
     def __init__(self):
-        self.m1 = 1
-        self.g = 10
-        self.l1 = 1
-        self.I1 = 1/12 * (self.m1 * self.l1**2)
 
-        self.kp1 = 200
-        self.kd1 = 2 * np.sqrt(self.kp1)
-
+        self.g = 9.81
+        self.m = 1
+        self.M = 5
+        self.L = 2
+        self.d = 0.1
+        self.b = 1 # pendulum up (b=1)
         self.theta_des = np.pi/2
-        self.z_end = [np.pi/2, 0]
+
+        self.z0 = [-1, 0, np.pi+0.1, 0]
+        self.z_end = [1, 0, np.pi, 0]
 
         self.theta1_mean, self.theta1_dev = 0.0, 0.0
         self.theta1dot_mean, self.theta1dot_dev = 0, 0.5 * 0
 
-        self.pause = 0.05
-        self.fps = 30
+        self.pause = 0.01
+        self.fps = 10
 
 
 def cost(x, args):
@@ -58,7 +59,8 @@ def cost(x, args):
 
     tau_sum = sum([x*y for x, y in zip(u_opt, u_opt)]) * dt
 
-    return tau_sum + time
+    # return tau_sum + time
+    return time
 
 
 # heuristic controller
@@ -76,7 +78,20 @@ def controller(t, t1, t2, u1, u2):
 
     return tau
 
-def pendcart(z, t, m, M, L, g, d, u):
+def dynamics_pendcart(z, t, g, m, M, L, d, b, t1, t2, u1, u2):
+    
+    x, x_dot, theta, theta_dot = z
+    u = controller(t, t1, t2, u1, u2)
+    
+    dx = z[1]
+    ax = 1.0*(1.0*L*m*theta_dot**2*np.sin(theta) - d*x_dot + g*m*np.sin(2*theta)/2 + u)/(M + m*np.sin(theta)**2)
+    omega = z[3]
+    alpha = -(1.0*g*(M + m)*np.sin(theta) + 1.0*(1.0*L*m*theta_dot**2*np.sin(theta) - d*x_dot + u)*np.cos(theta))/(L*(M + m*np.sin(theta)**2))
+    
+    return dx, ax, omega, alpha
+
+
+def ode_pendcart(z, t, g, m, M, L, d, b, u):
     
     x, x_dot, theta, theta_dot = z
     
@@ -87,113 +102,103 @@ def pendcart(z, t, m, M, L, g, d, u):
     
     return dx, ax, omega, alpha
 
-def onelink_rhs(z, t, m1, I1, l1, g, t1, t2, u1, u2):
 
-    theta1 = z[0]
-    theta1dot = z[1]
-
-    tau = controller(t, t1, t2, u1, u2)
-
-    theta1ddot = (1 / (I1+(m1*l1*l1/4))) * (tau - 0.5*m1*g*l1*cos(theta1))
-
-    zdot = np.array([theta1dot, theta1ddot])
-
-    return zdot
-
-
-def simulator(x):
+def simulator(x, z_current):
 
     t = x[0]
     u_opt = x[1:]
 
     N = OptParams().N
+    dt = OptParams().dt
     parms = Parameters()
 
     # disturbances
-    theta1_mean, theta1_dev = parms.theta1_mean, parms.theta1_dev
-    theta1dot_mean, theta1dot_dev = parms.theta1dot_dev, parms.theta1dot_dev
+    # theta1_mean, theta1_dev = parms.theta1_mean, parms.theta1_dev
+    # theta1dot_mean, theta1dot_dev = parms.theta1dot_dev, parms.theta1dot_dev
 
     # time setup
-    t0, tend = 0, t
+    t0, tend = 0, N*dt
     t_opt = np.linspace(t0, tend, N+1)
 
-    # 2 is for theta1 and theta1dot, change according to the system
-    z = np.zeros((N+1, 2))
+    # 4 is for theta1 and theta1dot, change according to the system
+    z = np.zeros((N+1, 4))
     tau = np.zeros((N+1, 1))
-    z0 = [-np.pi/2, 0]
+    z0 = z_current
     z[0] = z0
 
-    physical_parms = (parms.m1, parms.I1, parms.l1, parms.g)
+    physical_parms = (parms.g, parms.m, parms.M, parms.L, parms.d, parms.b)
 
     for i in range(0, N):
         all_parms = physical_parms + (t_opt[i], t_opt[i+1], u_opt[i], u_opt[i+1])
 
         z_temp = odeint(
-            onelink_rhs, z0, np.array([t_opt[i], t_opt[i+1]]),
+            dynamics_pendcart, z0, np.array([t_opt[i], t_opt[i+1]]),
             args=all_parms, atol=1e-13, rtol=1e-13
         )
 
+        # tau approximation
         t_half = (t_opt[i] + t_opt[i+1])/2
         tau_temp = u_opt[i] + (u_opt[i+1]-u_opt[i])/(t_opt[i+1]-t_opt[i])*(t_half-t_opt[i])
 
-        z0 = np.array([
-            z_temp[1, 0] + np.random.normal(theta1_mean, theta1_dev),
-            z_temp[1, 1] + np.random.normal(theta1dot_mean, theta1dot_dev)
-        ])
-
+        z0 = z_temp[1]
         z[i+1] = z0
         tau[i+1, 0] = tau_temp
 
     return z[-1], t_opt, z, tau
 
-
-def pendulum_constraint(x):
+def pendcart_constraint(x, z0, z_end):
 
     parms = Parameters()
-    z_end = parms.z_end
 
-    z_aft, _, _, _ = simulator(x)
+    z_aft, _, _, _ = simulator(x, z0)
 
-    theta1_diff = z_aft[0] - z_end[0]
-    theta1dot_diff = z_aft[1] - z_end[1]
+    x_diff = z_aft[0] - z_end[0]
+    xdot_diff = z_aft[1] - z_end[1]
+    theta_diff = z_aft[2] - z_end[2]
+    theta_dot_diff = z_aft[3] - z_end[3]
 
-    return [theta1_diff, theta1dot_diff]
+    return [x_diff, xdot_diff, theta_diff, theta_dot_diff]
 
 
-def animate(t, z, parms):
-
-    # interpolation
-    t_interp = np.arange(t[0], t[len(t)-1], 1/parms.fps)
-
-    m, n = np.shape(z)
-    shape = (len(t_interp), n)
-    z_interp = np.zeros(shape)
-
-    for i in range(n):
-        f = interpolate.interp1d(t, z[:, i])
-        z_interp[:, i] = f(t_interp)
-
-    l1 = parms.l1
-
-    plt.figure(1)
-
-    plt.xlim(-2, 2)
-    plt.ylim(-2, 2)
+def animate(x, params):
+    
+    L = params.L
+    W = 0.5
+    
+    plt.xlim(-5, 5)
+    plt.ylim(-2.7, 2.7)
     plt.gca().set_aspect('equal')
-
-    # plot
-    for i in range(len(t_interp)):
-        theta1 = z_interp[i, 0]
-        O = np.array([0, 0])
-        P = np.array([l1*cos(theta1), l1*sin(theta1)])
-
-        pend1, = plt.plot(
-            [O[0], P[0]], [O[1], P[1]], linewidth=5, color='red'
+    
+    plt.grid()
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.title('Inverted Pendulum')
+    
+    for i in range(len(x)):
+        stick, = plt.plot(
+            [x[i, 0], x[i, 0] + L*np.sin(x[i, 2])], 
+            [0, -L*np.cos(x[i, 2])], 
+            'b'
+        )
+        ball, = plt.plot(
+            x[i, 0] + L*np.sin(x[i, 2]), 
+            -L*np.cos(x[i, 2]), 
+            'ro'
+        )
+        body, = plt.plot(
+            [x[i, 0] - W/2, x[i, 0] + W/2],
+            [0, 0],
+            linewidth=5,
+            color='black'
         )
 
-        plt.pause(parms.pause)
-        pend1.remove()
+        plt.savefig(f'./images/data{i}.png')
 
+        plt.pause(params.pause)
+        stick.remove()
+        ball.remove()
+        body.remove()
+        
     plt.close()
 
 
@@ -218,7 +223,6 @@ def plot(t, z, T, parms):
 
     plt.show()
 
-
 if __name__ == '__main__':
 
     # Parameters
@@ -227,46 +231,64 @@ if __name__ == '__main__':
 
     # control sampling
     N = opt_params.N
+    dt = opt_params.dt
 
-    time_min, time_max = 1, 4
+    time_min, time_max = 1, 20
     u_min, u_max = -20, 120
-
-    # initial state (theta1, theta1dot)
-    z0 = [-np.pi/2, 0.0]
-
-    # object state (theta1, theta1dot)
-    z_end = parms.z_end
-
-    # temporal control inputs
-    u_opt = (u_min + (u_max-u_min) * np.random.rand(1, N+1)).flatten()
 
     # prepare upper/lower bounds
     u_lb = (u_min * np.ones((1, N+1))).flatten()
     u_ub = (u_max * np.ones((1, N+1))).flatten()
 
-    # state x (t, u)
-    x0 = [1, *u_opt]
-    x_min = [time_min, *u_lb]
-    x_max = [time_max, *u_ub]
+    # iteration
+    iter = 20
+    # Initial condition (x, x_dot, theta, theta_dot)
+    z0 = parms.z0
+    # object state (theta1, theta1dot)
+    z_end = parms.z_end
+    # simulated states
+    z_sim = np.zeros((iter+1, 4))
+    z_sim[0] = z0
 
-    limits = opt.Bounds(x_min, x_max)
-    constraint = {
-        'type': 'eq',
-        'fun': pendulum_constraint
-    }
+    physical_parms = (parms.g, parms.m, parms.M, parms.L, parms.d, parms.b)
 
-    result = opt.minimize(
-        cost, x0, args=(parms), method='SLSQP',
-        constraints=[constraint],
-        options={'ftol': 1e-6, 'disp': True, 'maxiter': 500},
-        bounds=limits
-    )
-    opt_state = result.x
+    for i in range(iter):
 
-    print(f'opt_state = {opt_state}')
-    print(f'params.t_opt = {opt_state[0]}')
-    print(f'params.u_opt = {opt_state[5:]}')
+        # temporal control inputs
+        u_opt = (u_min + (u_max-u_min) * np.random.rand(1, N+1)).flatten()
 
-    z_aft, t, z, tau = simulator(opt_state)
-    animate(t, z, parms)
-    plot(t, z, tau, parms)
+        # state x (t, u)
+        x0 = [1, *u_opt]
+        x_min = [time_min, *u_lb]
+        x_max = [time_max, *u_ub]
+
+        limits = opt.Bounds(x_min, x_max)
+        constraint = {
+            'type': 'eq',
+            'fun': pendcart_constraint,
+            'args': (z0, z_end),
+        }
+
+        # optimize
+        result = opt.minimize(
+            cost, x0, args=(parms), method='SLSQP',
+            constraints=[constraint],
+            options={'ftol': 1e-6, 'disp': True, 'maxiter': 10},
+            bounds=limits
+        )
+        opt_state = result.x
+
+        u = opt_state[1]
+        all_parms = physical_parms + (u,)
+
+        # TODO Time setup
+        z_temp = odeint(
+            ode_pendcart, z0, np.array([0.0, dt]),
+            args=all_parms, atol=1e-13, rtol=1e-13
+        )
+        z0 = z_temp[1]
+        z_sim[i+1] = z0
+        print(z0)
+
+    animate(z_sim, parms)
+    # plot(t, z, tau, parms)
