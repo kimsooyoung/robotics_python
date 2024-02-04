@@ -9,6 +9,7 @@ c = 4 # Damping constant
 k = 2 # Stiffness of the spring
 m = 20 # Mass
 F = 5 # Force
+x_init = [0,1]
 
 # Simulation Parameters
 tstart = 0
@@ -27,7 +28,7 @@ sysDisc = control.sample_system(sys, increment, method='zoh')
 print(sysDisc)
 
 # Step response for the system
-result = control.forced_response(sysDisc, t, F)
+result = control.forced_response(sysDisc, t, F, X0=x_init)
 
 # # Step response for the system
 # result = control.forced_response(sys, t, F)

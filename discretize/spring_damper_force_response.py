@@ -9,6 +9,7 @@ c = 4 # Damping constant
 k = 2 # Stiffness of the spring
 m = 20 # Mass
 F = 5 # Force
+x_init = [0,1]
 
 # Simulation Parameters
 tstart = 0
@@ -23,7 +24,7 @@ C = [[1, 0]]
 sys = control.ss(A, B, C, 0)
 
 # Step response for the system
-result = control.forced_response(sys, t, F)
+result = control.forced_response(sys, t, F, X0=x_init)
 x1 = result.x[0,:]
 x2 = result.x[1,:]
 

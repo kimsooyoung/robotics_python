@@ -8,7 +8,7 @@ tstop = 60
 increment = 0.1
 
 # Initial condition
-x_init = [0,0]
+x_init = [0,1]
 t = np.arange(tstart,tstop+1,increment)
 
 # Function that returns dx/dt
