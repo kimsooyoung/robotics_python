@@ -49,6 +49,7 @@ def animate(t, result, params):
     x1 = result[:,0]
     x2 = result[:,1]
     ceil = (0.0, 3.0)
+    damper_height = 0.5
 
     plt.xlim(-3, 3)
     plt.ylim(-2.7, 2.7)
@@ -60,11 +61,15 @@ def animate(t, result, params):
 
     for i in range(len(t)):
         spring_plt, = plt.plot(*spring(ceil, (0, x1[i]), 50, 0.2), c="black")
+        damper1, = plt.plot([0, 0], [x1[i], -2], c="black", linewidth=2)
+        damper2, = plt.plot([0, 0], [ 0.5*(x1[i]-2), 0.5*(x1[i]-2)-0.2 ], c="black", linewidth=10)
         ball, = plt.plot(x1[i], 'ro', markersize=15)
 
         plt.pause(params.pause)
         ball.remove()
         spring_plt.remove()
+        damper1.remove()
+        damper2.remove()
 
     plt.close()
 
