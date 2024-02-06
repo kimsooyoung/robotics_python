@@ -106,7 +106,9 @@ if __name__ == '__main__':
     A, B = dynamics(c, k, m, F)
 
     # pole placement
-    p = [-3.0, -3.3]
+    # p = [-1.0, -0.7]
+    p = [-2.0, -2.3]
+    # p = [-5.0, -5.3]
 
     K = control.place(A, B, p)
     eigvals, eigvecs = np.linalg.eig(A)
@@ -117,7 +119,7 @@ if __name__ == '__main__':
 
     # Simulate closed-loop system
     tstart = 0
-    tstop = 60
+    tstop = 30
     increment = 0.1
     t = np.arange(tstart, tstop + 1, increment)
 
@@ -132,4 +134,4 @@ if __name__ == '__main__':
     
     # visualize
     animate(t, result, params)
-    # plot(t, result)
+    plot(t, result)
