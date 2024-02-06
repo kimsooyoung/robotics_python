@@ -3,6 +3,7 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 from spring import spring
 
+import control
 
 class Param:
 
@@ -31,12 +32,20 @@ def dynamics(c, k, m, F):
 
     return A, B
 
+
+def get_control(x, x_ref, K):
+    return -K @ (x - x_ref)
+
+
 # Function that returns dx/dt
-def spring_mass_damper_rhs(x, t, A, B):
+def spring_mass_damper_rhs(x, t, A, B, K, x_ref):
+
+    if isinstance(K, np.ndarray):
+        u = get_control(x, x_ref, K)[0].reshape((1,1))
+    else:
+        u = 0
 
     x = x.reshape((2,1))
-    u = np.zeros((1,1))
-
     result = A @ x + B @ u
 
     return result.reshape((2,)).tolist()
@@ -96,17 +105,30 @@ if __name__ == '__main__':
     c, k, m, F = params.c, params.k, params.m, params.F
     A, B = dynamics(c, k, m, F)
 
-    # Initialization
+    # pole placement
+    p = [-3.0, -3.3]
+
+    K = control.place(A, B, p)
+    eigvals, eigvecs = np.linalg.eig(A)
+    eigVal_p, eigVec_p = np.linalg.eig(A - B@K)
+    print(f'eigVal: \n {eigvals}')
+    print(f'new eigVal, eigVec: \n {eigVal_p} \n {eigVec_p}')
+    print(f'Gain K = {K}\n')
+
+    # Simulate closed-loop system
     tstart = 0
     tstop = 60
     increment = 0.1
+    t = np.arange(tstart, tstop + 1, increment)
 
     # Initial condition (x, x_dot)
     x_init = [0, 1]
-    t = np.arange(tstart, tstop + 1, increment)
+    x_ref  = [-1, 0]
 
     # Solve ODE
-    result = odeint(spring_mass_damper_rhs, x_init, t, args=(A, B))
+    result = odeint(spring_mass_damper_rhs, x_init, t, args=(A, B, K, x_ref))
+    
+    # z_result = odeint(pendcart_non_linear, z0, tspan, args=(m, M, L, g, d, K2, z_ref)) # => working
     
     # visualize
     animate(t, result, params)
