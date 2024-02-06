@@ -38,10 +38,11 @@ def get_control(x, x_ref, K):
 
 
 # Function that returns dx/dt
-def spring_mass_damper_rhs(x, t, A, B, K, x_ref):
+def spring_mass_damper_rhs(x, t, A, B, K=None, x_ref=None, u_list=None):
 
     if isinstance(K, np.ndarray):
         u = get_control(x, x_ref, K)[0].reshape((1,1))
+        u_list.append(u[0][0])
     else:
         u = 0
 
@@ -81,21 +82,28 @@ def animate(t, result, params):
     plt.close()
 
 
-def plot(t, result):
+def plot(t, result, u_list=None):
 
     # Plot the Results
     x1 = result[:,0]
     x2 = result[:,1]
 
+    plt.subplot(2, 1, 1)
     plt.plot(t,x1)
     plt.plot(t,x2)
-
     plt.title('Simulation of Mass-Spring-Damper System')
     plt.xlabel('t')
     plt.ylabel('x(t)')
     plt.legend(["x1", "x2"])
-
     plt.grid()
+
+    plt.subplot(2, 1, 2)
+    plt.plot(u_list, color='brown', label=r'$u$')
+    plt.xlabel('t')
+    plt.ylabel('u(t)')
+    plt.legend()
+    plt.grid()
+
     plt.show()
 
 
@@ -105,16 +113,29 @@ if __name__ == '__main__':
     c, k, m, F = params.c, params.k, params.m, params.F
     A, B = dynamics(c, k, m, F)
 
-    # pole placement
-    # p = [-1.0, -0.7]
-    p = [-2.0, -2.3]
-    # p = [-5.0, -5.3]
+    # Define LQR Weighting Matrix
+    # Q = np.array([
+    #     [0.1, 0],
+    #     [0, 0.1], 
+    # ])
+    # R = 0.001
 
-    K = control.place(A, B, p)
-    eigvals, eigvecs = np.linalg.eig(A)
-    eigVal_p, eigVec_p = np.linalg.eig(A - B@K)
-    print(f'eigVal: \n {eigvals}')
-    print(f'new eigVal, eigVec: \n {eigVal_p} \n {eigVec_p}')
+    Q = np.array([
+        [100, 0],
+        [0, 1], 
+    ])
+    R = 0.01
+
+    # Q = np.array([
+    #     [1, 0],
+    #     [0, 1], 
+    # ])
+    # R = 0.1
+
+    K, S, E = control.lqr(A, B, Q, R)
+    eigVal_p, eigVec_p = np.linalg.eig(A - B @ K)
+    print(f'new eigVal : \n {eigVal_p}')
+    print(f'new eigVec : \n {eigVec_p}')
     print(f'Gain K = {K}\n')
 
     # Simulate closed-loop system
@@ -128,8 +149,9 @@ if __name__ == '__main__':
     x_ref  = [-1, 0]
 
     # Solve ODE
-    result = odeint(spring_mass_damper_rhs, x_init, t, args=(A, B, K, x_ref))
+    force_result = []
+    result = odeint(spring_mass_damper_rhs, x_init, t, args=(A, B, K, x_ref, force_result))
     
     # visualize
     animate(t, result, params)
-    plot(t, result)
+    plot(t, result, force_result)
