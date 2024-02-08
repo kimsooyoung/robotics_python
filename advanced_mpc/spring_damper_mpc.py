@@ -17,9 +17,10 @@ class Param:
         self.F = 5
 
         # Objective function
-        self.Q = sparse.diags([10.0, 0.0])
-        self.R = 0.1 * sparse.eye(1)
+        self.Q = sparse.diags([100.0, 10.0])
+        self.R = 0.01 * sparse.eye(1)
 
+        self.increment = 0.1
         self.umin = -500.0
         self.umax = 500.0
         self.N = 10
@@ -40,7 +41,9 @@ def dynamics(c, k, m, F):
         [1/m]
     ])
 
-    return A, B
+    C = np.array([[1, 0]])
+
+    return A, B, C
 
 
 # ref from : https://osqp.org/docs/examples/mpc.html
@@ -155,20 +158,27 @@ if __name__ == '__main__':
     # Define the parameters
     params = Param()
     c, k, m, F = params.c, params.k, params.m, params.F
-    umin, umax, N = params.umin, params.umax, params.N
+    increment, umin, umax, N = params.increment, params.umin, params.umax, params.N
     Q, R = params.Q, params.R
 
     # Define the system
-    A, B = dynamics(c, k, m, F)
+    A, B, C = dynamics(c, k, m, F)
     C_o = control.ctrb(A, B)
     print(A, B)
     print(f'C_o rank: {np.linalg.matrix_rank(C_o)}')
+
+    # Discretize the system
+    sys = control.ss(A, B, C, 0)
+    sysDisc = control.sample_system(sys, increment, method='zoh')
+    print(sysDisc.A, sysDisc.B)
+
+    # Swap the system matrices
+    A, B = sysDisc.A, sysDisc.B
 
     # Convert to sparse matrix
     Ad = sparse.csc_matrix(A)
     Bd = sparse.csc_matrix(B)
     [nx, nu] = Bd.shape
-    print(nx, nu)
 
     # Initial and Final condition (x, x_dot)
     x_init = np.array([0., 1.])
@@ -176,16 +186,16 @@ if __name__ == '__main__':
 
     # Prepare for MPC
     P, q, A, l, u = qp_mpc(umin, umax, x_init, x_ref, N, Ad, Bd, Q, R)
-    print(f'P: {P.shape}, q: {q.shape}, A: {A.shape}, l: {l.shape}, u: {u.shape}')
 
     # Create an OSQP object and Setup
     prob = osqp.OSQP()
     prob.setup(P, q, A, l, u, verbose=False)
 
-    # Simulate and solve
-    nsim = 30
-    t0, tend = 0, 10
-    t_span = np.linspace(t0, tend, nsim + 1)
+    # Simulation Parameters
+    tstart = 0
+    tstop = 10
+    t_span = np.arange(tstart, tstop, increment)
+    nsim = len(t_span) - 1
 
     # Define result holders
     x0 = x_init
@@ -197,7 +207,6 @@ if __name__ == '__main__':
     for i in range(nsim):
         # Solve
         res = prob.solve()
-        print(f"res.x : {res.x}")
 
         # Check solver status
         if res.info.status != 'solved':
@@ -206,16 +215,9 @@ if __name__ == '__main__':
         # Apply first control input to the plant
         ctrl = res.x[-N*nu:-(N-1)*nu]
         control_holder[i] = ctrl
-        print(f"prev state / ctrl : {x0} / {ctrl}")
         
         # Parse state
         x0 = Ad@x0 + Bd@ctrl
-
-        # t_temp = np.array([t_span[i], t_span[i+1]])
-        # z_result = odeint(spring_mass_damper_rhs, x0, t_temp, args=(A, B, ctrl))
-        # x0 = z_result[1]
-
-        print(f"new state : {x0}")
 
         # Update state
         state_holder[i+1] = x0
@@ -223,10 +225,6 @@ if __name__ == '__main__':
         u[:nx] = -x0
         prob.update(l=l, u=u)
 
-    # # Solve ODE
-    # force_result = []
-    # result = odeint(spring_mass_damper_rhs, x_init, t, args=(A, B, K, x_ref, force_result))
-    
-    # # visualize
-    # animate(t_span, state_holder, params)
+    # visualize
+    animate(t_span, state_holder, params)
     plot(t_span, state_holder, control_holder)
