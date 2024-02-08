@@ -153,5 +153,5 @@ if __name__ == '__main__':
     result = odeint(spring_mass_damper_rhs, x_init, t, args=(A, B, K, x_ref, force_result))
     
     # visualize
-    animate(t, result, params)
+    # animate(t, result, params)
     plot(t, result, force_result)
