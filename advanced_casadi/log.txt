@@ -1,0 +1,4 @@
+casadi-3.6.4
+pip install -U setuptools
+
+error: Microsoft Visual C++ 14.0 or greater is required. Get it with "Microsoft C++ Build Tools": https://visualstudio.microsoft.com/visual-cpp-build-tools/
