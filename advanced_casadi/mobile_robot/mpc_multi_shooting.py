@@ -7,6 +7,10 @@ import time
 import numpy as np
 from draw import Draw_MPC_point_stabilization_v1
 
+# Multi Shooting MPC means
+# 1. state variables as opt variables
+# 2. dynamics as MPC constraints
+
 def shift_movement(T, t0, x0, u, dynamics_func):
 
     f_value = dynamics_func(x0, u[:, 0])
@@ -39,7 +43,7 @@ if __name__ == '__main__':
     # xs = [1.5, 1.5, 0.0] # final state
     # T = 0.2 # sampling time [s]
     # N = 100 # prediction horizon    
-    
+
     rob_diam = 0.3 # [m]
     v_max = 0.6
     omega_max = np.pi / 4.0
@@ -68,20 +72,6 @@ if __name__ == '__main__':
     X = ca.SX.sym('X', n_states, N+1)
     # Initial and Final states (MPC optimization parameters)
     P = ca.SX.sym('P', n_states + n_states)
-
-    # initial condition
-    X[:, 0] = P[:3]
-
-    # define the relationship within the horizon
-
-    # compute solution symbolically - Euler integration
-    for i in range(N):
-        f_value = dynamics_func(X[:, i], U[:, i])
-        X[:, i+1] = X[:, i] + f_value * T
-
-    # this function to get the optimal trajectory knowing the optimal solution
-    mpc_func = ca.Function('mpc_func', [U, P], [X], ['input_U', 'target_state'], ['horizon_states'])
-
     # weighing matrices (states)
     Q = np.diag([1, 5, 0.1])
     # weighing matrices (controls)
@@ -89,25 +79,32 @@ if __name__ == '__main__':
 
     # Objective function
     obj = 0
+    # constraints - x/y states, initial state, dynamics contraints
+    g = []
+    # initial state
+    g.append(X[:, 0]-P[:3])
 
-    # compute objective
+    # Append the rest of the dynamics constraints and MPC cost function
     for i in range(N):
         obj = obj + (X[:3, i] - P[3:6]).T @ Q @ (X[:3, i] - P[3:6]) + U[:, i].T @ R @ U[:, i]
+        x_next = dynamics_func(X[:, i], U[:, i]) * T + X[:, i]
+        g.append(X[:, i+1]-x_next)
 
-    # compute constraints - x and y state
-    g = []
-    for i in range(N+1):
-        g.append(X[0, i])
-        g.append(X[1, i])
+    opt_variables = ca.vertcat(ca.reshape(U, -1, 1), ca.reshape(X, -1, 1))
 
     nlp_prob = {
         'f': obj, 
-        'x': ca.reshape(U, -1, 1), 
+        'x': opt_variables, 
+        'p': P,
         'g': ca.vertcat(*g),
-        'p': P
     }
-    opts_setting = {'ipopt.max_iter': 100, 'ipopt.print_level': 0, 'print_time': 0, 'ipopt.acceptable_tol': 1e-8, 'ipopt.acceptable_obj_change_tol': 1e-6}
-
+    opts_setting = {
+        'ipopt.max_iter': 100, 
+        'ipopt.print_level': 0,
+        'print_time': 0, 
+        'ipopt.acceptable_tol': 1e-8, 
+        'ipopt.acceptable_obj_change_tol': 1e-6
+    }
     solver = ca.nlpsol('solver', 'ipopt', nlp_prob, opts_setting)
 
     # THE SIMULATION LOOP SHOULD START FROM HERE
@@ -116,20 +113,28 @@ if __name__ == '__main__':
     lbx = []
     ubx = []
 
-    # State Bounds
-    lbg = -2.0
-    ubg = 2.0
-
+    # first, state constraint bounds
     for _ in range(N):
         lbx = ca.vertcat(lbx, -v_max, -omega_max)
         ubx = ca.vertcat(ubx, v_max, omega_max)
+    # second, control constraint bounds
+    for _ in range(N+1):
+        lbx = ca.vertcat(lbx, -2.0, -2.0, -np.inf)
+        ubx = ca.vertcat(ubx, 2.0, 2.0, np.inf)
 
+    # Constraint Bounds
+    lbg = 0.0
+    ubg = 0.0
+
+    # Simulation
     t0 = 0.0
     x0 = np.array([0.0, 0.0, 0.0]).reshape(-1, 1) # initial state
     xs = np.array([xs]).reshape(-1, 1) # final state
     u0 = np.zeros((N, n_controls)) # controls
     
-    init_control = ca.reshape(u0, -1, 1)
+    # MPC opt variables
+    x_m = np.zeros((n_states, N+1))
+    init_control = np.concatenate((u0.reshape(-1, 1), x_m.reshape(-1, 1)))
 
     # solver param - initial and final state
     c_p = np.concatenate((x0, xs))
@@ -157,30 +162,32 @@ if __name__ == '__main__':
         c_p = np.concatenate((x0, xs))
 
         # initial value of the optimization variables
-        init_control = ca.reshape(u0, -1, 1)
+        init_control = np.concatenate((ca.reshape(u0, -1, 1), ca.reshape(x_m, -1, 1)))
 
         # call the optimizer
         solve_tic = time.time()
         sol = solver(x0=init_control, p=c_p, lbg=lbg, lbx=lbx, ubg=ubg, ubx=ubx)
         solve_toc = time.time() - solve_tic
-
         time_list.append(solve_toc)
 
-        # one can only have this shape of the output
-        u_sol = ca.reshape(sol['x'], n_controls, N)
+        # Current X contains the state variables and control variables
+        opt_variables = sol['x'].full()
+        u_sol = ca.reshape(opt_variables[:n_controls*N], (n_controls, N))
+        x_m = ca.reshape(opt_variables[n_controls*N:], (n_states, N+1))
+
         # list of predicted states - [n_states, N+1]
-        ff_value = mpc_func(u_sol, c_p)
-        predict_x.append(ff_value.full())
+        predict_x.append(x_m.full())
         
         # dynamics step forward
         t0, x0, u0 = shift_movement(T, t0, x0, u_sol, dynamics_func)
 
         # store the results
         result_x.append(x0.full())
-        result_u.append(u_sol[:, 0])
+        result_u.append(u0[:, 0])
 
         # update initial state
         mpciter = mpciter + 1
+        # break
 
     time_list = np.array(time_list)
 
@@ -188,8 +195,8 @@ if __name__ == '__main__':
     print(f"Minimum solve time: {time_list.min()}")
 
     ############################################
-    # Average solve time: 0.004564980098179409 #
-    # Minimum solve time: 0.0021207332611083984 #
+    # Average solve time: 0.003887251445225307 #
+    # Minimum solve time: 0.001974344253540039 #
     ############################################
 
     # Visualize the result    
