@@ -72,9 +72,18 @@ class Draw_MPC_point_stabilization_v1(object):
 
 
 class Draw_MPC_Obstacle(object):
-    def __init__(self, robot_states: list, init_state: np.array, target_state: np.array, obstacle: np.array,
-                 rob_diam=0.3, export_fig=False):
+    def __init__(
+            self, 
+            robot_states: list, 
+            predict_state: list,
+            init_state: np.array, 
+            target_state: np.array, 
+            obstacle: np.array,
+            rob_diam=0.3, 
+            export_fig=False
+        ):
         self.robot_states = robot_states
+        self.predict_state = predict_state
         self.init_state = init_state
         self.target_state = target_state
         self.rob_radius = rob_diam / 2.0
@@ -111,16 +120,21 @@ class Draw_MPC_Obstacle(object):
                                         self.rob_radius * np.sin(self.init_state[2]), width=0.2, color='r')
         self.ax.add_patch(self.robot_arr)
         self.obstacle_circle = plt.Circle(self.obstacle[:2], self.obstacle[2], color='g', fill=True)
+        self.traj, = self.ax.plot(self.init_state[0], self.init_state[1], color='red', linestyle='--', linewidth=1)
         self.ax.add_artist(self.obstacle_circle)
         return self.target_circle, self.target_arr, self.robot_body, self.robot_arr, self.obstacle_circle
 
     def animation_loop(self, indx):
         position = self.robot_states[indx][:2]
+        predicted_position = self.predict_state[indx][:2]
         orientation = self.robot_states[indx][2]
+
         self.robot_body.center = position
         self.robot_arr.remove()
         self.robot_arr = mpatches.Arrow(position[0], position[1], self.rob_radius * np.cos(orientation),
                                         self.rob_radius * np.sin(orientation), width=0.2, color='r')
+        self.traj.remove()
+        self.traj, = self.ax.plot(predicted_position[0], predicted_position[1], color='red', linestyle='--', linewidth=1)
         self.ax.add_patch(self.robot_arr)
         return self.robot_arr, self.robot_body
 
