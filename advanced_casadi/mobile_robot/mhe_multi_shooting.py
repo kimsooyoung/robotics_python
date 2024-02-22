@@ -230,8 +230,15 @@ if __name__ == '__main__':
     # MHE variables
     T_mhe = 0.2
     # estimation horizon 
-    # N_mhe = 6 
-    N_mhe = len(time_list) - 1
+
+    ## Case 1
+    # N_mhe = 5
+
+    ## Case 2
+    # N_mhe = 10
+
+    ## Case 3
+    N_mhe = 20
 
     # measurement model
     r = ca.SX.sym('r')
