@@ -227,3 +227,90 @@ class Draw_FolkLift(object):
                                              label='DIANA')
         self.ax.add_patch(self.robot_arr)
         return self.robot_arr
+
+
+def draw_gt(t, d_):
+
+    d_ = np.reshape(d_, (-1, 3))
+
+    plt.figure(figsize=(12, 6))
+    
+    plt.subplot(311)
+    plt.plot(t, d_[:, 0], 'b', linewidth=1.5)
+    plt.axis([0, t[-1], 0, 1.8])
+    
+    plt.subplot(312)
+    plt.plot(t, d_[:, 1], 'b', linewidth=1.5)
+    plt.axis([0, t[-1], 0, 1.8])
+    
+    plt.subplot(313)
+    plt.plot(t, d_[:, 2], 'b', linewidth=1.5)
+    plt.axis([0, t[-1], -np.pi/4.0, np.pi/2.0])
+    
+    plt.show()
+
+
+def draw_gt_measurements(t, gt, meas):
+
+    gt = np.reshape(gt, (-1, 3))
+
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(311)
+    plt.plot(t, gt[:, 0], 'b', linewidth=1.5)
+    plt.plot(t, meas[:, 0]*np.cos(meas[:, 1]),'r', linewidth=1.5)
+    plt.axis([0, t[-1], 0, 1.8])
+
+    plt.subplot(312)
+    plt.plot(t, gt[:, 1], 'b', linewidth=1.5)
+    plt.plot(t, meas[:, 0]*np.sin(meas[:, 1]),'r', linewidth=1.5)
+    plt.axis([0, t[-1], 0, 1.8])
+
+    plt.subplot(313)
+    plt.plot(t, gt[:, 2], 'b', linewidth=1.5)
+    plt.axis([0, t[-1], -np.pi/4.0, np.pi/2.0])
+
+    plt.show()
+
+
+def draw_gtmeas_noisemeas(t, gt, meas):
+
+    gt = np.reshape(gt, (-1, 3))
+
+
+    plt.figure(figsize=(12, 6))
+    plt.subplot(211)
+    plt.plot(t, np.sqrt(gt[:, 0]**2 + gt[:, 1]**2), 'b', linewidth=1.5)
+    plt.plot(t, meas[:, 0],'r', linewidth=1.5)
+    plt.axis([0, t[-1], -0.2, 3])
+    plt.subplot(212)
+    plt.plot(t, np.arctan(gt[:, 1]/gt[:, 0]), 'b', linewidth=1.5)
+    plt.plot(t, meas[:, 1],'r', linewidth=1.5)
+    plt.axis([0, t[-1], 0.2, 1.0])
+    plt.show()
+
+def draw_gt_mhe_measurements(t, gt, meas, mhe_s, n_mhe=0):
+
+    gt = np.reshape(gt, (-1, 3))
+    mhe_s = np.reshape(mhe_s, (-1, 3))
+
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(311)
+    plt.plot(t, gt[:, 0], 'b', linewidth=1.5)
+    plt.plot(t, meas[:, 0]*np.cos(meas[:, 1]),'r', linewidth=1.5)
+    plt.plot(t[n_mhe:], mhe_s[:, 0], 'g', linewidth=1.5)
+    plt.axis([0, t[-1], 0, 1.8])
+
+    plt.subplot(312)
+    plt.plot(t, gt[:, 1], 'b', linewidth=1.5)
+    plt.plot(t, meas[:, 0]*np.sin(meas[:, 1]),'r', linewidth=1.5)
+    plt.plot(t[n_mhe:], mhe_s[:, 1], 'g', linewidth=1.5)
+    plt.axis([0, t[-1], 0, 1.8])
+
+    plt.subplot(313)
+    plt.plot(t, gt[:, 2], 'b', linewidth=1.5)
+    plt.plot(t[n_mhe:], mhe_s[:, 2], 'g', linewidth=1.5)
+    plt.axis([0, t[-1], -np.pi/4.0, np.pi/2.0])
+    
+    plt.show()
