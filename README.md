@@ -166,11 +166,30 @@ Check Observability and learn how Kalman Filter works
     <img src="./images/biped_walking.gif" height="300">
 </p>
 
+* Advanced Lecture - Inverted Pendulum
+
+<p align="center">
+    <img src="./images/advanced_ip.gif" height="200">
+    <img src="./images/advanced_ip.png" height="200">
+</p>
+
+* Advanced Lecture - Linear MPC with Spring Mass Damper
+
+<p align="center">
+    <img src="./images/advanced_spring_mass_damper.gif" height="300">
+</p>
+
+* Advanced Lecture - Non-Linear MPC with Mobile Robot and Inverted Pendulum
+
+<p align="center">
+    <img src="./images/advanced_obs.gif" height="300">
+</p>
+
 ---
 
 ### Ongoing tasks
 
-- [ ] Lecture notes
+- [x] Lecture notes (https://roadbalance_edu.teachable.com/)
+- [x] Youtube Tutorial (https://www.youtube.com/@road_balance)
 - [ ] Simulation program examples - Isaac Sim, Ignition
-- [ ] Youtube Tutorial
 - [ ] Real Robot Example
