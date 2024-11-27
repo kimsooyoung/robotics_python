@@ -95,14 +95,12 @@ def animate(t_interp, z_interp, params):
     # result plotting
     plt.figure(1)
     plt.subplot(2, 1, 1)
-    plt.plot(t, z[:, 0], color='red', label='theta1')
-    plt.plot(t, z[:, 2], color='blue', label='theta2')
+    plt.plot(t, z[:, 0], color='red', label='theta')
     plt.ylabel('angle')
     plt.legend(loc='upper left')
 
     plt.subplot(2, 1, 2)
-    plt.plot(t, z[:, 1], color='red', label='omega1')
-    plt.plot(t, z[:, 3], color='blue', label='omega2')
+    plt.plot(t, z[:, 1], color='blue', label='omega')
     plt.xlabel('t')
     plt.ylabel('angular rate')
     plt.legend(loc='lower left')
@@ -130,7 +128,7 @@ if __name__ == '__main__':
     t = np.linspace(0, 10, 500)
 
     # initlal state
-    z0 = np.array([np.pi, 0.001])
+    z0 = np.array([np.pi/4, 0.001])
     all_params = (
         params.m, params.I,
         params.c, params.l,

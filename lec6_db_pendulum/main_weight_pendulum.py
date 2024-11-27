@@ -23,10 +23,11 @@ from scipy.integrate import odeint
 class parameters:
 
     def __init__(self):
-        self.m = 20
+        self.m = 1
         self.c = 0.5
         self.l = 1
         self.I = self.m * self.l * self.l # ml^2
+        self.b = 0.5
         self.g = 9.81
         self.pause = 0.02
         self.fps = 20
@@ -94,30 +95,28 @@ def animate(t_interp, z_interp, params):
     plt.pause(1)
     plt.close()
 
-    # # result plotting
-    # plt.figure(1)
-    # plt.subplot(2, 1, 1)
-    # plt.plot(t, z[:, 0], color='red', label='theta1')
-    # plt.plot(t, z[:, 2], color='blue', label='theta2')
-    # plt.ylabel('angle')
-    # plt.legend(loc='upper left')
+    # result plotting
+    plt.figure(1)
+    plt.subplot(2, 1, 1)
+    plt.plot(t, z[:, 0], color='red', label='theta')
+    plt.ylabel('angle')
+    plt.legend(loc='upper left')
 
-    # plt.subplot(2, 1, 2)
-    # plt.plot(t, z[:, 1], color='red', label='omega1')
-    # plt.plot(t, z[:, 3], color='blue', label='omega2')
-    # plt.xlabel('t')
-    # plt.ylabel('angular rate')
-    # plt.legend(loc='lower left')
+    plt.subplot(2, 1, 2)
+    plt.plot(t, z[:, 1], color='blue', label='omega')
+    plt.xlabel('t')
+    plt.ylabel('angular rate')
+    plt.legend(loc='lower left')
 
-    # plt.show()
+    plt.show()
 
 
-def single_pendulum(z0, t, m, I, c, l, g):
+def single_pendulum(z0, t, m, I, c, l, b, g):
 
     theta, omega = z0
 
     M = 1.0*I + 0.5*m*(2*l**2*sin(theta)**2 + 2*l**2*cos(theta)**2)
-    C = 0
+    C = b * omega
     G = g*l*m*sin(theta)
 
     theta_dd = -(C + G) / M
@@ -129,14 +128,14 @@ if __name__ == '__main__':
 
     params = parameters()
 
-    t = np.linspace(0, 10, 500)
+    t = np.linspace(0, 15, 500)
 
     # initlal state
     z0 = np.array([np.pi/6, 0.001])
     all_params = (
         params.m, params.I,
         params.c, params.l,
-        params.g
+        params.b, params.g
     )
     z = odeint(single_pendulum, z0, t, args=all_params)
 
