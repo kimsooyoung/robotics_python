@@ -136,7 +136,7 @@ Check Observability and learn how Kalman Filter works
     <img src="./images/lec16.png" height="300">
 </p>
 
-* Lecture 17 - 3D dyanmics (free fall in 3D world)
+* Lecture 17 - 3D dynamics (free fall in 3D world)
 
 <p align="center">
     <img src="./images/lec17.gif" height="300">
