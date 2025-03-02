@@ -64,7 +64,7 @@ pip install msvc-runtime kiwisolver
     <img src="./images/lec7.png" height="200">
 </p>
 
-* Leture 8 - Hybrid Dynamics (jumping ball)
+* Lecture 8 - Hybrid Dynamics (jumping ball)
 
 <p align="center">
     <img src="./images/lec8.gif" height="200">
@@ -96,7 +96,7 @@ pip install msvc-runtime kiwisolver
 
 1. PID Control
 2. Feedback Linearization Control
-3. Torque base Trajectory control
+3. Torque base Trajectory Control
 
 <p align="center">
     <img src="./images/lec12_0.gif" height="200">
@@ -136,7 +136,7 @@ Check Observability and learn how Kalman Filter works
     <img src="./images/lec16.png" height="300">
 </p>
 
-* Lecture 17 - 3D dyanmics (free fall in 3D world)
+* Lecture 17 - 3D dynamics (free fall in 3D world)
 
 <p align="center">
     <img src="./images/lec17.gif" height="300">
