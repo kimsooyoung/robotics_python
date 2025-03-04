@@ -28,7 +28,7 @@ class Param:
         self.d = 0.1
         self.b = 1 # pendulum up (b=1)
 
-        self.pause = 0.01
+        self.pause = 0.03
         self.fps = 10
 
 
