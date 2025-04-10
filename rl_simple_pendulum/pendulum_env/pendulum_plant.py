@@ -1,4 +1,5 @@
 """
+original code from: https://github.com/dfki-ric-underactuated-lab/torque_limited_simple_pendulum
 Pendulum Plant
 ==============
 """
@@ -9,8 +10,16 @@ import yaml
 
 
 class PendulumPlant:
-    def __init__(self, mass=1.0, length=0.5, damping=0.1, gravity=9.81,
-                 coulomb_fric=0.0, inertia=None, torque_limit=np.inf):
+    def __init__(
+            self, 
+            mass=1.0, 
+            length=0.5, 
+            damping=0.1,
+            gravity=9.81,
+            coulomb_fric=0.0, 
+            inertia=None, 
+            torque_limit=np.inf
+        ):
 
         """
         The PendulumPlant class contains the kinematics and dynamics

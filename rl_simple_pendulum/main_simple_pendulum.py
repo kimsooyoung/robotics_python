@@ -81,8 +81,8 @@ def animate(t_interp, z_interp, params):
             P[0], P[1], color='black', marker='o', markersize=15
         )
 
-        plt.xlim(-1, 1)
-        plt.ylim(-1, 1)
+        plt.xlim(-1.2 * l, 1.2 * l)
+        plt.ylim(-1.2 * l, 1.2 * l)
         plt.gca().set_aspect('equal')
 
         plt.pause(params.pause)
@@ -110,10 +110,15 @@ def animate(t_interp, z_interp, params):
 
     plt.show()
 
+def controller():
+    return 2
+
 def simple_pendulum(z0, t, m, l, c, b, g):
 
     theta, omega = z0
-    torque = 0
+
+    # controller here this can be model-based / model-free whatever :)
+    torque = controller()
 
     theta_dd = (torque - m*g*l*sin(theta) - b*omega - np.sign(omega)*c) / (m*l*l)
 
