@@ -1,8 +1,13 @@
-# TODO: render
-
 import os
 import numpy as np
 import gymnasium as gym
+
+from stable_baselines3 import SAC
+from stable_baselines3.sac.policies import MlpPolicy
+from stable_baselines3.common.callbacks import (
+    EvalCallback,
+    StopTrainingOnRewardThreshold,
+)
 
 from pendulum_env import Simulator
 from pendulum_env import PendulumPlant
@@ -39,7 +44,6 @@ reward_type = "soft_binary_with_repellor"
 target = [np.pi, 0]
 target_epsilon = [0.1, 0.1]
 random_init = "False"
-learning_rate=0.0003
 
 env = SimplePendulumEnv(
     simulator=sim,
@@ -50,6 +54,16 @@ env = SimplePendulumEnv(
     state_representation=2, # [position,velocity] / [cos(position),sin(position),velocity]
     scale_action=True,
     random_init=random_init
+)
+
+log_dir = "./logs"
+tensorboard_log = os.path.join(log_dir, "tb_logs")
+agent = SAC(
+    MlpPolicy,
+    env,
+    verbose=1,
+    tensorboard_log=tensorboard_log,
+    learning_rate=learning_rate
 )
 
 # options={"state": np.array([0.0, 0.0]), "random_init": False}
