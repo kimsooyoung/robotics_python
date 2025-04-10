@@ -1,20 +1,28 @@
 """
+original code from: https://github.com/dfki-ric-underactuated-lab/torque_limited_simple_pendulum
 Gym Environment
 ===============
 """
 
 
 # Other imports
-import gym
 import numpy as np
-
+import gymnasium as gym
+from typing import Optional
 
 class SimplePendulumEnv(gym.Env):
     """
     An environment for reinforcement learning
     """
+
+    metadata = {
+        "render_modes": ["human", "rgb_array"],
+        "render_fps": 30,
+    }
+
     def __init__(self,
                  simulator,
+                 render_mode: Optional[str] = None,
                  max_steps=5000,
                  target=[np.pi, 0.0],
                  state_target_epsilon=[1e-2, 1e-2],
@@ -68,6 +76,7 @@ class SimplePendulumEnv(gym.Env):
                            possible state space
         """
         self.simulator = simulator
+        self.render_mode = render_mode
         self.max_steps = max_steps
         self.target = target
         self.target[0] = self.target[0] % (2*np.pi)
@@ -86,21 +95,23 @@ class SimplePendulumEnv(gym.Env):
             # state is [th, vel]
             self.low = np.array([-6*2*np.pi, -8])
             self.high = np.array([6*2*np.pi, 8])
-            self.observation_space = gym.spaces.Box(self.low,
-                                                    self.high)
+            self.observation_space = gym.spaces.Box(
+                self.low, self.high, dtype=np.float32
+            )
         elif state_representation == 3:
             # state is [cos(th), sin(th), vel]
             self.low = np.array([-1., -1., -8.])
             self.high = np.array([1., 1., 8.])
-            self.observation_space = gym.spaces.Box(self.low,
-                                                    self.high)
+            self.observation_space = gym.spaces.Box(
+                self.low, self.high, dtype=np.float32
+            )
 
         if scale_action:
-            self.action_space = gym.spaces.Box(-1, 1, shape=[1])
+            self.action_space = gym.spaces.Box(-1, 1, shape=(1,))
         else:
-            self.action_space = gym.spaces.Box(-self.torque_limit,
-                                               self.torque_limit,
-                                               shape=[1])
+            self.action_space = gym.spaces.Box(
+                -self.torque_limit, self.torque_limit, shape=(1,)
+            )
 
         self.state_shape = self.observation_space.shape
         self.n_actions = self.action_space.shape[0]
@@ -131,22 +142,28 @@ class SimplePendulumEnv(gym.Env):
             may contain additional information
             (empty at the moment)
         """
+
         if self.scale_action:
             a = float(self.torque_limit * action)  # rescaling the action
         else:
             a = float(action)
+
         self.simulator.step(a, self.dt, self.integrator)
-        current_t, current_state = self.simulator.get_state()
+
         # current_state is [position, velocity]
-        reward = self.swingup_reward(current_state, a)
-        observation = self.get_observation(current_state)
+        # current_t, current_state = self.simulator.get_state()
+        reward = self._calc_swingup_reward(a)
+        
+        observation = self._get_obs()
         done = self.check_final_condition()
-        info = {}
+        truncated = False
+        info = self._get_info()
+
         self.step_count += 1
 
-        return observation, reward, done, info
+        return observation, reward, done, truncated, info
 
-    def reset(self, state=None, random_init="start_vicinity"):
+    def reset(self, *, seed: Optional[int] = None, options: Optional[dict] = None):
         """
         Reset the environment. The pendulum is initialized with a random state
         in the vicinity of the stable fixpoint
@@ -154,10 +171,10 @@ class SimplePendulumEnv(gym.Env):
 
         Parameters
         ----------
-        state : array-like, default=None
+        options["state"] : array-like, default=None
             the state to which the environment is reset
             if state==None it defaults to the random initialisation
-        random_init : string, default=None
+        options["random_init"] : string, default=None
             A string determining the random state initialisation
             if None, defaults to self.random_init
             "False" : The pendulum is set to [0, 0],
@@ -177,6 +194,15 @@ class SimplePendulumEnv(gym.Env):
             when state==None and random_init does not indicate
             one of the implemented initializations
         """
+        super().reset(seed=seed)
+
+        if options is None:
+            state = None
+            random_init = "False" # TODO: everywhere?
+        else:
+            state = options.get("state") if "state" in options else None
+            random_init = options.get("random_init") if "random_init" in options else None
+
         self.simulator.reset_data_recorder()
         self.step_count = 0
         if state is not None:
@@ -189,34 +215,40 @@ class SimplePendulumEnv(gym.Env):
             elif random_init == "start_vicinity":
                 pos_range = np.pi/10
                 vel_range = np.pi/10
-                init_state = np.array([
-                                np.random.rand()*2*pos_range - pos_range,
-                                np.random.rand()*2*vel_range - vel_range])
+                init_state = np.array([\
+                    np.random.rand()*2*pos_range - pos_range,
+                    np.random.rand()*2*vel_range - vel_range
+                ])
             elif random_init == "everywhere":
                 pos_range = np.pi
                 vel_range = 1.0
                 init_state = np.array([
-                                np.random.rand()*2*pos_range - pos_range,
-                                np.random.rand()*2*vel_range - vel_range])
+                    np.random.rand()*2*pos_range - pos_range,
+                    np.random.rand()*2*vel_range - vel_range]
+                )
             else:
                 raise NotImplementedError(
-                    f'Sorry, random initialization {random_init}' +
+                    f'Sorry, random initialization {random_init} ' +
                     'is not implemented.')
 
         self.simulator.set_state(0, init_state)
-        current_t, current_state = self.simulator.get_state()
-        observation = self.get_observation(current_state)
+        observation = self._get_obs()
+        info = self._get_info()
 
-        return observation
+        return observation, info
 
     def render(self, mode='human'):
+        # TODO: 
         pass
 
     def close(self):
         pass
 
+    def _get_info(self):
+        return None
+
     # some helper methods
-    def get_observation(self, state):
+    def _get_obs(self):
         """
         Transform the state from the simulator an observation by
         wrapping the position to the observation space.
@@ -233,15 +265,20 @@ class SimplePendulumEnv(gym.Env):
         observation : array-like
             observation in environment format
         """
-        st = np.copy(state)
+        _, current_state = self.simulator.get_state()
+        st = np.copy(current_state)
         st[1] = np.clip(st[1], self.low[-1], self.high[-1])
 
         if self.state_representation == 2:
-            observation = np.array([obs for obs in st], dtype=np.float32)
+            observation = np.array(
+                [obs for obs in st], dtype=np.float32
+            )
+            # wraps the angle [−6π,6π)
             observation[0] = (observation[0] + 6*np.pi) % (np.pi*6*2) - 6*np.pi
         elif self.state_representation == 3:
-            observation = np.array([np.cos(st[0]), np.sin(st[0]), st[1]],
-                                   dtype=np.float32)
+            observation = np.array(
+                [np.cos(st[0]), np.sin(st[0]), st[1]], dtype=np.float32
+            )
 
         return observation
 
@@ -268,7 +305,7 @@ class SimplePendulumEnv(gym.Env):
             state = np.array([np.arctan2(obs[1], obs[0]), obs[2]])
         return state
 
-    def swingup_reward(self, observation, action):
+    def _calc_swingup_reward(self, action):
         """
         Calculate the reward for the pendulum for swinging up to the instable
         fixpoint. The reward function is selected based on the reward type
@@ -276,8 +313,8 @@ class SimplePendulumEnv(gym.Env):
 
         Parameters
         ----------
-        state : array-like
-            the observation that has been received from the environment
+        action : array-like
+            action from controller
 
         Returns
         -------
@@ -290,17 +327,22 @@ class SimplePendulumEnv(gym.Env):
             when the requested reward_type is not implemented
 
         """
+        
         reward = None
+        _, observation = self.simulator.get_state()
+        
         pos = observation[0] % (2*np.pi)
         pos_diff = self.target[0] - pos
         pos_diff = np.abs((pos_diff + np.pi) % (np.pi * 2) - np.pi)
+        
         vel = np.clip(observation[1], self.low[-1], self.high[-1])
 
         if self.reward_type == 'continuous':
             reward = - np.linalg.norm(pos_diff)
         elif self.reward_type == 'discrete':
-            reward = np.float(np.linalg.norm(pos_diff) <
-                              self.state_target_epsilon[0])
+            reward = np.float(
+                np.linalg.norm(pos_diff) < self.state_target_epsilon[0]
+            )
         elif self.reward_type == 'soft_binary':
             reward = np.exp(-pos_diff**2/(2*0.25**2))
         elif self.reward_type == 'soft_binary_with_repellor':
@@ -308,15 +350,16 @@ class SimplePendulumEnv(gym.Env):
             pos_diff_repellor = pos - 0
             reward -= np.exp(-pos_diff_repellor ** 2 / (2 * 0.25 ** 2))
         elif self.reward_type == "open_ai_gym":
+            # ref: https://github.com/Farama-Foundation/Gymnasium/blob/f02a56cf84a8bb3ebcdae392818c750ba1a2e4dc/gymnasium/envs/classic_control/pendulum.py#L138
             vel_diff = self.target[1] - vel
-            reward = (-(pos_diff)**2.0 -
-                      0.1*(vel_diff)**2.0 -
-                      0.001*action**2.0)
+            reward = (
+                -(pos_diff)**2.0 - 0.1*(vel_diff)**2.0 - 0.001*action**2.0
+            )
         elif self.reward_type == "open_ai_gym_red_torque":
             vel_diff = self.target[1] - vel
-            reward = (-(pos_diff)**2.0 -
-                      0.1*(vel_diff)**2.0 -
-                      0.01*action**2.0)
+            reward = (
+                -(pos_diff)**2.0 - 0.1*(vel_diff)**2.0 - 0.01*action**2.0
+            )
         else:
             raise NotImplementedError(
                 f'Sorry, reward type {self.reward_type} is not implemented.')

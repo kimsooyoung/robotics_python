@@ -191,5 +191,6 @@ Check Observability and learn how Kalman Filter works
 
 - [x] Lecture notes (https://roadbalance_edu.teachable.com/)
 - [x] Youtube Tutorial (https://www.youtube.com/@road_balance)
-- [ ] Simulation program examples - Isaac Sim, Ignition
+- [ ] Optimal Control examples
+- [ ] RL examples
 - [ ] Real Robot Example
