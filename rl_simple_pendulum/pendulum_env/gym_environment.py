@@ -202,10 +202,12 @@ class SimplePendulumEnv(gym.Env):
 
         if options is None:
             state = None
-            random_init = "False" # TODO: everywhere?
+            random_init = "False"
         else:
             state = options.get("state") if "state" in options else None
             random_init = options.get("random_init") if "random_init" in options else None
+
+        print(f"{state=} {random_init=}")
 
         self.simulator.reset_data_recorder()
         self.step_count = 0

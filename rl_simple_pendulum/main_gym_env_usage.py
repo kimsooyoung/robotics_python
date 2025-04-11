@@ -1,5 +1,3 @@
-# TODO: render
-
 import os
 import numpy as np
 import gymnasium as gym
@@ -7,7 +5,6 @@ import gymnasium as gym
 from pendulum_env import Simulator
 from pendulum_env import PendulumPlant
 from pendulum_env import SimplePendulumEnv
-
 
 # get the simulator
 torque_limit = 5.0
@@ -50,13 +47,13 @@ env = SimplePendulumEnv(
     state_representation=2, # [position,velocity] / [cos(position),sin(position),velocity]
     scale_action=True,
     random_init=random_init,
-    render_mode="rgb_array"
+    render_mode="human" # human/rgb_array
 )
 
-# options={"state": np.array([0.0, 0.0]), "random_init": False}
-options={"random_init": "start_vicinity"} # False/start_vicinity/everywhere
+# options={"state": np.array([1.0, 0.0]), "random_init": False}
+options={"random_init": "everywhere"} # False/start_vicinity/everywhere
 
-observation = env.reset()
+observation, info = env.reset(seed=None, options=options)
 episode_over = False
 
 while not episode_over:
