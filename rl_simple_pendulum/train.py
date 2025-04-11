@@ -23,6 +23,7 @@ from pendulum_env import SimplePendulumEnv
 MODEL_DIR = "models"
 LOG_DIR = "logs"
 
+# TODO: 
 
 # Simulator, Gym Env Params
 class Parameters():
@@ -51,11 +52,12 @@ class Parameters():
 
         # model params
         self.learning_rate = 0.0003
+        self.training_timesteps=1e6
+        self.reward_threshold=1000.0
+        self.eval_frequency=10000
+        self.n_eval_episodes=20
+        self.verbose = 1
 
-        self.training_timesteps=1e6,
-        self.reward_threshold=1000.0,
-        self.eval_frequency=10000,
-        self.n_eval_episodes=20,
 
 def train(args, sim, params):
     env = SimplePendulumEnv(
@@ -101,10 +103,17 @@ def train(args, sim, params):
     )
 
     if args.model_path is not None:
+        model = SAC.load(
+            path=args.model_path, 
+            env=env, 
+            verbose=params.verbose,
+            tensorboard_log=LOG_DIR
+        )
+    else:
         model = SAC(
             MlpPolicy,
             env,
-            verbose=1,
+            verbose=params.verbose,
             tensorboard_log=LOG_DIR,
             learning_rate=params.learning_rate
         )
@@ -136,20 +145,19 @@ def train(args, sim, params):
 
     # define training callbacks
     callback_on_best = StopTrainingOnRewardThreshold(
-        reward_threshold=reward_threshold,
-        verbose=verbose
+        reward_threshold=params.reward_threshold,
+        verbose=params.verbose
     )
 
-    log_path = os.path.join(self.log_dir, 'best_model')
+    # log_path = os.path.join(log_dir, 'best_model')
 
     eval_callback = EvalCallback(
         eval_env,
         callback_on_new_best=callback_on_best,
         best_model_save_path=LOG_DIR,
         log_path=LOG_DIR,
-        eval_freq=eval_frequency,
-        verbose=verbose,
-        n_eval_episodes=n_eval_episodes
+        eval_freq=params.eval_frequency,
+        n_eval_episodes=params.n_eval_episodes,
     )
 
     # train
@@ -157,7 +165,7 @@ def train(args, sim, params):
         total_timesteps=args.total_timesteps,
         reset_num_timesteps=False,
         progress_bar=True,
-        tb_log_name=run_name,
+        tb_log_name=run_name, # TODO: Check
         callback=eval_callback
     )
 
@@ -166,59 +174,60 @@ def train(args, sim, params):
 
 
 def test(args):
-    model_path = Path(args.model_path)
+    pass
+    # model_path = Path(args.model_path)
 
-    if not args.record_test_episodes:
-        # Render the episodes live
-        env = Go1MujocoEnv(
-            ctrl_type=args.ctrl_type,
-            render_mode="human",
-        )
-        inter_frame_sleep = 0.016
-    else:
-        # Record the episodes
-        env = Go1MujocoEnv(
-            ctrl_type=args.ctrl_type,
-            render_mode="rgb_array",
-            camera_name="tracking",
-            width=1920,
-            height=1080,
-        )
-        env = gym.wrappers.RecordVideo(
-            env, video_folder="recordings/", name_prefix=model_path.parent.name
-        )
-        inter_frame_sleep = 0.0
+    # if not args.record_test_episodes:
+    #     # Render the episodes live
+    #     env = Go1MujocoEnv(
+    #         ctrl_type=args.ctrl_type,
+    #         render_mode="human",
+    #     )
+    #     inter_frame_sleep = 0.016
+    # else:
+    #     # Record the episodes
+    #     env = Go1MujocoEnv(
+    #         ctrl_type=args.ctrl_type,
+    #         render_mode="rgb_array",
+    #         camera_name="tracking",
+    #         width=1920,
+    #         height=1080,
+    #     )
+    #     env = gym.wrappers.RecordVideo(
+    #         env, video_folder="recordings/", name_prefix=model_path.parent.name
+    #     )
+    #     inter_frame_sleep = 0.0
 
-    model = PPO.load(path=model_path, env=env, verbose=1)
+    # model = PPO.load(path=model_path, env=env, verbose=1)
 
-    num_episodes = args.num_test_episodes
-    total_reward = 0
-    total_length = 0
-    for _ in tqdm(range(num_episodes)):
-        obs, _ = env.reset()
-        env.render()
+    # num_episodes = args.num_test_episodes
+    # total_reward = 0
+    # total_length = 0
+    # for _ in tqdm(range(num_episodes)):
+    #     obs, _ = env.reset()
+    #     env.render()
 
-        ep_len = 0
-        ep_reward = 0
-        while True:
-            action, _ = model.predict(obs, deterministic=True)
-            obs, reward, terminated, truncated, info = env.step(action)
-            ep_reward += reward
-            ep_len += 1
+    #     ep_len = 0
+    #     ep_reward = 0
+    #     while True:
+    #         action, _ = model.predict(obs, deterministic=True)
+    #         obs, reward, terminated, truncated, info = env.step(action)
+    #         ep_reward += reward
+    #         ep_len += 1
 
-            # Slow down the rendering
-            time.sleep(inter_frame_sleep)
+    #         # Slow down the rendering
+    #         time.sleep(inter_frame_sleep)
 
-            if terminated or truncated:
-                print(f"{ep_len=}  {ep_reward=}")
-                break
+    #         if terminated or truncated:
+    #             print(f"{ep_len=}  {ep_reward=}")
+    #             break
 
-        total_length += ep_len
-        total_reward += ep_reward
+    #     total_length += ep_len
+    #     total_reward += ep_reward
 
-    print(
-        f"Avg episode reward: {total_reward / num_episodes}, avg episode length: {total_length / num_episodes}"
-    )
+    # print(
+    #     f"Avg episode reward: {total_reward / num_episodes}, avg episode length: {total_length / num_episodes}"
+    # )
 
 
 if __name__ == "__main__":
@@ -295,3 +304,9 @@ if __name__ == "__main__":
         if args.model_path is None:
             raise ValueError("--model_path is required for testing")
         test(args, sim, params)
+
+# python3 train.py --run train
+
+# pip install tensorboard
+# gymnasium 0.29.1
+# stable_baselines3 2.6.0

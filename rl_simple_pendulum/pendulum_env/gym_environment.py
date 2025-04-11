@@ -207,8 +207,6 @@ class SimplePendulumEnv(gym.Env):
             state = options.get("state") if "state" in options else None
             random_init = options.get("random_init") if "random_init" in options else None
 
-        print(f"{state=} {random_init=}")
-
         self.simulator.reset_data_recorder()
         self.step_count = 0
         if state is not None:
@@ -307,7 +305,8 @@ class SimplePendulumEnv(gym.Env):
         pass
 
     def _get_info(self):
-        return None
+        # must be dict: TypeError: 'NoneType' object does not support item assignment
+        return {}
 
     # some helper methods
     def _get_obs(self):
