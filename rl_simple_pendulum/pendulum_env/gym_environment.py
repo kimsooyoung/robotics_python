@@ -9,6 +9,7 @@ Gym Environment
 import numpy as np
 import gymnasium as gym
 from typing import Optional
+from gymnasium.error import DependencyNotInstalled
 
 class SimplePendulumEnv(gym.Env):
     """
@@ -88,6 +89,7 @@ class SimplePendulumEnv(gym.Env):
         self.validation_limit = validation_limit
         self.scale_action = scale_action
         self.random_init = random_init
+        self.screen = None
 
         self.torque_limit = simulator.plant.torque_limit
 
@@ -238,8 +240,65 @@ class SimplePendulumEnv(gym.Env):
         return observation, info
 
     def render(self, mode='human'):
-        # TODO: 
-        pass
+        if self.render_mode is None:
+            assert self.spec is not None
+            gym.logger.warn(
+                "You are calling render method without specifying any render mode. "
+                "You can specify the render_mode at initialization, "
+                f'e.g. gym.make("{self.spec.id}", render_mode="rgb_array")'
+            )
+            return
+
+        try:
+            from matplotlib import pyplot as plt
+        except ImportError as e:
+            raise DependencyNotInstalled(
+                'matplotlib is not installed, run `pip install matplotlib`'
+            ) from e
+        
+        # TODO: human render mode
+        # arrow
+        # TODO: rgb-array render mode
+
+        if self.screen is None:
+            self.screen = plt.figure(figsize=(5, 5))
+            plt.show(block=False)
+        # if self.clock is None:
+        #     self.clock = pygame.time.Clock()
+
+        if self.render_mode == "human":
+            print(f"test")
+            observation = self._get_obs()
+            theta, omega = self.get_state_from_observation(observation)
+
+            l = self.simulator.plant.l
+
+            O = np.array([0, 0])
+            P = np.array([l*np.sin(theta), -l*np.cos(theta)])
+
+            # origin
+            orgin, = plt.plot(
+                O[0], O[1], color='red', marker='s', markersize=10
+            )
+
+            # pendulum 
+            pend, = plt.plot(
+                [O[0], P[0]], [O[1], P[1]], linewidth=2.5, color='red'
+            )
+
+            # point mass
+            com, = plt.plot(
+                P[0], P[1], color='black', marker='o', markersize=15
+            )
+
+            plt.xlim(-1.2 * l, 1.2 * l)
+            plt.ylim(-1.2 * l, 1.2 * l)
+            plt.gca().set_aspect('equal')
+
+            plt.pause(1 / self.metadata["render_fps"])
+
+            pend.remove()
+            com.remove()
 
     def close(self):
         pass

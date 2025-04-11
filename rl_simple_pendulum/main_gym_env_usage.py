@@ -49,7 +49,8 @@ env = SimplePendulumEnv(
     integrator=integrator,
     state_representation=2, # [position,velocity] / [cos(position),sin(position),velocity]
     scale_action=True,
-    random_init=random_init
+    random_init=random_init,
+    render_mode="human"
 )
 
 # options={"state": np.array([0.0, 0.0]), "random_init": False}
@@ -62,7 +63,8 @@ while not episode_over:
     action = env.action_space.sample()  # agent policy that uses the observation and info
     observation, reward, terminated, truncated, info = env.step(action)
 
-    print(f"{observation=}")
+    # print(f"{observation=}")
+    env.render()
 
     if terminated:
         episode_over = True
