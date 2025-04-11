@@ -11,6 +11,8 @@ import gymnasium as gym
 from typing import Optional
 from gymnasium.error import DependencyNotInstalled
 
+from .simulation import get_arrow, set_arrow_properties
+
 class SimplePendulumEnv(gym.Env):
     """
     An environment for reinforcement learning
@@ -18,7 +20,7 @@ class SimplePendulumEnv(gym.Env):
 
     metadata = {
         "render_modes": ["human", "rgb_array"],
-        "render_fps": 30,
+        "render_fps": 60,
     }
 
     def __init__(self,
@@ -146,15 +148,15 @@ class SimplePendulumEnv(gym.Env):
         """
 
         if self.scale_action:
-            a = float(self.torque_limit * action)  # rescaling the action
+            self.a = float(self.torque_limit * action)  # rescaling the action
         else:
-            a = float(action)
+            self.a = float(action)
 
-        self.simulator.step(a, self.dt, self.integrator)
+        self.simulator.step(self.a, self.dt, self.integrator)
 
         # current_state is [position, velocity]
         # current_t, current_state = self.simulator.get_state()
-        reward = self._calc_swingup_reward(a)
+        reward = self._calc_swingup_reward(self.a)
         
         observation = self._get_obs()
         done = self.check_final_condition()
@@ -251,54 +253,53 @@ class SimplePendulumEnv(gym.Env):
 
         try:
             from matplotlib import pyplot as plt
+            import numpy as np
         except ImportError as e:
             raise DependencyNotInstalled(
                 'matplotlib is not installed, run `pip install matplotlib`'
             ) from e
-        
-        # TODO: human render mode
-        # arrow
-        # TODO: rgb-array render mode
 
         if self.screen is None:
-            self.screen = plt.figure(figsize=(5, 5))
-            plt.show(block=False)
-        # if self.clock is None:
-        #     self.clock = pygame.time.Clock()
+            self.screen, self.ax = plt.subplots()
+
+        observation = self._get_obs()
+        theta, _ = self.get_state_from_observation(observation)
+        l = self.simulator.plant.l
+
+        O = np.array([0, 0])
+        ee_pos_x = float(l * np.sin(theta))
+        ee_pos_y = float(-l * np.cos(theta))
+        P = np.array([ee_pos_x, ee_pos_y])
+
+        self.ax.clear()
+
+        # Draw pendulum
+        self.ax.plot([O[0], P[0]], [O[1], P[1]], linewidth=2.5, color='red')  # rod
+        self.ax.plot(P[0], P[1], color='black', marker='o', markersize=15)    # mass
+
+        # Draw origin
+        self.ax.plot(O[0], O[1], color='red', marker='s', markersize=10)
+
+        # Draw arrow (torque/force visualization)
+        arc, head = get_arrow(
+            radius=0.001, centX=0, centY=0, angle_=110, theta2_=320, color_="black"
+        )
+        set_arrow_properties(arc, head, self.a, 0, 0)
+        self.ax.add_patch(arc)
+        self.ax.add_patch(head)
+
+        self.ax.set_xlim(-1.2 * l, 1.2 * l)
+        self.ax.set_ylim(-1.2 * l, 1.2 * l)
+        self.ax.set_aspect('equal')
 
         if self.render_mode == "human":
-            print(f"test")
-            observation = self._get_obs()
-            theta, omega = self.get_state_from_observation(observation)
-
-            l = self.simulator.plant.l
-
-            O = np.array([0, 0])
-            P = np.array([l*np.sin(theta), -l*np.cos(theta)])
-
-            # origin
-            orgin, = plt.plot(
-                O[0], O[1], color='red', marker='s', markersize=10
-            )
-
-            # pendulum 
-            pend, = plt.plot(
-                [O[0], P[0]], [O[1], P[1]], linewidth=2.5, color='red'
-            )
-
-            # point mass
-            com, = plt.plot(
-                P[0], P[1], color='black', marker='o', markersize=15
-            )
-
-            plt.xlim(-1.2 * l, 1.2 * l)
-            plt.ylim(-1.2 * l, 1.2 * l)
-            plt.gca().set_aspect('equal')
-
             plt.pause(1 / self.metadata["render_fps"])
-
-            pend.remove()
-            com.remove()
+        elif self.render_mode == "rgb_array":
+            self.screen.canvas.draw()
+            width, height = self.screen.canvas.get_width_height()
+            image = np.frombuffer(self.screen.canvas.tostring_rgb(), dtype='uint8')
+            image = image.reshape((height, width, 3))
+            return image
 
     def close(self):
         pass
