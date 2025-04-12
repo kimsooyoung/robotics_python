@@ -4,9 +4,7 @@ import argparse
 import numpy as np
 import gymnasium as gym
 
-from pathlib import Path
 from tqdm import tqdm
-
 from stable_baselines3 import PPO, SAC
 from stable_baselines3.sac.policies import MlpPolicy
 from stable_baselines3.common.env_util import make_vec_env
@@ -154,7 +152,7 @@ def train(args, sim, params):
     eval_callback = EvalCallback(
         eval_env,
         callback_on_new_best=callback_on_best,
-        best_model_save_path=LOG_DIR,
+        best_model_save_path=model_path,
         log_path=LOG_DIR,
         eval_freq=params.eval_frequency,
         n_eval_episodes=params.n_eval_episodes,
@@ -172,11 +170,9 @@ def train(args, sim, params):
     # Save final model
     model.save(f"{model_path}/final_model")
 
+def test(args, sim, params):
 
-def test(args):
-    pass
-    # model_path = Path(args.model_path)
-
+    # TODO: record_test_episodes
     # if not args.record_test_episodes:
     #     # Render the episodes live
     #     env = Go1MujocoEnv(
@@ -198,36 +194,55 @@ def test(args):
     #     )
     #     inter_frame_sleep = 0.0
 
-    # model = PPO.load(path=model_path, env=env, verbose=1)
+    env = SimplePendulumEnv(
+        simulator=sim,
+        max_steps=params.max_steps,
+        reward_type=params.reward_type,
+        dt=params.dt,
+        integrator=params.integrator,
+        state_representation=params.state_representation, # [position,velocity] / [cos(position),sin(position),velocity]
+        scale_action=params.scale_action,
+        random_init=params.random_init,
+        render_mode="human" # human/rgb_array
+    )
 
-    # num_episodes = args.num_test_episodes
-    # total_reward = 0
-    # total_length = 0
-    # for _ in tqdm(range(num_episodes)):
-    #     obs, _ = env.reset()
-    #     env.render()
+    model = SAC.load(path=args.model_path, env=env, verbose=params.verbose)
 
-    #     ep_len = 0
-    #     ep_reward = 0
-    #     while True:
-    #         action, _ = model.predict(obs, deterministic=True)
-    #         obs, reward, terminated, truncated, info = env.step(action)
-    #         ep_reward += reward
-    #         ep_len += 1
+    num_episodes = args.num_test_episodes
+    total_reward = 0
+    total_length = 0
+    
+    for _ in tqdm(range(num_episodes)):
 
-    #         # Slow down the rendering
-    #         time.sleep(inter_frame_sleep)
+        observation, _ = env.reset()
 
-    #         if terminated or truncated:
-    #             print(f"{ep_len=}  {ep_reward=}")
-    #             break
+        ep_len = 0
+        ep_reward = 0
+        while True:
+            theta, omega = observation
+            # map meas pos to [-np.pi, np.pi]
+            meas_pos_mod = np.mod(theta + np.pi, 2 * np.pi) - np.pi
 
-    #     total_length += ep_len
-    #     total_reward += ep_reward
+            # TODO: use_symmetry
+            action, _states = model.predict(observation)
+            observation, reward, terminated, truncated, info = env.step(action)
+            
+            print(f"{observation=}")
+            env.render()
+            
+            ep_reward += reward
+            ep_len += 1
 
-    # print(
-    #     f"Avg episode reward: {total_reward / num_episodes}, avg episode length: {total_length / num_episodes}"
-    # )
+            if terminated or truncated:
+                print(f"{ep_len=}  {ep_reward=}")
+                break
+
+        total_length += ep_len
+        total_reward += ep_reward
+
+    print(
+        f"Avg episode reward: {total_reward / num_episodes}, avg episode length: {total_length / num_episodes}"
+    )
 
 
 if __name__ == "__main__":
@@ -305,7 +320,10 @@ if __name__ == "__main__":
             raise ValueError("--model_path is required for testing")
         test(args, sim, params)
 
+# TODO: eval
+
 # python3 train.py --run train
+# python3 train.py --run test --model_path 
 
 # pip install tensorboard
 # gymnasium 0.29.1
