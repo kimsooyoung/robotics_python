@@ -79,7 +79,7 @@ def train(args, sim, params):
         integrator=params.integrator,
         state_representation=params.state_representation, # [position,velocity] / [cos(position),sin(position),velocity]
         scale_action=params.scale_action,
-        random_init=params.random_init
+        random_init="False"
     )
 
     # TODO : vec env after register
@@ -162,7 +162,7 @@ def train(args, sim, params):
 
     # train
     model.learn(
-        total_timesteps=args.total_timesteps,
+        total_timesteps=params.training_timesteps,
         reset_num_timesteps=False,
         progress_bar=True,
         tb_log_name=run_name, # TODO: Check
