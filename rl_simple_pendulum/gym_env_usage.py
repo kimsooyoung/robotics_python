@@ -1,10 +1,12 @@
-import os
 import numpy as np
 import gymnasium as gym
 
-from pendulum_env import Simulator
-from pendulum_env import PendulumPlant
-from pendulum_env import SimplePendulumEnv
+import pendulum_env
+from pendulum_env import (
+    Simulator,
+    PendulumPlant,
+    SimplePendulumEnv
+)
 
 # get the simulator
 torque_limit = 5.0
@@ -38,7 +40,22 @@ target_epsilon = [0.1, 0.1]
 random_init = "False"
 learning_rate=0.0003
 
-env = SimplePendulumEnv(
+# # Style1. Manual Env creation
+# env = SimplePendulumEnv(
+#     simulator=sim,
+#     max_steps=max_steps,
+#     reward_type=reward_type,
+#     dt=dt,
+#     integrator=integrator,
+#     state_representation=2, # [position,velocity] / [cos(position),sin(position),velocity]
+#     scale_action=True,
+#     random_init=random_init,
+#     render_mode="human" # human/rgb_array
+# )
+
+# Style2. gym api
+env = gym.make(
+    'gymnasium_env/SimplePendulum-v0',
     simulator=sim,
     max_steps=max_steps,
     reward_type=reward_type,

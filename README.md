@@ -166,7 +166,7 @@ Check Observability and learn how Kalman Filter works
     <img src="./images/biped_walking.gif" height="300">
 </p>
 
-===
+---
 
 * Reinforcement Learning - Simple Pendulum
 
@@ -174,7 +174,7 @@ Check Observability and learn how Kalman Filter works
     <img src="./images/rl_simple_pendulum.gif" height="300">
 </p>
 
-===
+---
 
 * Advanced Lecture - Inverted Pendulum
 

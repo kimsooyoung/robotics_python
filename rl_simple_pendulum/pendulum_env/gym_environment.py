@@ -11,7 +11,8 @@ import gymnasium as gym
 from typing import Optional
 from gymnasium.error import DependencyNotInstalled
 
-from .simulation import get_arrow, set_arrow_properties
+from .simulation import Simulator, get_arrow, set_arrow_properties
+from .pendulum_plant import PendulumPlant
 
 class SimplePendulumEnv(gym.Env):
     """
@@ -78,6 +79,7 @@ class SimplePendulumEnv(gym.Env):
             "everywhere" : The pendulum is set to a random state in the whole
                            possible state space
         """
+
         self.simulator = simulator
         self.render_mode = render_mode
         self.max_steps = max_steps
@@ -93,7 +95,27 @@ class SimplePendulumEnv(gym.Env):
         self.random_init = random_init
         self.screen = None
 
-        self.torque_limit = simulator.plant.torque_limit
+        # Temporal plant & simulation for gym registration 
+        if self.simulator is None:
+            # get the simulator
+            torque_limit = 5.0
+            mass = 0.57288
+            length = 0.5
+            damping = 0.10
+            gravity = 9.81
+            coulomb_fric = 0.0
+            inertia = mass*length**2
+
+            pendulum = PendulumPlant(
+                mass=mass,
+                length=length,
+                damping=damping,
+                gravity=gravity,
+                coulomb_fric=coulomb_fric,
+                inertia=inertia,
+                torque_limit=torque_limit
+            )   
+            self.simulator = Simulator(plant=pendulum)
 
         if state_representation == 2:
             # state is [th, vel]
@@ -117,6 +139,7 @@ class SimplePendulumEnv(gym.Env):
                 -self.torque_limit, self.torque_limit, shape=(1,)
             )
 
+        self.torque_limit = self.simulator.plant.torque_limit
         self.state_shape = self.observation_space.shape
         self.n_actions = self.action_space.shape[0]
         self.n_states = self.observation_space.shape[0]

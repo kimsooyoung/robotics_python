@@ -60,27 +60,49 @@ class Parameters():
 
 
 def train(args, sim, params):
-    env = SimplePendulumEnv(
+    # env = SimplePendulumEnv(
+    #     simulator=sim,
+    #     max_steps=params.max_steps,
+    #     reward_type=params.reward_type,
+    #     dt=params.dt,
+    #     integrator=params.integrator,
+    #     state_representation=params.state_representation, # [position,velocity] / [cos(position),sin(position),velocity]
+    #     scale_action=params.scale_action,
+    #     random_init=params.random_init
+    # )
+
+    # eval_env = SimplePendulumEnv(
+    #     simulator=sim,
+    #     max_steps=params.max_steps,
+    #     reward_type=params.reward_type,
+    #     dt=params.dt,
+    #     integrator=params.integrator,
+    #     state_representation=params.state_representation, # [position,velocity] / [cos(position),sin(position),velocity]
+    #     scale_action=params.scale_action,
+    #     random_init="False"
+    # )
+
+    env = DummyVecEnv([lambda: SimplePendulumEnv(
         simulator=sim,
         max_steps=params.max_steps,
         reward_type=params.reward_type,
         dt=params.dt,
         integrator=params.integrator,
-        state_representation=params.state_representation, # [position,velocity] / [cos(position),sin(position),velocity]
+        state_representation=params.state_representation,
         scale_action=params.scale_action,
         random_init=params.random_init
-    )
+    )])
 
-    eval_env = SimplePendulumEnv(
+    eval_env = DummyVecEnv([lambda: SimplePendulumEnv(
         simulator=sim,
         max_steps=params.max_steps,
         reward_type=params.reward_type,
         dt=params.dt,
         integrator=params.integrator,
-        state_representation=params.state_representation, # [position,velocity] / [cos(position),sin(position),velocity]
+        state_representation=params.state_representation,
         scale_action=params.scale_action,
         random_init="False"
-    )
+    )])
 
     # TODO : vec env after register
     # vec_env = make_vec_env(
