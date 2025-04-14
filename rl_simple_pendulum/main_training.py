@@ -17,9 +17,12 @@ from stable_baselines3.common.callbacks import (
     StopTrainingOnRewardThreshold,
 )
 
-from pendulum_env import Simulator
-from pendulum_env import PendulumPlant
-from pendulum_env import SimplePendulumEnv
+import pendulum_env
+from pendulum_env import (
+    Simulator,
+    PendulumPlant,
+    SimplePendulumEnv
+)
 
 MODEL_DIR = "models"
 LOG_DIR = "logs"
@@ -61,57 +64,48 @@ class Parameters():
 
 def train(args, sim, params):
     # env = SimplePendulumEnv(
-    #     simulator=sim,
-    #     max_steps=params.max_steps,
-    #     reward_type=params.reward_type,
-    #     dt=params.dt,
-    #     integrator=params.integrator,
-    #     state_representation=params.state_representation, # [position,velocity] / [cos(position),sin(position),velocity]
-    #     scale_action=params.scale_action,
-    #     random_init=params.random_init
     # )
 
     # eval_env = SimplePendulumEnv(
+    # )
+
+    # env = gym.make(
+    #     'gymnasium_env/SimplePendulum-v0',
     #     simulator=sim,
     #     max_steps=params.max_steps,
     #     reward_type=params.reward_type,
-    #     dt=params.dt,
-    #     integrator=params.integrator,
-    #     state_representation=params.state_representation, # [position,velocity] / [cos(position),sin(position),velocity]
-    #     scale_action=params.scale_action,
-    #     random_init="False"
     # )
 
-    env = DummyVecEnv([lambda: SimplePendulumEnv(
-        simulator=sim,
-        max_steps=params.max_steps,
-        reward_type=params.reward_type,
-        dt=params.dt,
-        integrator=params.integrator,
-        state_representation=params.state_representation,
-        scale_action=params.scale_action,
-        random_init=params.random_init
-    )])
+    vec_env = make_vec_env(
+        SimplePendulumEnv,
+        env_kwargs={
+            "simulator": sim,
+            "max_steps": params.max_steps,
+            "reward_type": params.reward_type,
+            "dt": params.dt,
+            "integrator": params.integrator,
+            # [position,velocity] / [cos(position),sin(position),velocity]
+            "state_representation": params.state_representation,
+            "scale_action": params.scale_action,
+            "random_init": params.random_init
+        },
+        n_envs=args.num_parallel_envs,
+        seed=args.seed,
+        vec_env_cls=SubprocVecEnv,
+    )
 
-    eval_env = DummyVecEnv([lambda: SimplePendulumEnv(
+    eval_env = gym.make(
+        'gymnasium_env/SimplePendulum-v0',
         simulator=sim,
         max_steps=params.max_steps,
         reward_type=params.reward_type,
         dt=params.dt,
         integrator=params.integrator,
+        # [position,velocity] / [cos(position),sin(position),velocity]
         state_representation=params.state_representation,
         scale_action=params.scale_action,
         random_init="False"
-    )])
-
-    # TODO : vec env after register
-    # vec_env = make_vec_env(
-    #     Go1MujocoEnv,
-    #     env_kwargs={"ctrl_type": args.ctrl_type},
-    #     n_envs=args.num_parallel_envs,
-    #     seed=args.seed,
-    #     vec_env_cls=SubprocVecEnv,
-    # )
+    )
 
     train_time = time.strftime("%Y-%m-%d_%H-%M-%S")
     # TODO: algo
@@ -125,16 +119,16 @@ def train(args, sim, params):
     )
 
     if args.model_path is not None:
-        model = PPO.load(
+        model = SAC.load(
             path=args.model_path, 
-            env=env, 
+            env=vec_env, 
             verbose=params.verbose,
             tensorboard_log=log_path
         )
     else:
-        model = PPO(
+        model = SAC(
             MlpPolicy,
-            env,
+            vec_env,
             verbose=params.verbose,
             tensorboard_log=log_path,
             learning_rate=params.learning_rate
@@ -151,18 +145,6 @@ def train(args, sim, params):
         # TODO: Use dynamic learning rate
         # TODO: PPO
         # model = PPO("MlpPolicy", vec_env, verbose=1, tensorboard_log=LOG_DIR)
-
-    # TODO: Vector Env
-
-    # eval_callback = EvalCallback(
-    #     vec_env,
-    #     best_model_save_path=model_path,
-    #     log_path=LOG_DIR,
-    #     eval_freq=args.eval_frequency,
-    #     n_eval_episodes=5,
-    #     deterministic=True,
-    #     render=False,
-    # )
 
     # define training callbacks
     callback_on_best = StopTrainingOnRewardThreshold(
@@ -245,9 +227,7 @@ if __name__ == "__main__":
     train(args, sim, params)
 
 # TODO
-# env register
-# vector env
-# 
+# PPO
 
 # python3 main_training.py
 
