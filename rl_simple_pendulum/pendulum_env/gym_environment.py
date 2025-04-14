@@ -121,7 +121,8 @@ class SimplePendulumEnv(gym.Env):
         self.n_actions = self.action_space.shape[0]
         self.n_states = self.observation_space.shape[0]
         self.action_limits = [-self.torque_limit, self.torque_limit]
-
+        
+        self.a = None
         self.simulator.set_state(0, [0.0, 0.0])
         self.step_count = 0
 
@@ -284,7 +285,8 @@ class SimplePendulumEnv(gym.Env):
         arc, head = get_arrow(
             radius=0.001, centX=0, centY=0, angle_=110, theta2_=320, color_="black"
         )
-        set_arrow_properties(arc, head, self.a, 0, 0)
+        if self.a is not None:
+            set_arrow_properties(arc, head, self.a, 0, 0)
         self.ax.add_patch(arc)
         self.ax.add_patch(head)
 

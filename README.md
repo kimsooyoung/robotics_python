@@ -166,12 +166,25 @@ Check Observability and learn how Kalman Filter works
     <img src="./images/biped_walking.gif" height="300">
 </p>
 
+===
+
+* Reinforcement Learning - Simple Pendulum
+
+<p align="center">
+    <img src="./images/rl_simple_pendulum.gif" height="300">
+</p>
+
+===
+
 * Advanced Lecture - Inverted Pendulum
 
 <p align="center">
     <img src="./images/advanced_ip.gif" height="200">
     <img src="./images/advanced_ip.png" height="200">
 </p>
+
+
+
 
 * Advanced Lecture - Linear MPC with Spring Mass Damper
 

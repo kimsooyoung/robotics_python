@@ -21,13 +21,11 @@ from pendulum_env import SimplePendulumEnv
 MODEL_DIR = "models"
 LOG_DIR = "logs"
 
-# TODO: 
-
 # Simulator, Gym Env Params
 class Parameters():
     def __init__(self):
         # dynamics parameters
-        self.torque_limit = 5.0
+        self.torque_limit = 1.5
         self.mass = 0.57288
         self.length = 0.5
         self.damping = 0.10
@@ -203,7 +201,12 @@ def test(args, sim, params):
         state_representation=params.state_representation, # [position,velocity] / [cos(position),sin(position),velocity]
         scale_action=params.scale_action,
         random_init=params.random_init,
-        render_mode="human" # human/rgb_array
+        render_mode="rgb_array" # human/rgb_array
+    )
+    env = gym.wrappers.RecordVideo(
+        env=env, 
+        video_folder="video", name_prefix="test-video", 
+        episode_trigger=lambda x: x % 2 == 0
     )
 
     model = SAC.load(path=args.model_path, env=env, verbose=params.verbose)
@@ -211,7 +214,7 @@ def test(args, sim, params):
     num_episodes = args.num_test_episodes
     total_reward = 0
     total_length = 0
-    
+
     for _ in tqdm(range(num_episodes)):
 
         observation, _ = env.reset()
@@ -227,7 +230,7 @@ def test(args, sim, params):
             action, _states = model.predict(observation)
             observation, reward, terminated, truncated, info = env.step(action)
             
-            print(f"{observation=}")
+            # print(f"{observation=}")
             env.render()
             
             ep_reward += reward
@@ -243,7 +246,8 @@ def test(args, sim, params):
     print(
         f"Avg episode reward: {total_reward / num_episodes}, avg episode length: {total_length / num_episodes}"
     )
-
+    env.close_video_recorder()
+    env.close()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -263,7 +267,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num_test_episodes",
         type=int,
-        default=5,
+        default=1,
         help="Number of episodes to test the model",
     )
     parser.add_argument(
@@ -325,6 +329,7 @@ if __name__ == "__main__":
 # python3 train.py --run train
 # python3 train.py --run test --model_path 
 
+# pip install moviepy
 # pip install tensorboard
 # gymnasium 0.29.1
 # stable_baselines3 2.6.0
