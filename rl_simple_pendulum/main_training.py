@@ -110,11 +110,8 @@ def train(args, algo, sim, params):
     )
 
     train_time = time.strftime("%Y-%m-%d_%H-%M-%S")
-    # TODO: algo
-    run_name = f"{train_time}"
-    model_path = f"{MODEL_DIR}/{args.algorithm}/{run_name}"
-    # log_path = f"{args.algorithm}/{LOG_DIR}"
-    log_path = f"{LOG_DIR}/{args.algorithm}"
+    model_path = f"{MODEL_DIR}/{args.algorithm}/{train_time}"
+    log_path = f"{LOG_DIR}"
 
     print(
         f"Training on {args.num_parallel_envs} parallel training environments and saving models to '{model_path}'"
@@ -160,7 +157,7 @@ def train(args, algo, sim, params):
         total_timesteps=args.total_timesteps,
         reset_num_timesteps=False,
         progress_bar=True,
-        tb_log_name=log_path, # TODO: Check
+        tb_log_name=f"{args.algorithm}/{train_time}",
         callback=eval_callback
     )
 
@@ -222,7 +219,7 @@ if __name__ == "__main__":
     os.makedirs(LOG_DIR, exist_ok=True)
     train(args, sb3_class, sim, params)
 
-# TODO
+# Usage
 # python3 main_training.py --algorithm PPO --total_timesteps 10
 
 # pip install moviepy
