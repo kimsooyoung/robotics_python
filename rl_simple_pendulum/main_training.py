@@ -5,8 +5,7 @@ import numpy as np
 import gymnasium as gym
 
 from tqdm import tqdm
-from stable_baselines3 import PPO, SAC
-from stable_baselines3.sac.policies import MlpPolicy
+
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import (
     DummyVecEnv,
@@ -23,6 +22,12 @@ from pendulum_env import (
     PendulumPlant,
     SimplePendulumEnv
 )
+
+import stable_baselines3
+
+from stable_baselines3 import (
+    PPO, SAC, A2C, DDPG, DQN, TD3
+) 
 
 MODEL_DIR = "models"
 LOG_DIR = "logs"
@@ -55,27 +60,24 @@ class Parameters():
 
         # model params
         self.learning_rate = 0.0003
-        self.training_timesteps=1e6
         self.reward_threshold=1000.0
         self.eval_frequency=10000
         self.n_eval_episodes=20
         self.verbose = 1
+        self.device = 'cuda'
 
 
-def train(args, sim, params):
-    # env = SimplePendulumEnv(
-    # )
+def get_model_class(algo_name):
+    """Retrieve the SB3 algorithm class dynamically."""
+    try:
+        print(f"You are using {algo_name} from sb3")
+        return getattr(stable_baselines3, algo_name)
+    except AttributeError:
+        raise ValueError(f"Invalid algorithm: {algo_name}. Available options: A2C, DDPG, PPO, SAC, TD3")
 
-    # eval_env = SimplePendulumEnv(
-    # )
 
-    # env = gym.make(
-    #     'gymnasium_env/SimplePendulum-v0',
-    #     simulator=sim,
-    #     max_steps=params.max_steps,
-    #     reward_type=params.reward_type,
-    # )
-
+def train(args, algo, sim, params):
+    
     vec_env = make_vec_env(
         SimplePendulumEnv,
         env_kwargs={
@@ -110,49 +112,37 @@ def train(args, sim, params):
     train_time = time.strftime("%Y-%m-%d_%H-%M-%S")
     # TODO: algo
     run_name = f"{train_time}"
-
-    model_path = f"{MODEL_DIR}/{run_name}"
-    log_path = f"{LOG_DIR}"
+    model_path = f"{MODEL_DIR}/{args.algorithm}/{run_name}"
+    # log_path = f"{args.algorithm}/{LOG_DIR}"
+    log_path = f"{LOG_DIR}/{args.algorithm}"
 
     print(
         f"Training on {args.num_parallel_envs} parallel training environments and saving models to '{model_path}'"
     )
 
     if args.model_path is not None:
-        model = SAC.load(
+        model = algo.load(
             path=args.model_path, 
-            env=vec_env, 
+            env=vec_env,
+            device=params.device,
             verbose=params.verbose,
             tensorboard_log=log_path
         )
     else:
-        model = SAC(
-            MlpPolicy,
+        model = algo(
+            'MlpPolicy', # Must be str
             vec_env,
+            device=params.device,
             verbose=params.verbose,
             tensorboard_log=log_path,
             learning_rate=params.learning_rate
         )
-        # TODO: PPO
-        # model = PPO.load(
-        #     path=args.model_path, 
-        #     env=vec_env, 
-        #     verbose=1, 
-        #     tensorboard_log=LOG_DIR
-        # )
-    # else:
-        # Default PPO model hyper-parameters give good results
-        # TODO: Use dynamic learning rate
-        # TODO: PPO
-        # model = PPO("MlpPolicy", vec_env, verbose=1, tensorboard_log=LOG_DIR)
 
     # define training callbacks
     callback_on_best = StopTrainingOnRewardThreshold(
         reward_threshold=params.reward_threshold,
         verbose=params.verbose
     )
-
-    # log_path = os.path.join(log_dir, 'best_model')
 
     # Evaluate the model every eval_frequency for 'n_eval_episodes' episodes 
     # and save it if it's improved over the previous best model.
@@ -167,10 +157,10 @@ def train(args, sim, params):
 
     # train
     model.learn(
-        total_timesteps=params.training_timesteps,
+        total_timesteps=args.total_timesteps,
         reset_num_timesteps=False,
         progress_bar=True,
-        tb_log_name=run_name, # TODO: Check
+        tb_log_name=log_path, # TODO: Check
         callback=eval_callback
     )
 
@@ -182,7 +172,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--algorithm",
         type=str,
-        default=None,
+        default='SAC',
         help="Custom name of the run. Note that all runs are saved in the 'models' directory and have the training time prefixed.",
     )
     parser.add_argument(
@@ -210,6 +200,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    try:
+        sb3_class = get_model_class(args.algorithm)
+    except ValueError as e:
+        print(e)
+        exit(1)
+
     params = Parameters()
     pendulum = PendulumPlant(
         mass=params.mass,
@@ -224,12 +220,10 @@ if __name__ == "__main__":
 
     os.makedirs(MODEL_DIR, exist_ok=True)
     os.makedirs(LOG_DIR, exist_ok=True)
-    train(args, sim, params)
+    train(args, sb3_class, sim, params)
 
 # TODO
-# PPO
-
-# python3 main_training.py
+# python3 main_training.py --algorithm PPO --total_timesteps 10
 
 # pip install moviepy
 # pip install tensorboard

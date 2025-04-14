@@ -25,7 +25,7 @@ class SimplePendulumEnv(gym.Env):
     }
 
     def __init__(self,
-                 simulator,
+                 simulator=None,
                  render_mode: Optional[str] = None,
                  max_steps=5000,
                  target=[np.pi, 0.0],
