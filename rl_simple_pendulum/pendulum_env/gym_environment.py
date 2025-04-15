@@ -184,7 +184,16 @@ class SimplePendulumEnv(gym.Env):
         
         observation = self._get_obs()
         done = self.check_final_condition()
+
         truncated = False
+        if self.state_representation == 2:
+            theta = observation[0]
+        elif self.state_representation == 3:
+            theta, _ = self.get_state_from_observation(observation)
+
+        if theta > 2*np.pi or theta < -2*np.pi:
+            truncated = True
+
         info = self._get_info()
 
         self.step_count += 1

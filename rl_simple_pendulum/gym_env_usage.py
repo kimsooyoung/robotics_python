@@ -75,9 +75,11 @@ episode_over = False
 
 while not episode_over:
     action = env.action_space.sample()  # agent policy that uses the observation and info
+    # action = np.array([torque_limit])
+
     observation, reward, terminated, truncated, info = env.step(action)
 
-    print(f"{observation=}")
+    print(f"{action=} {observation=}")
     env.render()
 
     if terminated or truncated:
