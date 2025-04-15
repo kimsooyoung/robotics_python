@@ -3,9 +3,9 @@ import time
 import argparse
 import numpy as np
 import gymnasium as gym
+import stable_baselines3
 
 from tqdm import tqdm
-
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import (
     DummyVecEnv,
@@ -16,18 +16,11 @@ from stable_baselines3.common.callbacks import (
     StopTrainingOnRewardThreshold,
 )
 
-import pendulum_env
 from pendulum_env import (
     Simulator,
     PendulumPlant,
     SimplePendulumEnv
 )
-
-import stable_baselines3
-
-from stable_baselines3 import (
-    PPO, SAC, A2C, DDPG, DQN, TD3
-) 
 
 MODEL_DIR = "models"
 LOG_DIR = "logs"
@@ -51,7 +44,7 @@ class Parameters():
         self.max_steps = 1000
         # continuous, discrete, soft_binary, soft_binary_with_repellor, 
         # open_ai_gym, open_ai_gym_red_torque
-        self.reward_type = "soft_binary_with_repellor" 
+        self.reward_type = "open_ai_gym" 
         self.target = [np.pi, 0]
         self.target_epsilon = [0.1, 0.1]
         self.random_init = "everywhere" # False, start_vicinity, everywhere
@@ -175,13 +168,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--num_parallel_envs",
         type=int,
-        default=12,
+        default=3,
         help="Number of parallel environments while training",
     )
     parser.add_argument(
         "--total_timesteps",
         type=int,
-        default=1_000_000,
+        default=3_000_000,
         help="Number of timesteps to train the model for",
     )
     parser.add_argument(
@@ -221,6 +214,11 @@ if __name__ == "__main__":
 
 # Usage
 # python3 main_training.py --algorithm PPO --total_timesteps 10
+# python3 main_training.py --algorithm SAC 
+# python3 main_training.py --algorithm A2C 
+# python3 main_training.py --algorithm TD3 
+
+# tensorboard --logdir <log-file>
 
 # pip install moviepy
 # pip install tensorboard

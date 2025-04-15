@@ -3,9 +3,9 @@ import time
 import argparse
 import numpy as np
 import gymnasium as gym
+import stable_baselines3
 
 from tqdm import tqdm
-from stable_baselines3 import PPO, SAC
 from stable_baselines3.sac.policies import MlpPolicy
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.vec_env import SubprocVecEnv
@@ -54,9 +54,18 @@ class Parameters():
         self.eval_frequency=10000
         self.n_eval_episodes=20
         self.verbose = 1
+        self.device = 'cuda'
 
 
-def test(args, sim, params):
+def get_model_class(algo_name):
+    """Retrieve the SB3 algorithm class dynamically."""
+    try:
+        print(f"You are using {algo_name} from sb3")
+        return getattr(stable_baselines3, algo_name)
+    except AttributeError:
+        raise ValueError(f"Invalid algorithm: {algo_name}. Available options: A2C, DDPG, PPO, SAC, TD3")
+
+def test(args, algo, sim, params):
 
     env = SimplePendulumEnv(
         simulator=sim,
@@ -76,7 +85,12 @@ def test(args, sim, params):
             episode_trigger=lambda x: x % 2 == 0
         )
 
-    model = SAC.load(path=args.model_path, env=env, verbose=params.verbose)
+    model = algo.load(
+        path=args.model_path, 
+        env=env, 
+        device=params.device,
+        verbose=params.verbose
+    )
 
     num_episodes = args.num_test_episodes
     total_reward = 0
@@ -120,6 +134,12 @@ def test(args, sim, params):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
+        "--algorithm",
+        type=str,
+        default='SAC',
+        help="Custom name of the run. Note that all runs are saved in the 'models' directory and have the training time prefixed.",
+    )
+    parser.add_argument(
         "--render_mode",
         type=str,
         default="human",
@@ -139,6 +159,12 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    try:
+        sb3_class = get_model_class(args.algorithm)
+    except ValueError as e:
+        print(e)
+        exit(1)
+
     params = Parameters()
     pendulum = PendulumPlant(
         mass=params.mass,
@@ -153,10 +179,12 @@ if __name__ == "__main__":
 
     if args.model_path is None:
         raise ValueError("--model_path is required for testing")
-    test(args, sim, params)
+    
+    test(args, sb3_class, sim, params)
 
 # TODO: PPO
-# python3 main_evaluation.py --model_path <sth> --render_mode <human>
+# python3 main_evaluation.py --algorithm PPO --model_path <sth> --render_mode <human>
+# python3 main_evaluation.py --algorithm A2C --model_path 
 
 # pip install moviepy
 # pip install tensorboard
