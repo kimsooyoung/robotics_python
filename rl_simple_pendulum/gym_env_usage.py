@@ -8,11 +8,20 @@ from pendulum_env import (
     SimplePendulumEnv
 )
 
-# get the simulator
-torque_limit = 5.0
-mass = 0.57288
-length = 0.5
-damping = 0.10
+# # Test Env
+# torque_limit = 5.0
+# mass = 0.57288
+# length = 0.5
+# damping = 0.10
+# gravity = 9.81
+# coulomb_fric = 0.0
+# inertia = mass*length**2
+
+# Real Values
+torque_limit = 30.0
+mass = 10.0
+length = 0.3
+damping = 0.01
 gravity = 9.81
 coulomb_fric = 0.0
 inertia = mass*length**2
@@ -67,8 +76,8 @@ env = gym.make(
     render_mode="human" # human/rgb_array
 )
 
-# options={"state": np.array([1.0, 0.0]), "random_init": False}
-options={"random_init": "everywhere"} # False/start_vicinity/everywhere
+options={"state": np.array([0.0, 0.0]), "random_init": False}
+# options={"random_init": "everywhere"} # False/start_vicinity/everywhere
 
 observation, info = env.reset(seed=None, options=options)
 episode_over = False
