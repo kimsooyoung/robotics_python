@@ -32,6 +32,7 @@ H_01 = sy.Matrix([
 # Pendulum COM in world frame
 G = H_01 * sy.Matrix([c, 0, 1])
 G_xy = sy.Matrix([G[0], G[1]])
+print(f"{G_xy=}")
 
 # velocity vectors
 theta_d = sy.symbols('theta_d', real=True)
@@ -94,3 +95,12 @@ C = b - G
 print(f"M : {M[0]}")
 print(f"C : {C[0]}")
 print(f"G : {G[0]}")
+
+# Application2 - static forces
+F = sy.Matrix([0, -m*g])
+J = G_xy.jacobian(q)
+print(f"{J=}")
+tau = sy.simplify(J.transpose()*F)
+
+print(f'tau = {tau}')
+# tau = Matrix([[-c*g*m*sin(theta)]])
