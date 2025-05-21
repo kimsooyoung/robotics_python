@@ -1,9 +1,18 @@
+# referenced from : https://github.com/dfki-ric-underactuated-lab/torque_limited_simple_pendulum
 import sys, os
 
 import numpy as np
 from matplotlib import pyplot as plt
 
-from pendulum_env import DirectCollocationCalculator
+from pendulum_env import (
+    # env
+    Simulator,
+    PendulumPlant,
+    # trajectory optimization
+    DirectCollocationCalculator,
+    # controller
+    PIDController
+)
 from utils import (
     prepare_empty_data_dict, 
     plot_trajectory,
@@ -42,7 +51,7 @@ class Parameters():
         # swingup parameters
         self.x0 = [0.0, 0.0]
         self.goal = [np.pi, 0.0]
-        self.torque_limit = 1
+        self.torque_limit = 5
 
         # direct collocation parameters
         self.N = 21
@@ -107,21 +116,24 @@ if __name__ == '__main__':
     save_trajectory(csv_path, data_dict)
 
     # Simulate trajectory
+    pendulum = PendulumPlant(
+        mass=params.m,
+        length=params.l,
+        damping=params.b,
+        gravity=params.g,
+        coulomb_fric=params.c,
+        inertia=None,
+        torque_limit=params.torque_limit,
+    )
+    sim = Simulator(plant=pendulum)
 
-    # pendulum = PendulumPlant(
-    #     mass=mass,
-    #     length=length,
-    #     damping=damping,
-    #     gravity=gravity,
-    #     coulomb_fric=coulomb_fric,
-    #     inertia=None,
-    #     torque_limit=torque_limit,
-    # )
-
-    # sim = Simulator(plant=pendulum)
-
+    controller = PIDController(
+        data_dict=data_dict, 
+        Kp=20.0, 
+        Ki=1.0,
+        Kd=1.0
+    )
     # # controller = OpenLoopController(data_dict=data_dict)
-    # # controller = PIDController(data_dict=data_dict, Kp=3.0, Ki=1.0, Kd=1.0)
     # controller = TVLQRController(
     #     data_dict=data_dict,
     #     mass=mass,
@@ -130,17 +142,17 @@ if __name__ == '__main__':
     #     gravity=gravity,
     #     torque_limit=torque_limit,
     # )
-    # controller.set_goal(goal)
+    controller.set_goal(params.goal)
 
-    # T, X, U = sim.simulate_and_animate(
-    #     t0=T[0],
-    #     x0=X[0],
-    #     tf=t_final,
-    #     dt=dt,
-    #     controller=controller,
-    #     integrator="runge_kutta",
-    #     phase_plot=False,
-    #     save_video=False,
-    # )
+    T, X, U = sim.simulate_and_animate(
+        t0=T[0],
+        x0=X[0],
+        tf=t_final,
+        dt=dt,
+        controller=controller,
+        integrator="runge_kutta",
+        phase_plot=False,
+        save_video=False,
+    )
 
-    # plot_trajectory(T, X, U, None, True)
+    plot_trajectory(T, X, U, None, True)
