@@ -11,7 +11,8 @@ from pendulum_env import (
     # trajectory optimization
     DirectCollocationCalculator,
     # controller
-    PIDController
+    PIDController,
+    LQRController
 )
 from utils import (
     prepare_empty_data_dict, 
@@ -51,7 +52,8 @@ class Parameters():
         # swingup parameters
         self.x0 = [0.0, 0.0]
         self.goal = [np.pi, 0.0]
-        self.torque_limit = 5
+        # self.torque_limit = 5
+        self.torque_limit = 50
 
         # direct collocation parameters
         self.N = 21
@@ -98,10 +100,9 @@ if __name__ == '__main__':
     )
     T, X, U = dircal.extract_trajectory(x_trajectory, dircol, result, N=1000)
 
-    # # plot results
-    plot_trajectory(T, X, U, None, True)
-
-    dircal.plot_phase_space_trajectory(x_trajectory)
+    # plot results
+    # plot_trajectory(T, X, U, None, True)
+    # dircal.plot_phase_space_trajectory(x_trajectory)
 
     # save results
     csv_path = os.path.join(log_dir, "computed_trajectory.csv")
@@ -127,11 +128,22 @@ if __name__ == '__main__':
     )
     sim = Simulator(plant=pendulum)
 
-    controller = PIDController(
-        data_dict=data_dict, 
-        Kp=20.0, 
-        Ki=1.0,
-        Kd=1.0
+    # controller = PIDController(
+    #     data_dict=data_dict, 
+    #     Kp=20.0, 
+    #     Ki=1.0,
+    #     Kd=1.0
+    # )
+    controller = LQRController(
+        mass=params.m,
+        length=params.l,
+        damping=params.b,
+        gravity=params.g,
+        coulomb_fric=params.c,
+        torque_limit=params.torque_limit,
+        Q=np.diag([10, 1]),
+        R=np.array([[1]]),
+        compute_RoA=False
     )
     # # controller = OpenLoopController(data_dict=data_dict)
     # controller = TVLQRController(
