@@ -39,8 +39,11 @@ class Parameters():
         self.b = 0.1 # damping friction coefficient
         self.I = self.m * self.l * self.l # inertia
         self.g = 9.81 # gravity
+        self.max_torque = 2 # maxinum control output
+
         self.pause = 0.02
         self.fps = 20
+
 
 
 ### Utils ###
@@ -145,7 +148,7 @@ def linearize(goal, params):
 
     A = np.array([
         [0, 1],
-        [-m*g*l / I*np.cos(goal[0]), -b/I]
+        [-m*g*l/I * np.cos(goal[0]), -b/I]
     ])
     B = np.array([[0, 1./I]]).T
 
@@ -167,10 +170,21 @@ def lqr_scipy(A, B, Q, R):
 
     return K, X, eigVals
 
-def controller_lqr(K, theta, omega):
-    return K.dot([theta, omega])[0]
+def controller_lqr(K, max_tau, theta, omega):
 
-def simple_pendulum(z0, t, m, l, c, b, g, K):
+    goal = [np.pi, 0.0]
+
+    delta_pos = theta - goal[0]
+    delta_pos_wrapped = (delta_pos + np.pi) % (2*np.pi) - np.pi
+    delta_y = np.asarray([delta_pos_wrapped, omega - goal[1]])
+
+    u = np.asarray(-K.dot(delta_y))[0]
+
+    u = np.clip(u, -max_tau, max_tau)
+
+    return u
+
+def simple_pendulum(z0, t, m, l, c, b, g, max_tau, K):
 
     theta, omega, tau = z0
 
@@ -179,9 +193,7 @@ def simple_pendulum(z0, t, m, l, c, b, g, K):
     # PID
     # torque = controller_pid(l, g, m, theta, omega)
     # LQR
-    torque = controller_lqr(K, theta, omega)
-    
-    print(f"{torque=}")
+    torque = controller_lqr(K, max_tau, theta, omega)
 
     theta_dd = (torque - m*g*l*sin(theta) - b*omega - np.sign(omega)*c) / (m*l*l)
 
@@ -191,24 +203,25 @@ if __name__ == '__main__':
 
     params = Parameters()
 
-    t = np.linspace(0, 10, 500)
+    t = np.linspace(0, 5, 500)
 
     ### LQR
     # Linearize for linear control
     Q = np.diag([10, 1])
-    R = np.array([[1000]])
+    R = np.array([[1]])
     goal = np.array([np.pi, 0])
     A_lin, B_lin = linearize(goal, params)
     K, S, eigVals = lqr_scipy(A_lin, B_lin, Q, R)
     print(f"{K=} {eigVals=}")
 
     # initlal state
-    # z0 = np.array([np.pi/4, 0.001])
+    # z0 = np.array([3.1, 0.001, 10.0])
     z0 = np.array([0.0, 0.001, 0.0])
     all_params = (
         params.m, params.l,
         params.c, params.b,
-        params.g, K
+        params.g, params.max_torque,
+        K
     )
     z = odeint(simple_pendulum, z0, t, args=all_params)
 
