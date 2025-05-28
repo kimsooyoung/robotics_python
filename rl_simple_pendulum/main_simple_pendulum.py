@@ -15,8 +15,9 @@
 
 from matplotlib import pyplot as plt
 import numpy as np
-from scipy import interpolate
+import scipy.linalg
 
+from scipy import interpolate
 from scipy.integrate import odeint
 
 
@@ -125,7 +126,7 @@ def animate(t_interp, z_interp, params):
 
     plt.show()
 
-def controller(l, g, m, theta, omega):
+def controller_pid(l, g, m, theta, omega):
     # Jacobian based angle-torque control
     torque = -l*g*m*sin(theta)
 
@@ -138,12 +139,49 @@ def controller(l, g, m, theta, omega):
 
     return torque
 
-def simple_pendulum(z0, t, m, l, c, b, g):
+def linearize(goal, params):
+
+    m, l, g, I, b = params.m, params.l, params.g, params.I, params.b
+
+    A = np.array([
+        [0, 1],
+        [-m*g*l / I*np.cos(goal[0]), -b/I]
+    ])
+    B = np.array([[0, 1./I]]).T
+
+    return A, B
+
+def lqr_scipy(A, B, Q, R):
+    """Solve the continuous time lqr controller.
+    dx/dt = A x + B u
+    cost = integral x.T*Q*x + u.T*R*u
+    ref: Bertsekas, p.151
+    """
+
+    # first, try to solve the ricatti equation
+    X = np.array(scipy.linalg.solve_continuous_are(A, B, Q, R))
+
+    # compute the lqr gain
+    K = np.array(scipy.linalg.inv(R).dot(B.T.dot(X)))
+    eigVals, eigVecs = scipy.linalg.eig(A-B.dot(K))
+
+    return K, X, eigVals
+
+def controller_lqr(K, theta, omega):
+    return K.dot([theta, omega])[0]
+
+def simple_pendulum(z0, t, m, l, c, b, g, K):
 
     theta, omega, tau = z0
 
-    # controller here this can be model-based / model-free whatever :)
-    torque = controller(l, g, m, theta, omega)
+    ### Controller here this can be model-based / model-free whatever :)
+    
+    # PID
+    # torque = controller_pid(l, g, m, theta, omega)
+    # LQR
+    torque = controller_lqr(K, theta, omega)
+    
+    print(f"{torque=}")
 
     theta_dd = (torque - m*g*l*sin(theta) - b*omega - np.sign(omega)*c) / (m*l*l)
 
@@ -155,13 +193,22 @@ if __name__ == '__main__':
 
     t = np.linspace(0, 10, 500)
 
+    ### LQR
+    # Linearize for linear control
+    Q = np.diag([10, 1])
+    R = np.array([[1000]])
+    goal = np.array([np.pi, 0])
+    A_lin, B_lin = linearize(goal, params)
+    K, S, eigVals = lqr_scipy(A_lin, B_lin, Q, R)
+    print(f"{K=} {eigVals=}")
+
     # initlal state
     # z0 = np.array([np.pi/4, 0.001])
     z0 = np.array([0.0, 0.001, 0.0])
     all_params = (
         params.m, params.l,
         params.c, params.b,
-        params.g
+        params.g, K
     )
     z = odeint(simple_pendulum, z0, t, args=all_params)
 
