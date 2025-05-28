@@ -13,12 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from matplotlib import pyplot as plt
+import control
 import numpy as np
 import scipy.linalg
 
 from scipy import interpolate
 from scipy.integrate import odeint
+from matplotlib import pyplot as plt
 
 
 class Parameters():
@@ -211,7 +212,8 @@ if __name__ == '__main__':
     R = np.array([[1]])
     goal = np.array([np.pi, 0])
     A_lin, B_lin = linearize(goal, params)
-    K, S, eigVals = lqr_scipy(A_lin, B_lin, Q, R)
+    # K, S, eigVals = lqr_scipy(A_lin, B_lin, Q, R)
+    K, S, eigVals = control.lqr(A_lin, B_lin, Q, R)
     print(f"{K=} {eigVals=}")
 
     # initlal state
