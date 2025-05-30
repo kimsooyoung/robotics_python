@@ -98,11 +98,11 @@ if __name__ == '__main__':
         goal_state=params.goal,
         control_cost=params.control_cost,
     )
-    T, X, U = dircal.extract_trajectory(x_trajectory, dircol, result, N=1000)
+    T, X, U = dircal.extract_trajectory(x_trajectory, dircol, result, N=300)
 
     # plot results
-    # plot_trajectory(T, X, U, None, True)
-    # dircal.plot_phase_space_trajectory(x_trajectory)
+    plot_trajectory(T, X, U, None, True)
+    dircal.plot_phase_space_trajectory(x_trajectory)
 
     # save results
     csv_path = os.path.join(log_dir, "computed_trajectory.csv")
@@ -128,22 +128,11 @@ if __name__ == '__main__':
     )
     sim = Simulator(plant=pendulum)
 
-    # controller = PIDController(
-    #     data_dict=data_dict, 
-    #     Kp=20.0, 
-    #     Ki=1.0,
-    #     Kd=1.0
-    # )
-    controller = LQRController(
-        mass=params.m,
-        length=params.l,
-        damping=params.b,
-        gravity=params.g,
-        coulomb_fric=params.c,
-        torque_limit=params.torque_limit,
-        Q=np.diag([10, 1]),
-        R=np.array([[1]]),
-        compute_RoA=False
+    controller = PIDController(
+        data_dict=data_dict, 
+        Kp=20.0, 
+        Ki=1.0,
+        Kd=1.0
     )
     # # controller = OpenLoopController(data_dict=data_dict)
     # controller = TVLQRController(
